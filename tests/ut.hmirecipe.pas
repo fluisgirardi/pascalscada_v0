@@ -78,6 +78,7 @@ type
     procedure DownloadWithAnEmptyLibraryReportsAnError;
     procedure ManyFieldsCreatedAtRuntimeStayInRange;
     procedure StreamingFourFieldsFromALfmStaysInRange;
+    procedure StreamingTheUserLfmVerbatim;
     procedure AnEmptyGridKeepsOneUsableParameterColumn;
     procedure StreamingAStaleSingleColumnEmptyGridHeals;
   end;
@@ -490,6 +491,132 @@ begin
   TryStream('ColCount ausente', BuildLFM(''));
   TryStream('ColCount = 4',    BuildLFM('4'));
   TryStream('ColCount = 1',    BuildLFM('1'));
+end;
+
+type
+  //espelho do formulario do usuario que reproduz o erro: o mesmo nome de
+  //classe e o mesmo campo published do unit1.pas real.
+  //mirror of the user's form that reproduces the error: the same class name
+  //and the same published field as the real unit1.pas.
+  TReplayForm1 = class(TForm)
+    HMIRecipeGrid1: THMIRecipeGrid;
+  end;
+
+const
+  CUserLfmReplayText =
+      'object Form1: TForm1' + LineEnding +
+      '  Left = 438' + LineEnding +
+      '  Height = 419' + LineEnding +
+      '  Top = 250' + LineEnding +
+      '  Width = 582' + LineEnding +
+      '  Caption = ''Form1''' + LineEnding +
+      '  ClientHeight = 419' + LineEnding +
+      '  ClientWidth = 582' + LineEnding +
+      '  LCLVersion = ''4.8.0.0''' + LineEnding +
+      '  object HMIRecipeGrid1: THMIRecipeGrid' + LineEnding +
+      '    Left = 39' + LineEnding +
+      '    Height = 191' + LineEnding +
+      '    Top = 21' + LineEnding +
+      '    Width = 475' + LineEnding +
+      '    DefaultColWidth = 100' + LineEnding +
+      '    DefaultRowHeight = 22' + LineEnding +
+      '    FixedCols = 0' + LineEnding +
+      '    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goSmoothScroll]' + LineEnding +
+      '    RowCount = 2' + LineEnding +
+      '    TabOrder = 0' + LineEnding +
+      '    Fields = <    ' + LineEnding +
+      '      item' + LineEnding +
+      '        MaxValue = 100' + LineEnding +
+      '      end    ' + LineEnding +
+      '      item' + LineEnding +
+      '        MaxValue = 100' + LineEnding +
+      '      end    ' + LineEnding +
+      '      item' + LineEnding +
+      '        MaxValue = 100' + LineEnding +
+      '      end    ' + LineEnding +
+      '      item' + LineEnding +
+      '        MaxValue = 100' + LineEnding +
+      '      end>' + LineEnding +
+      '    NameColumnTitle = ''Recipe''' + LineEnding +
+      '    ColWidths = (' + LineEnding +
+      '      150' + LineEnding +
+      '      100' + LineEnding +
+      '      100' + LineEnding +
+      '      100' + LineEnding +
+      '      100' + LineEnding +
+      '    )' + LineEnding +
+      '    Cells = (' + LineEnding +
+      '      5' + LineEnding +
+      '      0' + LineEnding +
+      '      0' + LineEnding +
+      '      ''Recipe''' + LineEnding +
+      '      1' + LineEnding +
+      '      0' + LineEnding +
+      '      ''Field 0''' + LineEnding +
+      '      2' + LineEnding +
+      '      0' + LineEnding +
+      '      ''Field 1''' + LineEnding +
+      '      3' + LineEnding +
+      '      0' + LineEnding +
+      '      ''Field 2''' + LineEnding +
+      '      4' + LineEnding +
+      '      0' + LineEnding +
+      '      ''Field 3''' + LineEnding +
+      '    )' + LineEnding +
+      '  end' + LineEnding +
+      'end' + LineEnding;
+
+procedure TTestHMIRecipe.StreamingTheUserLfmVerbatim;
+var
+  lfm: TStringStream;
+  bin: TMemoryStream;
+  Reader: TReader;
+  Grid: THMIRecipeGrid;
+  Form: TForm;
+begin
+  //o .lfm real de um usuario: itens de campo sem Name (o padrao nao e'
+  //gravado) mas com MaxValue, mais FixedCols = 0, ColWidths e o array
+  //Cells gravado pelo designer. Lido na ordem exata em que esta' no arquivo.
+  //
+  //a real user .lfm: field items without Name (the default is not stored)
+  //but with MaxValue, plus FixedCols = 0, ColWidths and the Cells array the
+  //designer stored. Read in the exact order they appear in the file.
+  RegisterClass(THMIRecipeGrid);
+  RegisterClass(TRecipeFields);
+  RegisterClass(TRecipeField);
+  RegisterClass(TReplayForm1);
+  RegisterClassAlias(TReplayForm1, 'TForm1');
+
+  lfm := TStringStream.Create(CUserLfmReplayText);
+  try
+    lfm.Position := 0;
+    bin := TMemoryStream.Create;
+    try
+      LRSObjectTextToBinary(lfm, bin);
+      bin.Position := 0;
+      Reader := TReader.Create(bin, 4096);
+      try
+        Form := TForm(Reader.ReadRootComponent(nil));
+        Grid := TReplayForm1(Form).HMIRecipeGrid1;
+        try
+          AssertEquals('quatro campos + coluna do nome', 5, Grid.ColCount);
+          AssertEquals('cabecalho da ultima coluna', 'Field 3',
+                       Grid.Cells[4, 0]);
+          AssertEquals('titulo da coluna do nome', 'Recipe',
+                       Grid.Cells[0, 0]);
+          AssertEquals('quatro campos na colecao', 4, Grid.Fields.Count);
+        finally
+          Form.Free;
+        end;
+      finally
+        Reader.Free;
+      end;
+    finally
+      bin.Free;
+    end;
+  finally
+    lfm.Free;
+  end;
 end;
 
 procedure TTestHMIRecipe.AnEmptyGridKeepsOneUsableParameterColumn;

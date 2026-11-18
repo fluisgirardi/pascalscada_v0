@@ -228,6 +228,7 @@ type
   protected
     procedure SetEditText(ACol, ARow: Longint; const Value: string); override;
     procedure DrawCell(ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState); override;
+    procedure ReadState(Reader: TReader); override;
     procedure Loaded; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
@@ -643,6 +644,34 @@ procedure THMIRecipeGrid.RecipeChanged;
 begin
   if Assigned(FOnRecipeChanged) then
     FOnRecipeChanged(Self);
+end;
+
+procedure THMIRecipeGrid.ReadState(Reader: TReader);
+begin
+  //o designer nao grava no .lfm as propriedades cujo valor iguala o padrao
+  //da LCL. Com 4 campos, por exemplo, o ColCount de projeto (5) iguala o
+  //padrao e nao vai para o arquivo; mas os arrays gravados (ColWidths,
+  //Cells) sao do tamanho do ColCount de projeto. O ReadColWidths da LCL
+  //consome ColCount valores e depois exige o fim da lista: com o ColCount
+  //pequeno do construtor sobra item na lista e a leitura levanta
+  //EReadError "Invalid value for property"; com o ColCount pequeno o array
+  //Cells gravado tambem estoura EGridException. Voltando ao tamanho padrao
+  //da LCL antes de ler, qualquer arquivo gravado pelo designer e' consumido
+  //inteiro; o Loaded reconstroi o layout real em seguida.
+  //
+  //the designer does not store into the .lfm the properties whose value
+  //equals the LCL default. With 4 fields, for instance, the design ColCount
+  //(5) equals the default and does not go to the file; but the stored arrays
+  //(ColWidths, Cells) have the size of the design ColCount. The LCL's
+  //ReadColWidths consumes ColCount values and then requires the end of the
+  //list: with the small constructor ColCount the list is left unfinished and
+  //reading raises EReadError "Invalid value for property"; with a small
+  //ColCount the stored Cells array also raises EGridException. Going back
+  //to the LCL default size before reading makes any designer-written file
+  //be consumed whole; Loaded rebuilds the real layout right after.
+  ColCount := 5;
+  RowCount := 5;
+  inherited ReadState(Reader);
 end;
 
 procedure THMIRecipeGrid.Loaded;
