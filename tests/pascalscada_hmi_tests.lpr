@@ -46,6 +46,7 @@ uses
   ut.hmiedit,
   ut.hmibutton,
   ut.hmirecipe,
+  ut.hmirecipebutton,
   ut.hmicombobox,
   ut.smallcontrols,
   ut.hmiflowimage,

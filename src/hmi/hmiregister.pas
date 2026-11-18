@@ -35,7 +35,7 @@ uses
   hmibooleanpropertyconnector, HMIComboBox, HMIKeyboardManager,
   hmi_draw_elevador, hmi_draw_fita, hmi_draw_redler, hmi_draw_rosca,
   hmi_polyline, hmicolorpropertyconnector, HMITransparentButton, HMIButton,
-  HMIRecipe,
+  HMIRecipe, HMIRecipeButton,
   HMI_Draw_Valves, HMIBasicEletricMotor, hmi_draw_flow_valve,
   hmi_draw_flow_pump, hmi_draw_basic_vector_control, HMIBandeja,
   CentralUserManagement, TagLinkedSeriesSource,
@@ -87,6 +87,10 @@ begin
   RegisterComponents(strControlsPallete,  [THMIButton]);
   //a tabela de receitas (biblioteca em disco + download/upload para o CLP)
   //the recipe table (library on disk + download/upload to the PLC)
+  //os botoes de comando da biblioteca de receitas (nova, apagar, salvar,
+  //enviar e receber)
+  //the recipe library command buttons (add, delete, save, download, upload)
+  RegisterComponents(strControlsPallete,  [THMIRecipeButton]);
   {$IFDEF FPC}
   RegisterComponents(strControlsPallete,  [THMIRecipeGrid]);
   {$ENDIF}
@@ -157,6 +161,8 @@ begin
   RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphUpFile',                   TImageFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphDownFile',                 TImageFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphGrayedFile',               TImageFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIRecipeButton,                         'GlyphUpFile',                   TImageFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIRecipeButton,                         'GlyphDownFile',                 TImageFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADASecureAction,                 'SecurityCode',                  TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADACheckSpecialTokenAction,      'SecurityCode',                  TSecurityCodePropertyEditor);
 

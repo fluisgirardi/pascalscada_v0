@@ -29,7 +29,7 @@
 Built on top of LCL controls, added SCADA features like Tag link and security"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="59">
+    <Files Count="60">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -272,6 +272,10 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
         <Filename Value="src/hmi/hmirecipe.pas"/>
         <UnitName Value="HMIRecipe"/>
       </Item60>
+      <Item61>
+        <Filename Value="src/hmi/hmirecipebutton.pas"/>
+        <UnitName Value="HMIRecipeButton"/>
+      </Item61>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="8">
