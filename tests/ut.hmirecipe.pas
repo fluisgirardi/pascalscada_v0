@@ -80,6 +80,7 @@ type
     procedure StreamingFourFieldsFromALfmStaysInRange;
     procedure StreamingTheUserLfmVerbatim;
     procedure ColumnsAddedByMistakeAreDropped;
+    procedure TheSequenceColumnNumbersTheRecipes;
     procedure AnEmptyGridKeepsOneUsableParameterColumn;
     procedure StreamingAStaleSingleColumnEmptyGridHeals;
   end;
@@ -115,6 +116,13 @@ begin
   FGrid.RecipeFile := FLibrary;
   FGrid.NameColumnTitle := 'Recipe';
   FGrid.OnError := @GridError;
+  //os casos abaixo falam de colunas por indice; sem a coluna de sequencia o
+  //nome fica na coluna 0 e os parametros em 1..n, como antes. A sequencia
+  //tem casos proprios.
+  //the cases below talk about columns by index; without the sequence column
+  //the name sits at column 0 and the parameters at 1..n, as before. The
+  //sequence column has its own cases.
+  FGrid.ShowRowNumbers := False;
 
   f := FGrid.Fields.Add;
   f.Name := 'Temperature';
@@ -446,11 +454,15 @@ var
         Grid := THMIRecipeGrid(Reader.ReadRootComponent(nil));
         Form := TForm.CreateNew(nil);
         try
-          AssertEquals(aLabel + ': quatro campos + coluna do nome', 5,
+          //com a coluna de sequencia por padrao: 1 + nome + quatro campos.
+          //with the sequence column on by default: 1 + name + four fields.
+          AssertEquals(aLabel + ': sequencia + nome + quatro campos', 6,
                        Grid.ColCount);
           AssertEquals(aLabel + ': cabecalho da ultima coluna', 'F4',
-                       Grid.Cells[4, 0]);
+                       Grid.Cells[5, 0]);
           AssertEquals(aLabel + ': titulo da coluna do nome', 'Recipe',
+                       Grid.Cells[1, 0]);
+          AssertEquals(aLabel + ': titulo da sequencia', '#',
                        Grid.Cells[0, 0]);
 
           //forca o caminho completo do formulario: janela real, carregada e
@@ -461,7 +473,7 @@ var
           Form.Show;
           Application.ProcessMessages;
           AssertEquals(aLabel + ': depois de pintar, ColCount continua certo',
-                       5, Grid.ColCount);
+                       6, Grid.ColCount);
         finally
           Form.Free;
           Grid.Free;
@@ -567,6 +579,45 @@ const
       '  end' + LineEnding +
       'end' + LineEnding;
 
+procedure TTestHMIRecipe.TheSequenceColumnNumbersTheRecipes;
+begin
+  //a coluna de sequencia vem antes do nome, com 1 na primeira receita e
+  //acompanhando a ordem da biblioteca (inclusive depois de apagar).
+  //
+  //the sequence column comes before the name, with 1 on the first recipe and
+  //following the order of the library (including after a deletion).
+  FGrid.ShowRowNumbers := True;
+  FGrid.AddRecipe('A');
+  FGrid.AddRecipe('B');
+  FGrid.AddRecipe('C');
+
+  AssertEquals('sequencia + nome + dois parametros', 4, FGrid.ColCount);
+  AssertEquals('titulo da sequencia', '#', FGrid.Cells[0, 0]);
+  AssertEquals('nome na coluna 1', 'Recipe', FGrid.Cells[1, 0]);
+  AssertEquals('primeiro parametro na coluna 2', 'Temperature',
+               FGrid.Cells[2, 0]);
+  AssertEquals('primeira linha', '1', FGrid.Cells[0, 1]);
+  AssertEquals('terceira linha', '3', FGrid.Cells[0, 3]);
+
+  //apagar a primeira receita renumera / deleting the first one renumbers
+  FGrid.DeleteRecipe(0);
+  AssertEquals('sobraram duas', 2, FGrid.RecipeCount);
+  AssertEquals('renumerou a primeira', '1', FGrid.Cells[0, 1]);
+  AssertEquals('e a segunda', '2', FGrid.Cells[0, 2]);
+  AssertEquals('o nome acompanhou', 'B', FGrid.Cells[1, 1]);
+
+  //a coluna e' so' de leitura / the column is read-only
+  FGrid.TypeInto(0, 1, '99');
+  AssertEquals('nao aceita digitacao', '1', FGrid.Cells[0, 1]);
+  AssertEquals('e nao estraga o nome', 'B', FGrid.Cells[1, 1]);
+
+  //sem a coluna o nome volta para a coluna 0
+  //without the column the name goes back to column 0
+  FGrid.ShowRowNumbers := False;
+  AssertEquals('uma coluna a menos', 3, FGrid.ColCount);
+  AssertEquals('nome na coluna 0', 'B', FGrid.Cells[0, 1]);
+end;
+
 procedure TTestHMIRecipe.ColumnsAddedByMistakeAreDropped;
 var
   lfm: TStringStream;
@@ -633,8 +684,8 @@ begin
       Grid := THMIRecipeGrid(Reader.ReadRootComponent(nil));
       try
         AssertEquals('o .lfm com Columns carregou', 0, Grid.Columns.Count);
-        AssertEquals('tres campos + nome', 4, Grid.ColCount);
-        AssertEquals('ultimo cabecalho', 'C', Grid.Cells[3, 0]);
+        AssertEquals('sequencia + nome + tres campos', 5, Grid.ColCount);
+        AssertEquals('ultimo cabecalho', 'C', Grid.Cells[4, 0]);
       finally
         Grid.Free;
       end;
@@ -680,11 +731,12 @@ begin
         Form := TForm(Reader.ReadRootComponent(nil));
         Grid := TReplayForm1(Form).HMIRecipeGrid1;
         try
-          AssertEquals('quatro campos + coluna do nome', 5, Grid.ColCount);
+          AssertEquals('sequencia + quatro campos + coluna do nome', 6,
+                       Grid.ColCount);
           AssertEquals('cabecalho da ultima coluna', 'Field 3',
-                       Grid.Cells[4, 0]);
+                       Grid.Cells[5, 0]);
           AssertEquals('titulo da coluna do nome', 'Recipe',
-                       Grid.Cells[0, 0]);
+                       Grid.Cells[1, 0]);
           AssertEquals('quatro campos na colecao', 4, Grid.Fields.Count);
         finally
           Form.Free;
@@ -713,9 +765,10 @@ begin
   //plus one empty parameter column.
   Grid := THMIRecipeGrid.Create(nil);
   try
-    AssertEquals('nome + uma coluna de parametro vazia', 2, Grid.ColCount);
-    AssertEquals('a coluna extra esta vazia', '', Grid.Cells[1, 0]);
-    AssertEquals('a linha de receita vazia esta vazia', '', Grid.Cells[1, 1]);
+    AssertEquals('sequencia + nome + uma coluna de parametro vazia', 3,
+                 Grid.ColCount);
+    AssertEquals('a coluna extra esta vazia', '', Grid.Cells[2, 0]);
+    AssertEquals('a linha de receita vazia esta vazia', '', Grid.Cells[2, 1]);
   finally
     Grid.Free;
   end;
@@ -756,8 +809,9 @@ begin
     try
       Grid := THMIRecipeGrid(Reader.ReadRootComponent(nil));
       try
-        AssertEquals('nome + uma coluna de parametro vazia', 2, Grid.ColCount);
-        AssertEquals('a coluna extra esta vazia', '', Grid.Cells[1, 0]);
+        AssertEquals('sequencia + nome + uma coluna de parametro vazia', 3,
+                     Grid.ColCount);
+        AssertEquals('a coluna extra esta vazia', '', Grid.Cells[2, 0]);
       finally
         Grid.Free;
       end;

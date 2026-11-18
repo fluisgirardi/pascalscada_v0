@@ -167,6 +167,9 @@ begin
   FGrid.AutoLoad := False;
   FGrid.RecipeFile := FLibrary;
   FGrid.OnError := @GridError;
+  //sem a coluna de sequencia: nome na coluna 0, parametros em 1..n.
+  //without the sequence column: name at column 0, parameters at 1..n.
+  FGrid.ShowRowNumbers := False;
 
   f := FGrid.Fields.Add;
   f.Name := 'Temperature';

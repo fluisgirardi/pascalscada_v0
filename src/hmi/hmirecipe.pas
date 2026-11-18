@@ -202,6 +202,9 @@ type
     FRecipeFile: string;
     FAutoLoad: Boolean;
     FNameColumnTitle: string;
+    FShowRowNumbers: Boolean;
+    FRowNumberTitle: string;
+    FRowNumberWidth: Integer;
     FUpdating: Boolean;
     FLastError: string;
     FOnError: TRecipeErrorEvent;
@@ -212,6 +215,9 @@ type
     procedure SetFields(const v: TRecipeFields);
     procedure SetRecipeFile(const v: string);
     procedure SetNameColumnTitle(const v: string);
+    procedure SetShowRowNumbers(const v: Boolean);
+    procedure SetRowNumberTitle(const v: string);
+    procedure SetRowNumberWidth(const v: Integer);
     procedure RecipeChanged;
 
     function  GetRecipe(aIndex: Integer): TRecipe;
@@ -225,9 +231,15 @@ type
     function  FieldCaption(aIndex: Integer): string;
     function  FieldKey(aIndex: Integer): string;
     function  FieldIndexByKey(const aKey: string): Integer;
+    //: coluna do nome (0 ou 1 quando ha a coluna de sequencia)
+    //: the name column (0, or 1 when the sequence column is shown)
+    function  NameCol: Integer;
+    //: coluna do parametro aIndex / the column of parameter number aIndex
+    function  FieldCol(aIndex: Integer): Integer;
   protected
     procedure SetEditText(ACol, ARow: Longint; const Value: string); override;
     procedure DrawCell(ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState); override;
+    function  EditingAllowed(ACol: Integer = -1): Boolean; override;
     procedure ReadState(Reader: TReader); override;
     procedure Loaded; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
@@ -356,6 +368,24 @@ type
 
     //: titulo da coluna do nome / title of the name column
     property NameColumnTitle: string read FNameColumnTitle write SetNameColumnTitle;
+
+    {$IFDEF PORTUGUES}
+    //: Mostra a coluna de sequencia (1, 2, 3...) antes do nome da receita.
+    //: A coluna e' so' de leitura e acompanha a ordem da biblioteca.
+    {$ELSE}
+    //: Shows the sequence column (1, 2, 3...) before the recipe name. The
+    //: column is read-only and follows the order of the library.
+    {$ENDIF}
+    property ShowRowNumbers: Boolean read FShowRowNumbers
+                                   write SetShowRowNumbers default True;
+
+    //: titulo da coluna de sequencia / title of the sequence column
+    property RowNumberTitle: string read FRowNumberTitle
+                                    write SetRowNumberTitle;
+
+    //: largura da coluna de sequencia / width of the sequence column
+    property RowNumberWidth: Integer read FRowNumberWidth
+                                     write SetRowNumberWidth default 40;
 
     property OnError: TRecipeErrorEvent read FOnError write FOnError;
     property OnDownload: TRecipeNotifyEvent read FOnDownload write FOnDownload;
@@ -599,15 +629,19 @@ begin
   FRecipes := TList.Create;
   FAutoLoad := True;
   FNameColumnTitle := 'Recipe';
+  FShowRowNumbers := True;
+  FRowNumberTitle := '#';
+  FRowNumberWidth := 40;
   FixedCols := 0;
   FixedRows := 1;
   RowCount := 2;
-  ColCount := 2;
   DefaultRowHeight := 22;
   DefaultColWidth := 100;
-  ColWidths[0] := 150;
   Options := Options + [goEditing, goColSizing, goTabs];
   RefreshCells;
+  ColWidths[0] := FRowNumberWidth;
+  if ColCount > 1 then
+    ColWidths[1] := 150;
 end;
 
 destructor THMIRecipeGrid.Destroy;
@@ -638,6 +672,37 @@ begin
   if FNameColumnTitle = v then exit;
   FNameColumnTitle := v;
   RefreshCells;
+end;
+
+procedure THMIRecipeGrid.SetShowRowNumbers(const v: Boolean);
+begin
+  if FShowRowNumbers = v then exit;
+  FShowRowNumbers := v;
+  RefreshCells;
+  //larguras coerentes com o novo layout: sequencia estreita, nome largo.
+  //widths matching the new layout: narrow sequence, wide name.
+  if FShowRowNumbers then begin
+    ColWidths[0] := FRowNumberWidth;
+    if ColCount > 1 then
+      ColWidths[1] := 150;
+  end else
+    ColWidths[0] := 150;
+end;
+
+procedure THMIRecipeGrid.SetRowNumberTitle(const v: string);
+begin
+  if FRowNumberTitle = v then exit;
+  FRowNumberTitle := v;
+  RefreshCells;
+end;
+
+procedure THMIRecipeGrid.SetRowNumberWidth(const v: Integer);
+begin
+  if v < 1 then exit;
+  if FRowNumberWidth = v then exit;
+  FRowNumberWidth := v;
+  if FShowRowNumbers and (ColCount > 0) then
+    ColWidths[0] := FRowNumberWidth;
 end;
 
 procedure THMIRecipeGrid.RecipeChanged;
@@ -773,24 +838,41 @@ begin
   end;
 end;
 
+function THMIRecipeGrid.NameCol: Integer;
+begin
+  if FShowRowNumbers then
+    Result := 1
+  else
+    Result := 0;
+end;
+
+function THMIRecipeGrid.FieldCol(aIndex: Integer): Integer;
+begin
+  Result := NameCol + 1 + aIndex;
+end;
+
 procedure THMIRecipeGrid.FillRecipeCells(aRow: Integer; aRecipe: TRecipe);
 var
   i: Integer;
+  first: Integer;
 begin
   if aRecipe = nil then exit;
-  Cells[0, aRow] := aRecipe.Name;
+  if FShowRowNumbers then
+    Cells[0, aRow] := IntToStr(aRow);
+  first := NameCol;
+  Cells[first, aRow] := aRecipe.Name;
   for i := 0 to FFields.Count-1 do begin
     if i < Length(aRecipe.Values) then
-      Cells[i+1, aRow] := ValueToText(aRecipe.Values[i], FFields[i].Decimals)
+      Cells[first+1+i, aRow] := ValueToText(aRecipe.Values[i], FFields[i].Decimals)
     else
-      Cells[i+1, aRow] := ValueToText(FFields[i].DefaultValue, FFields[i].Decimals);
+      Cells[first+1+i, aRow] := ValueToText(FFields[i].DefaultValue, FFields[i].Decimals);
   end;
 end;
 
 procedure THMIRecipeGrid.FillCells;
 var
   i: Integer;
-  TargetCols: Integer;
+  first, TargetCols: Integer;
 begin
   if csDestroying in ComponentState then exit;
   FUpdating := True;
@@ -817,11 +899,12 @@ begin
     //minimum of two columns (the name + one empty parameter column) and two
     //rows (the header + one recipe row): a single column grid makes any
     //Cells[1,x] read - ours, the LCL's or the user's - raise EGridException
-    //"Index Out of range Cell[Col=1 Row=0]".
-    if FFields.Count + 1 < 2 then
-      TargetCols := 2
-    else
-      TargetCols := FFields.Count + 1;
+    //"Index Out of range Cell[Col=1 Row=0]". With the sequence column the
+    //minimum grows by one column.
+    first := NameCol;
+    TargetCols := first + FFields.Count + 1;
+    if TargetCols < first + 2 then
+      TargetCols := first + 2;
     if ColCount <> TargetCols then
       ColCount := TargetCols;
     if RowCount <> FRecipes.Count + 1 then
@@ -829,20 +912,20 @@ begin
     if RowCount < 2 then
       RowCount := 2;
 
-    Cells[0, 0] := FNameColumnTitle;
+    if FShowRowNumbers then
+      Cells[0, 0] := FRowNumberTitle;
+    Cells[first, 0] := FNameColumnTitle;
     for i := 0 to FFields.Count-1 do
-      Cells[i+1, 0] := FieldCaption(i);
+      Cells[first+1+i, 0] := FieldCaption(i);
 
     for i := 0 to FRecipes.Count-1 do
       FillRecipeCells(i+1, TRecipe(FRecipes[i]));
 
     //linha vazia sobrando quando nao ha receita nenhuma.
     //empty row left over when there is no recipe at all.
-    if FRecipes.Count = 0 then begin
-      Cells[0, 1] := '';
-      for i := 0 to ColCount-2 do
-        Cells[i+1, 1] := '';
-    end;
+    if FRecipes.Count = 0 then
+      for i := 0 to ColCount-1 do
+        Cells[i, 1] := '';
   finally
     FUpdating := False;
   end;
@@ -872,6 +955,7 @@ var
   recipe: TRecipe;
   v: Double;
   newName: string;
+  first: Integer;
 begin
   if FUpdating then exit;
   if (csDesigning in ComponentState) or (csLoading in ComponentState) then begin
@@ -884,8 +968,17 @@ begin
   if (ARow < 1) or (ARow > FRecipes.Count) then exit;
 
   recipe := TRecipe(FRecipes[ARow-1]);
+  first := NameCol;
 
-  if ACol = 0 then begin
+  //a coluna de sequencia e' so' de leitura: qualquer digitacao volta ao
+  //numero da linha.
+  //the sequence column is read-only: any typing goes back to the row number.
+  if FShowRowNumbers and (ACol = 0) then begin
+    FillRecipeCells(ARow, recipe);
+    exit;
+  end;
+
+  if ACol = first then begin
     newName := Trim(Value);
     if newName = '' then begin
       DoError('The recipe name cannot be empty.');
@@ -902,16 +995,16 @@ begin
       exit;
     end;
     recipe.Name := newName;
-    Cells[0, ARow] := newName;
+    Cells[first, ARow] := newName;
     RecipeChanged;
     exit;
   end;
 
-  if (ACol < 1) or (ACol > FFields.Count) then exit;
-  field := FFields[ACol-1];
+  if (ACol < first+1) or (ACol > first + FFields.Count) then exit;
+  field := FFields[ACol-first-1];
 
   if not TextToValue(Value, v) then begin
-    DoError('"' + Value + '" is not a valid number for ' + FieldCaption(ACol-1) + '.');
+    DoError('"' + Value + '" is not a valid number for ' + FieldCaption(ACol-first-1) + '.');
     FillRecipeCells(ARow, recipe);
     exit;
   end;
@@ -919,21 +1012,41 @@ begin
   if field.CheckRange then begin
     if (v < field.MinValue) or (v > field.MaxValue) then begin
       DoError(Format('%s: %s is out of the range %s .. %s.',
-        [FieldCaption(ACol-1), ValueToText(v, field.Decimals),
+        [FieldCaption(ACol-first-1), ValueToText(v, field.Decimals),
          ValueToText(field.MinValue, field.Decimals),
          ValueToText(field.MaxValue, field.Decimals)]));
       v := EnsureRange(v, field.MinValue, field.MaxValue);
     end;
   end;
 
-  if ACol-1 < Length(recipe.Values) then
-    recipe.Values[ACol-1] := v
+  if ACol-first-1 < Length(recipe.Values) then
+    recipe.Values[ACol-first-1] := v
   else begin
     recipe.SetFieldCount(FFields.Count);
-    recipe.Values[ACol-1] := v;
+    recipe.Values[ACol-first-1] := v;
   end;
   Cells[ACol, ARow] := ValueToText(v, field.Decimals);
   RecipeChanged;
+end;
+
+function THMIRecipeGrid.EditingAllowed(ACol: Integer): Boolean;
+var
+  targetCol: Integer;
+begin
+  Result := inherited EditingAllowed(ACol);
+  if not Result then exit;
+  //cabecalho nunca edita; a coluna de sequencia tambem nao.
+  //the header never edits; neither does the sequence column.
+  if ACol < 0 then
+    targetCol := Col
+  else
+    targetCol := ACol;
+  if Row < 1 then begin
+    Result := False;
+    exit;
+  end;
+  if FShowRowNumbers and (targetCol = 0) then
+    Result := False;
 end;
 
 procedure THMIRecipeGrid.DrawCell(ACol, ARow: Integer; ARect: TRect;
@@ -946,7 +1059,9 @@ begin
   oldColor := Canvas.Brush.Color;
   if ARow = 0 then
     Canvas.Font.Style := Canvas.Font.Style + [fsBold]
-  else if ACol = 0 then
+  else if ACol <= NameCol then
+    //sequencia e nome: fundo cinza, como coluna fixa de leitura.
+    //sequence and name: grey background, as a read-only fixed column.
     Canvas.Brush.Color := clBtnFace;
   inherited DrawCell(ACol, ARow, ARect, AState);
   Canvas.Font.Style := oldStyle;
