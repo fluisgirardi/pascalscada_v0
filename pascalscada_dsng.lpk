@@ -3,6 +3,7 @@
   <Package Version="5">
     <Name Value="pascalscada_dsng"/>
     <Type Value="RunAndDesignTime"/>
+    <Author Value="Fabio Luis Girardi &lt;fabio@pascalscada.com>"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
@@ -20,8 +21,10 @@
         </Debugging>
       </Linking>
     </CompilerOptions>
-    <Version Minor="7" Release="7"/>
-    <Files Count="19">
+    <Description Value="Package used to register property editors and others tool on Lazarus IDE, to avoid GUI linking."/>
+    <License Value="LGPL v2.1 with linking exception"/>
+    <Version Minor="8" Release="1"/>
+    <Files Count="22">
       <Item1>
         <Filename Value="src/scada_dsng/bitmappertagassistant.pas"/>
         <UnitName Value="bitmappertagassistant"/>
@@ -100,6 +103,18 @@
         <Filename Value="src/scada_dsng/s7pluscertpropedit.pas"/>
         <UnitName Value="s7pluscertpropedit"/>
       </Item19>
+      <Item20>
+        <Filename Value="src/scada_dsng/us7plusbasketbuilder.pas"/>
+        <UnitName Value="us7plusbasketbuilder"/>
+      </Item20>
+      <Item21>
+        <Filename Value="src\scada_dsng\opcuatagassistant.pas"/>
+        <UnitName Value="opcuatagassistant"/>
+      </Item21>
+      <Item22>
+        <Filename Value="src\scada_dsng\opcuaserveredt.pas"/>
+        <UnitName Value="opcuaserveredt"/>
+      </Item22>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
@@ -108,7 +123,7 @@
       </Item1>
       <Item2>
         <PackageName Value="pascalscada"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Release="1" Valid="True"/>
         <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
       </Item2>
     </RequiredPkgs>

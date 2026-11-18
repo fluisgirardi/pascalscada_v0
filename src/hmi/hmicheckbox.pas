@@ -677,7 +677,7 @@ procedure THMICheckBox.SetWriteTrue(v:Boolean);
 begin
   if (inherited GetChecked) and v then begin
     if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-      (FTag as ITagNumeric).Value:=FValueTrue;
+      HMIWriteTagNumber(Self, FTag, FValueTrue);
   end;
   FWriteTrue := v
 end;
@@ -686,7 +686,7 @@ procedure THMICheckBox.SetWriteFalse(v:Boolean);
 begin
   if (not (inherited GetChecked)) and v then begin
     if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-      (FTag as ITagNumeric).Value:=FValueFalse;
+      HMIWriteTagNumber(Self, FTag, FValueFalse);
   end;
   FWriteFalse := v
 end;
@@ -703,7 +703,7 @@ begin
 
   if (v<>FValueTrue) and ((FTag<>nil) and Supports(FTag, ITagNumeric))then begin
     if GetChecked and FWriteTrue then begin
-      (FTag as ITagNumeric).Value:=v;
+      HMIWriteTagNumber(Self, FTag, v);
     end;
   end;
   FValueTrue := v;
@@ -721,7 +721,7 @@ begin
 
   if (v<>FValueFalse) and ((FTag<>nil) and Supports(FTag, ITagNumeric)) then begin
     if (not GetChecked) and FWriteFalse then begin
-      (FTag as ITagNumeric).Value:=v;
+      HMIWriteTagNumber(Self, FTag, v);
     end;
   end;
 
@@ -770,12 +770,12 @@ begin
   if ((FTag<>nil) and Supports(FTag, ITagNumeric)) then
     if State=cbChecked then begin
       if FWriteTrue and SendIt(FValueTrue) then begin
-        (FTag as ITagNumeric).Value := FValueTrue;
+        HMIWriteTagNumber(Self, FTag, FValueTrue);
         DoAfterSendValue(FValueTrue);
       end;
     end else begin
       if FWriteFalse and SendIt(FValueFalse) then begin
-        (FTag as ITagNumeric).Value := FValueFalse;
+        HMIWriteTagNumber(Self, FTag, FValueFalse);
         DoAfterSendValue(FValueFalse);
       end;
     end;

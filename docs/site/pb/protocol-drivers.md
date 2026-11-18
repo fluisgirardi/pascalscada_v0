@@ -147,6 +147,19 @@ TPLCString<img alt="plcstring" src="http://www.pascalscada.com/wp-content/upload
 <td>Endereça pelo nome do tag no programa do CLP, não por offset de memória. Página dedicada em preparação.<br/><strong>Requer OpenSSL:</strong> a conexão é TLS 1.3, então o driver carrega o OpenSSL 1.1.1 ou 3.x em tempo de execução. Linux e macOS normalmente já o têm. <strong>No Windows</strong> as DLLs não fazem parte do sistema: baixe o OpenSSL 3.x em <a href="https://slproweb.com/products/Win32OpenSSL.html">slproweb.com/products/Win32OpenSSL.html</a> (outras compilações estão listadas em <a href="https://wiki.openssl.org/index.php/Binaries">wiki.openssl.org/index.php/Binaries</a>) e copie <code>libssl-3-x64.dll</code> e <code>libcrypto-3-x64.dll</code> (programas de 32 bits: <code>libssl-3.dll</code> e <code>libcrypto-3.dll</code>) para a pasta do seu executável &#8212; e do <code>lazarus.exe</code> para usar o Tag Builder na IDE. A arquitetura das DLLs deve ser a mesma do programa. Sem elas a conexão falha.</td>
 </tr>
 <tr>
+<td><strong>TOPCUADriver</strong></td>
+<td>OPC UA (cliente)</td>
+<td>1 componente de protocolo para 1 servidor</td>
+<td>Qualquer servidor OPC UA: S7-1200/1500 e PLCSim, outros CLPs com servidor OPC UA, gateways, sistemas SCADA</td>
+<td>nenhuma (a biblioteca open62541 abre a conexão com o <code>EndpointUrl</code>)</td>
+<td>TPLCTagNumber<img alt="plctagnumber" src="http://www.pascalscada.com/wp-content/uploads/2016/08/plctagnumber.png"/><br/>
+TPLCBlock<img alt="plcblock" src="http://www.pascalscada.com/wp-content/uploads/2016/08/plcblock.png"/><br/>
+TPLCString<img alt="plcstring" src="http://www.pascalscada.com/wp-content/uploads/2016/08/plcstring.png"/></td>
+<td>
+<p>LongAddress — o NodeId da variável (ex.: <code>ns=3;s="DB1"."Speed"</code>, <code>nsu=urn:meu:servidor;i=1001</code>)</p></td>
+<td>Subscrição ou leitura periódica, Sign/SignAndEncrypt, usuário/senha, Tag Builder. <strong>Requer a biblioteca open62541 1.5</strong> (<code>libopen62541.so</code> / <code>libopen62541.dll</code>). Veja <a href="/pb/opc-ua/">Cliente OPC UA</a>.</td>
+</tr>
+<tr>
 <td><strong>TLGXDriver</strong></td>
 <td>EtherNet/IP (CIP), Rockwell/Allen-Bradley</td>
 <td>1 componente de protocolo para 1 CLP</td>

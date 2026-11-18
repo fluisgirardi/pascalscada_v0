@@ -13,6 +13,8 @@ uses
   testsupport.fakedriver,
   testsupport.fakeserver,
   testsupport.fakeserial,
+  testsupport.opcuaserver,
+  testsupport.logcollector,
   //casos de teste / test cases
   ut.crc16utils,
   ut.hsutils,
@@ -25,6 +27,9 @@ uses
   ut.s7plusconnection,
   ut.s7plusonchange,
   ut.s7plustagplan,
+  ut.s7plusbasket,
+  ut.s7plusblockhash,
+  ut.s7plusalarms, ut.s7plusalarmtracker,
   ut.s7pluscertificate,
   ut.s7plusclientcert,
   ut.s7plustypeinfo,
@@ -34,7 +39,6 @@ uses
   ut.messagespool,
   ut.plcmemorymanager2,
   ut.crossevent,
-  ut.pscadalog,
   ut.commtypes,
   ut.lgxdriver,
   ut.tcp_udpport,
@@ -61,7 +65,12 @@ uses
   ut.isotcp,
   ut.scanthread,
   ut.socketserver,
-  ut.mtpcpu;
+  ut.mtpcpu,
+  ut.opcuadriver,
+  ut.pscadalog,
+  ut.commportlog,
+  ut.scanlog,
+  ut.opcuaserver;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)

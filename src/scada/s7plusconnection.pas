@@ -33,14 +33,19 @@ unit S7PlusConnection;
 interface
 
 uses
-  Classes, SysUtils, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
-  S7PlusTypeInfo, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta,
-  S7PlusHarpoLegitimate, S7PlusCertificate;
+  Classes, SysUtils, Types, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
+  S7PlusTypeInfo, S7PlusAlarms, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta,
+  S7PlusHarpoLegitimate, S7PlusCertificate, S7PlusReturnValue;
 
 const
   //: Default of TS7PlusConnection.MaxItemsPerRequest: the largest number of items a PLC took in
   //: one Get/SetMultiVariables request when measured (101 was refused with an error code).
   S7PlusDefaultMaxItemsPerRequest = 100;
+
+  //: How often a renewing session (see S7PlusFamilyRenewsSessionKey) would refresh its
+  //: SessionKey, in ms (TIA uses ~25 min). A session that never renews (S7-1500/PLCSIM)
+  //: ends on its own ~1h after connect, so a long-lived client must reconnect instead.
+  S7PlusSessionKeyRenewIntervalMs = 25*60*1000;
 
 type
   ES7PlusError = class(Exception);
@@ -158,6 +163,11 @@ type
     FTpduCode:Byte;      //TPDU size asked for at the COTP connect ($0A = 1024 bytes)
     FTpduBytes:Integer;  //the TPDU size in use (what the PLC confirmed)
     FLastReturnValue:QWord;
+    //: Function code (opcode/func) of the last response header SendRequest received.
+    //: A generic-error reply carries S7PlusFunc_Error ($04B1) here even though its first
+    //: payload value has no sign bit and would otherwise read as a success returnValue
+    //: (ported from gijzelaerr/s7commplus _last_response_function, #158).
+    FLastResponseFunction:Word;
     FOnDebug:TS7PlusDebugEvent;
 
     //-- V2+ TLS/IntegrityId ---------------------------------------------------
@@ -179,6 +189,12 @@ type
     //: Header fields of the last notification ParseNotification understood.
     FLastNotifSubscriptionId:Cardinal;
     FLastNotifSequence:Cardinal;
+    //: Alarm subscription (AlarmSubscriptionCreate): its object id (0 = none), the languages of the
+    //: texts, the credit limit now in force, and the alarms received and not yet taken.
+    FAlarmSubObjectId:Cardinal;
+    FAlarmNextCredit:SmallInt;
+    FAlarmLanguages:TCardinalDynArray;
+    FAlarmQueue:TS7PlusAlarmArray;
 
     //-- Subscriptions (on-change notifications, V2+) --------------------------
     //: ObjectId the PLC assigned to the nested ClassSubscriptions container created
@@ -260,6 +276,13 @@ type
     //: result to address 1846. Required before the PLC allows any data operation on a
     //: session that went through the SecurityKey blob exchange.
     function PostAuthLegitimation(const Password:AnsiString):Boolean;
+    //: Refreshes the in-session SessionKey by re-running the legitimation (challenge from
+    //: 303, solve, write). Only the S7-1200 key family renews in-session, so this is a
+    //: no-op (returns false) for S7-1500/PLCSIM, which must RECONNECT instead when their
+    //: ~1h session lapses. It is NOT auto-scheduled: on the cert-authenticated TIA sessions
+    //: this driver targets, re-legitimation poisons the session (see Connect's note), so
+    //: renewal is left to an explicit caller. (gijzelaerr/s7commplus #171/#186/#158.)
+    function RenewSessionKey(const Password:AnsiString):Boolean;
     //: Generic single-address V1 GetVarSubstreamed read, reused by the TIA-observed
     //: post-legitimation sequence below (each call in that sequence targets a different
     //: InObjectId/address/seq_field, unlike PostAuthLegitimation's own hardcoded one).
@@ -310,6 +333,9 @@ type
     function FrameApplicationBody(const Frame:TBytes; out Version:Byte):TBytes;
     procedure QueueNotification(const Body:TBytes);
     function PopNotification(out Body:TBytes):Boolean;
+    //: Takes a notification frame as an alarm notification of the alarm subscription: queues the alarms
+    //: and renews the credit. False when it is not one.
+    function TakeAlarmNotification(const Body:TBytes):Boolean;
 
     //-- payload builders/parsers ----------------------------------------------
     //: Picks the V1 fixed-width ObjectQualifier (KeyQualifier=1, matching TIA's own V1
@@ -475,6 +501,12 @@ type
     //: Sends an EXPLORE request for ExploreId (a RID) and reassembles the (possibly
     //: multi-fragment) response payload.
     function Explore(ExploreId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
+    //: Explore with an ExploreRequestId (the alarm subsystem's EXPLORE names what it wants in it).
+    function ExploreRequest(ExploreId, ExploreRequestId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
+    //: Reads the alarms that are active now (EXPLORE of the alarm subsystem, no subscription): the
+    //: DAI objects the PLC keeps, with the texts of the languages asked for (Languages empty = all of
+    //: them; e.g. S7PlusLang_Portuguese_BR). False when the request failed or the reply is not understood.
+    function ReadActiveAlarms(const Languages:array of Cardinal; out Alarms:TS7PlusAlarmArray):Boolean;
     //: Browses a DB's variables via EXPLORE + the compiled type-info tree, returning a
     //: flat list of (name, LID path, softdatatype) - the only reliable way to know a DB
     //: variable's real address on S7CommPlus. The type-info container is cached after the
@@ -497,6 +529,14 @@ type
     //: The type-info RID of the DB the last successful BrowseDB read.
     property LastBrowseTiRid:Cardinal read FLastBrowseTiRid;
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):Boolean;
+    //: The attributes AttrIds of one object of the PLC (an EXPLORE of RelationId, e.g. $8A0E0000+DB number
+    //: for a DB), decoded; see S7PlusParseObjectAttrs. Reads the object and everything below it.
+    function ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+      out Values:TS7PlusAttrValues):Boolean;
+    //: Every attribute an EXPLORE of RelationId returns when no attribute list is given (what the
+    //: PLC sends by default), with the ids. For diagnostics.
+    function ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+      out Values:TS7PlusAttrValues):Boolean;
     //: Performs PLC password authentication (legitimation), required by some PLCs before
     //: SetMultiVariables/DB writes are accepted even though reads are open (a protection
     //: level configured in TIA Portal). Must be called after Connect, with TLS active.
@@ -557,6 +597,23 @@ type
                               out Errors:TS7PlusNotificationErrorArray):Boolean;
     //: How many notifications are waiting in the queue (see PollNotification).
     function PendingNotificationCount:Integer;
+    //: Subscribes to the alarms (S7-1200/1500): the PLC then sends a notification for each alarm that
+    //: comes or goes, which PollNotification (and so WaitAlarms) collects. Languages are the languages of
+    //: the texts to keep (empty = all). SendTextsAndFilter asks the PLC to send the texts with the
+    //: notification; S7-1200 without TLS refuse it (the creation fails): use False there. CreditLimit as in
+    //: SubscriptionCreate (-1 = unlimited); it is renewed by WaitAlarms. Returns False when the PLC refuses.
+    function AlarmSubscriptionCreate(const Languages:array of Cardinal; SendTextsAndFilter:Boolean=true;
+                                     CreditLimit:SmallInt=10):Boolean;
+    //: Removes the alarm subscription (only that object; the data subscriptions are not touched).
+    function AlarmSubscriptionDelete:Boolean;
+    //: True while there is an alarm subscription in this session.
+    function AlarmSubscriptionActive:Boolean;
+    //: Waits up to WaitMs for the traffic of the alarm subscription and returns the alarms that came in
+    //: (the ones queued by an earlier PollNotification too); the credit is renewed here. False when the
+    //: connection broke. Alarms empty = none arrived.
+    function WaitAlarms(WaitMs:LongInt; out Alarms:TS7PlusAlarmArray):Boolean;
+    //: The alarms already received and not yet handed over, without waiting for anything.
+    procedure TakeQueuedAlarms(out Alarms:TS7PlusAlarmArray);
     //: ObjectId the PLC assigned to the most recent successful SubscriptionCreate.
     property LastSubscriptionObjectId:Cardinal read FSubscriptionObjectId;
     //: True when the session got the ClassSubscriptions container a subscription needs as
@@ -588,11 +645,19 @@ type
     //: connection can carry another one. Cleared by Connect.
     property StreamLost:Boolean read FStreamLost;
     property SessionId:Cardinal read FSessionId;
+    //: The SubscriptionContainer object id the PLC assigned at session setup (the live equivalent of the
+    //: ES-session container the download references); used to seed the block-download id remap.
+    property SubscriptionsContainerObjectId:Cardinal read FSubscriptionsContainerObjectId;
     property ProtocolVersion:Byte read FProtocolVersion;
     property SessionSetupOK:Boolean read FSessionSetupOK;
     //: Return value (VLQ64) parsed from the last GetMultiVariables/SetMultiVariables
     //: response; 0 means the PLC reported success on that request.
     property LastReturnValue:QWord read FLastReturnValue;
+    //: Function code of the last response header SendRequest read (see FLastResponseFunction).
+    property LastResponseFunction:Word read FLastResponseFunction;
+    //: True when the last response was the generic error frame (S7PlusFunc_Error): the PLC
+    //: refused the request outright, regardless of what its first payload value looks like.
+    function LastResponseWasError:Boolean;
     property OnDebug:TS7PlusDebugEvent read FOnDebug write FOnDebug;
     //: Whether to activate TLS (after InitSSL, before CreateObject). Most S7-1200/1500
     //: firmware from TIA Portal V15+ requires this for anything beyond the initial
@@ -638,7 +703,18 @@ type
 //: Formats bytes as a space-separated hex string, for debug traces.
 function S7PlusHexStr(const B:TBytes):String;
 
+//: Whether a PLC of this key family refreshes its SessionKey in-session (vs. ending the
+//: session, which forces a reconnect). Only the S7-1200 family renews; an S7-1500 without
+//: TLS refuses the key write and drops the link, and PLCSIM resets (gijzelaerr/s7commplus
+//: #186). See S7PlusSessionKeyRenewIntervalMs and TS7PlusConnection.RenewSessionKey.
+function S7PlusFamilyRenewsSessionKey(Family:TS7PlusHarpoKeyFamily):Boolean;
+
 implementation
+
+function S7PlusFamilyRenewsSessionKey(Family:TS7PlusHarpoKeyFamily):Boolean;
+begin
+  Result := Family=hkfS7_1200;
+end;
 
 function S7PlusHexStr(const B:TBytes):String;
 const
@@ -1959,6 +2035,25 @@ end;
 //: the one CreateObject carried), solves it via S7PlusHarpoLegitimate, writes the
 //: 248-byte solved blob to address 1846. Required before the PLC allows any data
 //: operation on a session that went through the SecurityKey blob exchange.
+function TS7PlusConnection.LastResponseWasError:Boolean;
+begin
+  Result := FLastResponseFunction=S7PlusFunc_Error;
+end;
+
+function TS7PlusConnection.RenewSessionKey(const Password:AnsiString):Boolean;
+begin
+  Result := false;
+  if not FConnected then exit;
+  //Gate strictly on the key family: only S7-1200 renews in-session. For S7-1500/PLCSIM
+  //this is a no-op - they must reconnect when the ~1h session lapses. (Not auto-called;
+  //see the declaration's note on cert sessions.)
+  if not S7PlusFamilyRenewsSessionKey(FHarpoAuthFamily) then begin
+    Debug(Format('RenewSessionKey: familia %d nao renova a SessionKey em sessao - ignorado (reconecte)',[Ord(FHarpoAuthFamily)]));
+    exit;
+  end;
+  Result := PostAuthLegitimation(Password);
+end;
+
 function TS7PlusConnection.PostAuthLegitimation(const Password:AnsiString):Boolean;
 var
   Payload, Resp, LegitChallenge, LegitBlob, Svs:TBytes;
@@ -2035,10 +2130,18 @@ begin
     exit;
   end;
 
+  //A generic-error reply (S7PlusFunc_Error) refuses the write even though its first
+  //payload value has no sign bit and would read as a success returnValue - so check the
+  //response function before trusting the value (gijzelaerr/s7commplus #158).
+  if LastResponseWasError then begin
+    Debug('PostAuthLegitimation: rejeitado - PLC respondeu com a funcao de erro generico ($04B1)');
+    exit;
+  end;
+
   if Length(Resp)>=1 then begin
     RetVal := DecodeUInt64VLQ(Resp, 0, c);
-    if (RetVal and QWord($8000000000000000))<>0 then begin
-      Debug(Format('PostAuthLegitimation: rejeitado pela PLC (returnValue=0x%.16x)',[RetVal]));
+    if S7PlusReturnValueFailed(RetVal) then begin
+      Debug('PostAuthLegitimation: rejeitado pela PLC ('+S7PlusDescribeReturnValue(RetVal)+')');
       exit;
     end;
   end;
@@ -2059,6 +2162,7 @@ begin
   FWithIntegrityId := false;
   FIntegrityIdRead := 0;
   FIntegrityIdWrite := 0;
+  FLastResponseFunction := 0;
 
   if not CotpConnect then exit;
   if not InitSSL then exit; //always unencrypted - triggers the PLC to prepare for TLS
@@ -2152,6 +2256,9 @@ begin
   FIntegrityIdWrite := 0;
   SetLength(FServerSessionVersion, 0);
   SetLength(FNotifQueue, 0);
+  FAlarmSubObjectId := 0;
+  SetLength(FAlarmLanguages, 0);
+  SetLength(FAlarmQueue, 0);
   ReleaseTLS;
 end;
 
@@ -2512,6 +2619,7 @@ begin
       Debug('SendRequest: resposta reassemblada menor que o cabecalho de 10 bytes');
       exit;
     end;
+    FLastResponseFunction := (Response[3] shl 8) or Response[4];
     RespPayload := BytesCopy(Response, 10, Length(Response)-10);
     Result := true;
     Debug(Format('SendRequest: respPayload reassemblado (%d bytes)',[Length(RespPayload)]));
@@ -2544,6 +2652,7 @@ begin
     exit;
   end;
 
+  FLastResponseFunction := (Response[3] shl 8) or Response[4];
   RespPayload := BytesCopy(Response, 10, Length(Response)-10);
 
   //SessionKey/HMAC (V3) responses prepend an IntegrityId VLQ before the actual
@@ -2552,8 +2661,17 @@ begin
   //[IntegrityId+ReturnValue] blob as if it were the ReturnValue alone - reliably
   //producing a sign-bit-set (looks like failure) value regardless of the real result.
   if (Length(FHarpoSessionKey)>0) and (Length(RespPayload)>1) then begin
-    DecodeUInt32VLQ(RespPayload, 0, c);
-    RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+    //A rejected legitimation can begin with a value too large for an IntegrityId (a
+    //64-bit ReturnValue), which DecodeUInt32VLQ now rejects as out of range. In that
+    //case leave the payload unstripped so the caller still sees the real ReturnValue
+    //(python-snap7/s7commplus _strip_response_integrity_id does the same, #155).
+    try
+      DecodeUInt32VLQ(RespPayload, 0, c);
+      RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+    except
+      on E:Exception do
+        Debug('SendRequest: IntegrityId prefix out of range, resposta deixada sem strip: '+E.Message);
+    end;
   end;
 
   Result := true;
@@ -2640,8 +2758,15 @@ begin
   if Length(Response)<10 then exit;
   RespPayload := BytesCopy(Response, 10, Length(Response)-10);
   if (Length(FHarpoSessionKey)>0) and (Length(RespPayload)>1) then begin
-    DecodeUInt32VLQ(RespPayload, 0, c);
-    RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+    //Leave the payload unstripped if the leading value is not a valid IntegrityId
+    //(see the matching note in SendRequest, #155).
+    try
+      DecodeUInt32VLQ(RespPayload, 0, c);
+      RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+    except
+      on E:Exception do
+        Debug('SendReplayRaw: IntegrityId prefix out of range, resposta deixada sem strip: '+E.Message);
+    end;
   end;
   Result := true;
   Debug('SendReplayRaw: respPayload='+S7PlusHexStr(RespPayload));
@@ -3381,6 +3506,11 @@ begin
     end;
 
     if (Length(Body)>0) and (Body[0]=S7PlusOpcode_Notification) then begin
+      //with an alarm subscription the notification may be an alarm one: keep its alarms apart
+      if (FAlarmSubObjectId<>0) and TakeAlarmNotification(Body) then begin
+        WaitMs := 0;
+        continue;
+      end;
       Got := ParseNotification(Body, CreditTick, Values, Errors);
       if not Got then
         Debug('PollNotification: notificacao nao interpretada: '+S7PlusHexStr(Body));
@@ -3694,57 +3824,107 @@ end;
 //: reported it in the errors section instead) just leaves that Results[i].Ok=false.
 function TS7PlusConnection.ParseMultiReadResponse(const Response:TBytes; ItemCount:Integer; out Results:TS7PlusMultiReadResultArray):Boolean;
 var
-  Offset, c, i:Integer;
+  Offset, c:Integer;
   RetVal:QWord;
-  ItemNr:Cardinal;
   ErrText:String;
+  AnyError, Parsed:Boolean;
+
+  procedure ResetResults;
+  var k:Integer;
+  begin
+    SetLength(Results, ItemCount);
+    for k:=0 to ItemCount-1 do begin
+      SetLength(Results[k].Data, 0);
+      Results[k].Ok := false;
+    end;
+  end;
+
+  //Fills Results from the value list, then lets a per-item error override it: the error
+  //wins even when a value is present, which is how a missing DB arrives (empty value +
+  //an error-list entry for the same item - #133). Raises on a malformed/out-of-sync
+  //list. HadError=true when at least one item was flagged failed by the error list.
+  //Mirrors python-snap7/s7commplus client._parse_read_items.
+  function ParseItems(StartOffset:Integer; out HadError:Boolean):Boolean;
+  var o, cc:Integer; Nr:Cardinal;
+  begin
+    HadError := false;
+    o := StartOffset;
+    //Values section.
+    while o<Length(Response) do begin
+      Nr := DecodeUInt32VLQ(Response, o, cc); o := o+cc;
+      if Nr=0 then break;
+      if (Nr>=1) and (Nr<=Cardinal(ItemCount)) then begin
+        Results[Nr-1].Data := DecodePValueToBytes(Response, o, cc);
+        Results[Nr-1].Ok := true;
+        o := o+cc;
+      end else begin
+        //Unexpected item index - still consume its PValue to keep the parse in sync.
+        DecodePValueToBytes(Response, o, cc);
+        o := o+cc;
+      end;
+    end;
+    //Errors section: a per-item error wins over any (usually empty) value.
+    while o<Length(Response) do begin
+      Nr := DecodeUInt32VLQ(Response, o, cc); o := o+cc;
+      if Nr=0 then break;
+      DecodeUInt64VLQ(Response, o, cc); o := o+cc; //per-item error value
+      if (Nr>=1) and (Nr<=Cardinal(ItemCount)) then begin
+        Results[Nr-1].Ok := false;
+        SetLength(Results[Nr-1].Data, 0);
+        HadError := true;
+      end;
+    end;
+    Result := true;
+  end;
+
 begin
   Result := false;
-  SetLength(Results, ItemCount);
-  for i:=0 to ItemCount-1 do begin
-    SetLength(Results[i].Data, 0);
-    Results[i].Ok := false;
-  end;
+  ResetResults;
 
   Offset := 0;
   RetVal := DecodeUInt64VLQ(Response, Offset, c);
   Offset := Offset+c;
   FLastReturnValue := RetVal;
-  if RetVal<>0 then begin
-    ErrText := ExtractErrorText(BytesCopy(Response, Offset, Length(Response)-Offset));
-    if ErrText<>'' then
-      Debug(Format('ParseMultiReadResponse: PLC retornou erro (returnValue=%d): %s',[RetVal,ErrText]))
-    else
-      Debug(Format('ParseMultiReadResponse: PLC retornou erro (returnValue=%d)',[RetVal]));
+
+  if RetVal=0 then begin
+    try
+      Result := ParseItems(Offset, AnyError);
+    except
+      on E:Exception do begin
+        Debug('ParseMultiReadResponse: resposta malformada: '+E.Message);
+        ResetResults;
+        Result := false;
+      end;
+    end;
     exit;
   end;
 
-  //Values section.
-  while Offset<Length(Response) do begin
-    ItemNr := DecodeUInt32VLQ(Response, Offset, c);
-    Offset := Offset+c;
-    if ItemNr=0 then break;
-    if (ItemNr>=1) and (ItemNr<=Cardinal(ItemCount)) then begin
-      Results[ItemNr-1].Data := DecodePValueToBytes(Response, Offset, c);
-      Results[ItemNr-1].Ok := true;
-      Offset := Offset+c;
-    end else begin
-      //Unexpected item index - still consume its PValue to keep the parse in sync.
-      DecodePValueToBytes(Response, Offset, c);
-      Offset := Offset+c;
-    end;
+  //A non-zero ReturnValue is still usable when it is a PARTIAL error: the item lists
+  //parse and at least one item is flagged failed (e.g. 0x20278000009A0013 =
+  //SERVICE_EXECUTED_WITH_PARTIAL_ERROR on an S7-1500 CPU 1512SP-1). Keep the good values
+  //and mark the failed items instead of refusing the whole batch (python-snap7 #145/#133).
+  //A genuine or unparseable error still refuses the request, as before.
+  Parsed := false;
+  AnyError := false;
+  try
+    Parsed := ParseItems(Offset, AnyError);
+  except
+    on E:Exception do
+      Parsed := false;
   end;
 
-  //Errors section (per-item failures within an otherwise-successful batch).
-  while Offset<Length(Response) do begin
-    ItemNr := DecodeUInt32VLQ(Response, Offset, c);
-    Offset := Offset+c;
-    if ItemNr=0 then break;
-    DecodeUInt64VLQ(Response, Offset, c); //error value - not surfaced per-item yet
-    Offset := Offset+c;
+  if Parsed and AnyError then begin
+    Debug('ParseMultiReadResponse: erro parcial ('+S7PlusDescribeReturnValue(RetVal)+'); itens falhos marcados, bons mantidos');
+    Result := true;
+  end else begin
+    ErrText := ExtractErrorText(BytesCopy(Response, Offset, Length(Response)-Offset));
+    if ErrText<>'' then
+      Debug('ParseMultiReadResponse: PLC retornou erro ('+S7PlusDescribeReturnValue(RetVal)+'): '+ErrText)
+    else
+      Debug('ParseMultiReadResponse: PLC retornou erro ('+S7PlusDescribeReturnValue(RetVal)+')');
+    ResetResults;
+    Result := false;
   end;
-
-  Result := true;
 end;
 
 class function TS7PlusConnection.ReadItemReplyBytes(const Item:TS7PlusMultiReadItem):Integer;
@@ -3992,12 +4172,17 @@ begin
 end;
 
 function TS7PlusConnection.Explore(ExploreId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
+begin
+  Result := ExploreRequest(ExploreId, 0, AttributeIds, RespPayload);
+end;
+
+function TS7PlusConnection.ExploreRequest(ExploreId, ExploreRequestId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
 var
   Payload:TBytes;
   i:Integer;
 begin
   Payload := EncodeUInt32(ExploreId); //ExploreId (fixed UInt32, not VLQ)
-  Payload := BytesConcat(Payload, EncodeUInt32VLQ(0)); //ExploreRequestId (0=none)
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(ExploreRequestId)); //ExploreRequestId (0=none)
   Payload := BytesConcat(Payload, BytesOf([1])); //ExploreChildsRecursive
   Payload := BytesConcat(Payload, BytesOf([1])); //unknown flag - protocol always sends 1
   Payload := BytesConcat(Payload, BytesOf([0])); //ExploreParents
@@ -4131,6 +4316,37 @@ begin
   SetLength(FTypeInfoObjects, 0);
 end;
 
+function TS7PlusConnection.ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+  out Values:TS7PlusAttrValues):Boolean;
+var
+  Resp:TBytes;
+begin
+  SetLength(Values, 0);
+  Result := Explore(RelationId, AttrIds, Resp);
+  if not Result then exit;
+  Result := S7PlusParseObjectAttrs(Resp, RelationId, AttrIds, Values);
+  if not Result then
+    Debug(Format('ReadObjectAttributes: $%.8x not found in the reply (%d bytes): %s',
+                 [RelationId, Length(Resp), Copy(S7PlusHexStr(Resp), 1, 160)]));
+end;
+
+function TS7PlusConnection.ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+  out Values:TS7PlusAttrValues):Boolean;
+var
+  Resp:TBytes;
+  NoAttrs:array of Cardinal;
+begin
+  SetLength(Ids, 0);
+  SetLength(Values, 0);
+  SetLength(NoAttrs, 0);
+  Result := Explore(RelationId, NoAttrs, Resp);
+  if not Result then exit;
+  Result := S7PlusParseObjectAllAttrs(Resp, RelationId, Ids, Values);
+  if not Result then
+    Debug(Format('ReadObjectAllAttributes: $%.8x not found in the reply (%d bytes): %s',
+                 [RelationId, Length(Resp), Copy(S7PlusHexStr(Resp), 1, 160)]));
+end;
+
 function TS7PlusConnection.ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):Boolean;
 var
   RespPayload:TBytes;
@@ -4146,6 +4362,149 @@ begin
   end;
   Blocks := S7PlusParseExploreDataBlocks(RespPayload);
   Debug(Format('ListDataBlocks: %d DBs encontradas',[Length(Blocks)]));
+end;
+
+function TS7PlusConnection.ReadActiveAlarms(const Languages:array of Cardinal; out Alarms:TS7PlusAlarmArray):Boolean;
+var
+  RespPayload:TBytes;
+  Attrs:TCardinalDynArray;
+begin
+  SetLength(Alarms, 0);
+  Attrs := S7PlusAlarmExploreAttributes;
+  Result := ExploreRequest(S7PlusIds_NativeTheAlarmSubsysRID, S7PlusIds_AlarmSubsystemItsUpdateRelevantDAI, Attrs, RespPayload);
+  if not Result then begin
+    Debug('ReadActiveAlarms: falha ao explorar o subsistema de alarmes');
+    exit;
+  end;
+  Result := S7PlusParseAlarmExplore(RespPayload, Languages, Alarms);
+  if Result then
+    Debug(Format('ReadActiveAlarms: %d alarmes ativos',[Length(Alarms)]))
+  else
+    Debug('ReadActiveAlarms: resposta do subsistema de alarmes invalida ou com erro');
+end;
+
+function TS7PlusConnection.TakeAlarmNotification(const Body:TBytes):Boolean;
+var
+  SubId:Cardinal;
+  Tick:Byte;
+  Alarms:TS7PlusAlarmArray;
+  n, i:Integer;
+begin
+  Result := S7PlusParseAlarmNotification(Body, FAlarmLanguages, SubId, Tick, Alarms);
+  if not Result then exit;
+  n := Length(FAlarmQueue);
+  if n+Length(Alarms)>1024 then begin
+    //nobody takes them: never grow without bound, drop the oldest
+    Debug('TakeAlarmNotification: fila de alarmes cheia, descartando os mais antigos');
+    for i:=Length(Alarms) to n-1 do
+      FAlarmQueue[i-Length(Alarms)] := FAlarmQueue[i];
+    n := n-Length(Alarms);
+    if n<0 then n := 0;
+  end;
+  SetLength(FAlarmQueue, n+Length(Alarms));
+  for i:=0 to High(Alarms) do
+    FAlarmQueue[n+i] := Alarms[i];
+  Debug(Format('Notificacao de alarme: %d alarme(s), CreditTick=%d',[Length(Alarms), Tick]));
+  //renew the credit one tick before it runs out, to keep the flow constant (as the reference does)
+  if (FAlarmNextCredit>0) and (Tick>=FAlarmNextCredit-1) then begin
+    FAlarmNextCredit := (FAlarmNextCredit+5) mod 255;
+    if FAlarmNextCredit=0 then FAlarmNextCredit := 5;
+    Debug(Format('Alarmes: novo limite de credito %d',[FAlarmNextCredit]));
+    SubscriptionSetCreditLimitFor(FAlarmSubObjectId, FAlarmNextCredit);
+  end;
+end;
+
+function TS7PlusConnection.AlarmSubscriptionCreate(const Languages:array of Cardinal; SendTextsAndFilter:Boolean;
+                                                   CreditLimit:SmallInt):Boolean;
+var
+  ObjBytes, Payload, Resp:TBytes;
+  BodyOffset, c, i:Integer;
+  RetVal:QWord;
+  ObjectId:Cardinal;
+  ErrText:String;
+begin
+  Result := false;
+  if FAlarmSubObjectId<>0 then begin
+    Result := true; //already there
+    exit;
+  end;
+  if not HasSubscriptionContainer then begin
+    Debug('AlarmSubscriptionCreate: sessao sem container de subscricoes');
+    exit;
+  end;
+
+  //same envelope as SubscriptionCreate; the object is the alarm subscription with its reference child
+  ObjBytes := S7PlusBuildAlarmSubscriptionObject($7FFFC001, CreditLimit, SendTextsAndFilter, Languages, []);
+  Payload := EncodeUInt32(FSubscriptionsContainerObjectId); //InObjectId
+  Payload := BytesConcat(Payload, EncodeValuePUDInt(0)); //RequestValue
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //padding
+  Payload := BytesConcat(Payload, ObjBytes);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  if not SendRequest(S7PlusFunc_CreateObject, Payload, Resp, Length(ObjBytes)+4) then exit;
+
+  RetVal := DecodeUInt64VLQ(Resp, 0, c);
+  FLastReturnValue := RetVal;
+  if RetVal=0 then begin
+    Result := ParseCreateObjectSessionId(Resp, ObjectId, BodyOffset, RetVal) and (RetVal=0);
+    if Result then begin
+      FAlarmSubObjectId := ObjectId;
+      FAlarmNextCredit := CreditLimit;
+      SetLength(FAlarmLanguages, Length(Languages));
+      for i:=0 to High(Languages) do
+        FAlarmLanguages[i] := Languages[i];
+      Debug(Format('AlarmSubscriptionCreate: sucesso, ObjectId=%d',[ObjectId]));
+    end else
+      Debug('AlarmSubscriptionCreate: falha ao interpretar resposta de sucesso (returnValue=0)');
+  end else begin
+    ErrText := ExtractErrorText(BytesCopy(Resp, c, Length(Resp)-c));
+    if ErrText<>'' then
+      Debug(Format('AlarmSubscriptionCreate: falha (returnValue=%d): %s',[RetVal, ErrText]))
+    else
+      Debug(Format('AlarmSubscriptionCreate: falha (returnValue=%d)',[RetVal]));
+  end;
+end;
+
+function TS7PlusConnection.AlarmSubscriptionDelete:Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  Result := true;
+  if FAlarmSubObjectId=0 then exit;
+  Payload := EncodeUInt32(FAlarmSubObjectId); //DeleteObjectId
+  Payload := BytesConcat(Payload, BytesOf([$00]));
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+  Result := SendRequest(S7PlusFunc_DeleteObject, Payload, Resp);
+  if not Result then
+    Debug('AlarmSubscriptionDelete: falha ao remover a subscricao de alarmes');
+  FAlarmSubObjectId := 0;
+  SetLength(FAlarmQueue, 0);
+end;
+
+function TS7PlusConnection.AlarmSubscriptionActive:Boolean;
+begin
+  Result := FAlarmSubObjectId<>0;
+end;
+
+procedure TS7PlusConnection.TakeQueuedAlarms(out Alarms:TS7PlusAlarmArray);
+begin
+  Alarms := FAlarmQueue;
+  SetLength(FAlarmQueue, 0);
+end;
+
+function TS7PlusConnection.WaitAlarms(WaitMs:LongInt; out Alarms:TS7PlusAlarmArray):Boolean;
+var
+  Got:Boolean;
+  Credit:Byte;
+  Values:TS7PlusNotificationValueArray;
+  Errors:TS7PlusNotificationErrorArray;
+begin
+  SetLength(Alarms, 0);
+  Result := PollNotification(WaitMs, Got, Credit, Values, Errors);
+  //what the poll took in (and what an earlier one left) is handed over once
+  Alarms := FAlarmQueue;
+  SetLength(FAlarmQueue, 0);
 end;
 
 end.

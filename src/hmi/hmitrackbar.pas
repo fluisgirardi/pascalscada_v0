@@ -308,7 +308,7 @@ begin
   if [csLoading,csReading]*ComponentState<>[] then exit;
 
   if (FTag<>nil) AND Supports(Ftag, ITagNumeric) and SendIt(Position) then begin
-    (Ftag as ITagNumeric).Value := Position;
+    HMIWriteTagNumber(Self, Ftag, Position);
     DoAfterSendValue;
   end;
 end;

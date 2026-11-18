@@ -33,7 +33,7 @@ interface
 uses
   Classes, SysUtils, Types, pascalScadaMTPCPU, ProtocolDriver, ProtocolTypes, Tag, CommPort, CommTypes,
   S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock,
-  PLCString, S7PlusTagPlan;
+  PLCString, S7PlusTagPlan, S7PlusAlarms, SyncObjs;
 
 //: Registers the Tag Builder tool of the S7CommPlus protocol (the design package does it,
 //: since the tool has forms) - see TS7CommPlusDriver.OpenTagEditor.
@@ -177,6 +177,11 @@ type
   end;
   TS7PlusFillCandidateArray = array of TS7PlusFillCandidate;
 
+  //: Receives alarms from the driver (see TS7CommPlusDriver.AddAlarmHandler). IsSnapshot is True for the list
+  //: of the alarms that were active when the subscription was created (again): it is the complete state, not
+  //: a change. Called from the scan thread, or from the thread that called AlarmSubscribe.
+  TS7PlusAlarmsHandler = procedure(Sender:TObject; const Alarms:TS7PlusAlarmArray; IsSnapshot:Boolean) of object;
+
   TS7CommPlusDriver = class(TProtocolDriver)
   private
     FConnection:TS7PlusConnection;
@@ -205,6 +210,13 @@ type
     FSubNextRefId:Cardinal;
     FSubFailCount:Integer;
     FSubRetryAt:QWord;
+    //: Alarm subscription asked for (AlarmSubscribe) and kept: created again after a reconnect.
+    FAlarmWanted, FAlarmTexts:Boolean;
+    FAlarmLangs:TCardinalDynArray;
+    FAlarmCredit:SmallInt;
+    FAlarmRetryAt:QWord;
+    FAlarmHandlers:array of TS7PlusAlarmsHandler;
+    FAlarmHandlersCS:TCriticalSection;
     FSubResetPending:Boolean; //set by whoever notices the session is gone, consumed by the scan thread
     FSubCycleMs:Integer;
     FSubCreditLimit:SmallInt;
@@ -242,7 +254,6 @@ type
     procedure SetMaxItemsPerSubscription(AValue:Integer);
     function GetExploreDelayMs:Integer;
     procedure SetExploreDelayMs(AValue:Integer);
-    function EnsureConnected:Boolean;
     function GetConnected:Boolean;
     function AreaRIDOf(ReadFunction:LongInt; out AreaRID:Cardinal):Boolean;
     procedure ConnDebug(Sender:TObject; const Msg:String);
@@ -275,9 +286,28 @@ type
     function EntryItemCount(Idx:Integer):Integer;
     function FindEntryByRefId(RefId:Cardinal; out EntryIdx, ItemIdx:Integer):Boolean;
     procedure ManageSubscriptions(Now_:QWord);
+    procedure ManageAlarmSubscription(Now_:QWord);
     procedure PumpNotifications(WaitMs:LongInt);
+    procedure DispatchAlarms(const Alarms:TS7PlusAlarmArray; IsSnapshot:Boolean);
+    procedure DeliverQueuedAlarms;
+    procedure PumpNotificationsRun(WaitMs:LongInt);
+    procedure AfterAlarmSubscription;
     procedure RenewCredit(SubscriptionId:Cardinal; CreditTick:Byte);
   protected
+    {$IFDEF PORTUGUES}
+    //: Ponte (somente leitura) para a conexão/sessão viva, para subclasses de download de bloco
+    //: (TGP2ES7CommPlusDriver) emitirem CreateObject/SetMultiVariables sobre a sessão já ativa.
+    //: Chame EnsureConnected antes. Único acréscimo à classe base para o download; a lógica de
+    //: download fica toda na subclasse, em outra unit.
+    {$ELSE}
+    //: Read-only bridge to the live connection/session, so a block-download subclass
+    //: (TGP2ES7CommPlusDriver) can issue CreateObject/SetMultiVariables over the active session.
+    //: Call EnsureConnected first. The only base-class addition for the download; all download
+    //: logic lives in the subclass, in another unit.
+    {$ENDIF}
+    property Connection:TS7PlusConnection read FConnection;
+    //: (moved from private to protected so the download subclass can open the session first).
+    function EnsureConnected:Boolean;
     function CompositeWriteSize(SoftDataType:Byte):Integer;
     //: Appends to Items one write per writable member of a whole-DB/area entry, each cut out
     //: of Values (the tag's bytes, laid out like ReadComposite assembles them) at its
@@ -393,6 +423,42 @@ type
     function BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
     //: Lists every DB in the PLC program with its symbolic (TIA Portal) name and number.
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
+    //: Reads attributes of one object of the PLC program (an EXPLORE of RelationId; for a DB it is
+    //: S7PlusIds_DBAccessAreaBase + the DB number), decoded as in S7PlusParseObjectAttrs. For diagnostics
+    //: and tools (e.g. the hashes of a block); it reads the object and everything below it.
+    function ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+      out Values:TS7PlusAttrValues):TProtocolIOResult;
+    //: Every attribute an EXPLORE of the object returns by default (with no attribute list), with the ids.
+    function ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+      out Values:TS7PlusAttrValues):TProtocolIOResult;
+    //: Reads the alarms that are active in the PLC now (S7-1200/1500: the alarm subsystem's DAI objects), with
+    //: the texts of the languages asked for (Languages empty = all; e.g. S7PlusLang_Portuguese_BR = 1046).
+    //: Needs no subscription: it is one EXPLORE, so it can be called whenever a snapshot is wanted.
+    function ReadActiveAlarms(const Languages:array of Cardinal; out Alarms:TS7PlusAlarmArray):TProtocolIOResult;
+    //: Subscribes to the alarms (S7-1200/1500): the PLC sends a notification each time an alarm comes or
+    //: goes, and AlarmPoll hands them over. Languages: the texts to keep (empty = all). SendTexts makes the
+    //: PLC send the texts with the notification (an S7-1200 without TLS refuses that: use False, and read
+    //: the texts with ReadActiveAlarms). CreditLimit as in SubscriptionCreditLimit (-1 = unlimited); it is
+    //: renewed on its own. The subscription is created again after a reconnect. An alarm that was already
+    //: active when subscribing is not sent: ReadActiveAlarms gives that snapshot. ioOk, or an error when
+    //: the PLC refuses the subscription.
+    function AlarmSubscribe(const Languages:array of Cardinal; SendTexts:Boolean=true;
+                            CreditLimit:SmallInt=10):TProtocolIOResult;
+    //: Removes the alarm subscription (the data subscriptions are not touched).
+    function AlarmUnsubscribe:TProtocolIOResult;
+    //: Asks for the alarm subscription without talking to the PLC now: it is created by the scan thread as
+    //: soon as the connection is up (and again after each reconnect), so it can be called before the port is
+    //: open (e.g. when a component is loaded). Same parameters as AlarmSubscribe. AlarmUnsubscribe cancels it.
+    procedure AlarmRequest(const Languages:array of Cardinal; SendTexts:Boolean=true; CreditLimit:SmallInt=10);
+    //: Registers a handler for the alarms: the scan thread hands them over as they arrive, and with a
+    //: handler registered AlarmPoll gets nothing (the handler takes them). Each time the subscription is
+    //: created, the alarms that were already active come first, with IsSnapshot=True.
+    procedure AddAlarmHandler(Handler:TS7PlusAlarmsHandler);
+    procedure RemoveAlarmHandler(Handler:TS7PlusAlarmsHandler);
+    //: Waits up to WaitMs (ms; the driver is held meanwhile, so keep it short) for alarms and returns
+    //: the ones that arrived since the last call (the scan thread also takes them in while it runs). Alarms
+    //: empty with ioOk = none arrived. Without an AlarmSubscribe it fails.
+    function AlarmPoll(WaitMs:Integer; out Alarms:TS7PlusAlarmArray):TProtocolIOResult;
     //: Drops everything the driver keeps from browsing the PLC: the type information, the
     //: variables of each DB and process area, the DB names. Call it after a download to the PLC
     //: (a new DB, a changed one), or the browse keeps answering with the program as it was when
@@ -588,6 +654,9 @@ function S7PlusPickFillers(const Candidates:TS7PlusFillCandidateArray; ItemsLeft
 
 implementation
 
+uses
+  pscadalog;
+
 var
   S7PlusTagBuilderEditor:TOpenTagEditor = nil;
 
@@ -605,6 +674,7 @@ constructor TS7CommPlusDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   FConnection := nil;
+  FAlarmHandlersCS := TCriticalSection.Create;
   FUseTLS := true;
   PReadSomethingAlways := true;
   PDeliverReadAhead := true;      //DoScanRead reads tags ahead of their time: their values must reach the tags
@@ -623,6 +693,7 @@ destructor TS7CommPlusDriver.Destroy;
 begin
   FreeAndNil(FConnection);
   inherited Destroy;
+  FreeAndNil(FAlarmHandlersCS);
 end;
 
 function TS7CommPlusDriver.GetConnected:Boolean;
@@ -632,6 +703,9 @@ end;
 
 procedure TS7CommPlusDriver.ConnDebug(Sender:TObject; const Msg:String);
 begin
+  //the driver is the source, also for the messages of its connection
+  if PSLogWants(lcProtocol, llDebug) then
+    PSLog(Self, lcProtocol, llDebug, Msg);
   if Assigned(FOnDebug) then
     FOnDebug(Self, Msg);
 end;
@@ -1633,6 +1707,7 @@ begin
   //On-change tags: subscribe what just became resolvable, and take in whatever the PLC has
   //already pushed (including notifications that arrived while a request was in flight).
   ManageSubscriptions(Now_);
+  ManageAlarmSubscription(Now_);
   PumpNotifications(0);
   CheckSubscriptionWatchdog(GetTickCount64);
   CheckProgramChange(GetTickCount64);
@@ -1661,7 +1736,7 @@ begin
     end;
 
   if Length(DueIndices)=0 then begin
-    if Length(FSubs)>0 then
+    if (Length(FSubs)>0) or FConnection.AlarmSubscriptionActive then
       //Nothing to poll: the idle wait is spent listening for notifications instead of
       //sleeping, so a change is picked up as soon as the PLC sends it.
       PumpNotifications(20)
@@ -2053,6 +2128,12 @@ end;
 //: Takes in notifications: the first waits up to WaitMs for one to arrive, the rest only
 //: drain what is already there. Bounded, so a flood cannot starve the polled tags.
 procedure TS7CommPlusDriver.PumpNotifications(WaitMs:LongInt);
+begin
+  PumpNotificationsRun(WaitMs);
+  DeliverQueuedAlarms;
+end;
+
+procedure TS7CommPlusDriver.PumpNotificationsRun(WaitMs:LongInt);
 const
   MaxPerCall = 64;
 var
@@ -2063,7 +2144,8 @@ var
   n:Integer;
 begin
   if (FConnection=nil) or (not FConnection.Connected) then exit;
-  if (Length(FSubs)=0) and (FConnection.PendingNotificationCount=0) then exit;
+  if (Length(FSubs)=0) and (FConnection.PendingNotificationCount=0) and
+     (not FConnection.AlarmSubscriptionActive) then exit;
 
   for n:=1 to MaxPerCall do begin
     if not FConnection.PollNotification(WaitMs, Got, Credit, Values, Errors) then begin
@@ -2792,6 +2874,245 @@ begin
       CheckProgramNow(Blocks);
     end else
       Result := FailResult;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+  out Values:TS7PlusAttrValues):TProtocolIOResult;
+begin
+  SetLength(Values, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := FailResult;
+      exit;
+    end;
+    if FConnection.ReadObjectAttributes(RelationId, AttrIds, Values) then
+      Result := ioOk
+    else
+      Result := FailResult;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+  out Values:TS7PlusAttrValues):TProtocolIOResult;
+begin
+  SetLength(Ids, 0);
+  SetLength(Values, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := FailResult;
+      exit;
+    end;
+    if FConnection.ReadObjectAllAttributes(RelationId, Ids, Values) then
+      Result := ioOk
+    else
+      Result := FailResult;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.ReadActiveAlarms(const Languages:array of Cardinal; out Alarms:TS7PlusAlarmArray):TProtocolIOResult;
+begin
+  SetLength(Alarms, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := FailResult;
+      exit;
+    end;
+    if FConnection.ReadActiveAlarms(Languages, Alarms) then
+      Result := ioOk
+    else
+      Result := FailResult;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+//: The alarms that were active when the subscription came up go to the handlers first, as the complete state.
+procedure TS7CommPlusDriver.AfterAlarmSubscription;
+var
+  Snap:TS7PlusAlarmArray;
+begin
+  if Length(FAlarmHandlers)=0 then exit;
+  if FConnection.ReadActiveAlarms(FAlarmLangs, Snap) then
+    DispatchAlarms(Snap, true)
+  else
+    ConnDebug(Self, 'Falha ao ler os alarmes ativos depois de assinar.');
+end;
+
+procedure TS7CommPlusDriver.DispatchAlarms(const Alarms:TS7PlusAlarmArray; IsSnapshot:Boolean);
+var
+  H:array of TS7PlusAlarmsHandler;
+  i:Integer;
+begin
+  //a snapshot is delivered even when empty: it says that nothing is active
+  if (Length(Alarms)=0) and (not IsSnapshot) then exit;
+  FAlarmHandlersCS.Enter;
+  try
+    SetLength(H, Length(FAlarmHandlers));
+    for i:=0 to High(H) do
+      H[i] := FAlarmHandlers[i];
+  finally
+    FAlarmHandlersCS.Leave;
+  end;
+  for i:=0 to High(H) do
+    try
+      H[i](Self, Alarms, IsSnapshot);
+    except
+      on E:Exception do
+        ConnDebug(Self, 'Excecao no tratador de alarmes: '+E.Message);
+    end;
+end;
+
+procedure TS7CommPlusDriver.DeliverQueuedAlarms;
+var
+  A:TS7PlusAlarmArray;
+begin
+  if (FConnection=nil) or (Length(FAlarmHandlers)=0) then exit;
+  FConnection.TakeQueuedAlarms(A);
+  if Length(A)>0 then
+    DispatchAlarms(A, false);
+end;
+
+procedure TS7CommPlusDriver.AddAlarmHandler(Handler:TS7PlusAlarmsHandler);
+begin
+  FAlarmHandlersCS.Enter;
+  try
+    SetLength(FAlarmHandlers, Length(FAlarmHandlers)+1);
+    FAlarmHandlers[High(FAlarmHandlers)] := Handler;
+  finally
+    FAlarmHandlersCS.Leave;
+  end;
+end;
+
+procedure TS7CommPlusDriver.RemoveAlarmHandler(Handler:TS7PlusAlarmsHandler);
+var
+  i, j:Integer;
+begin
+  FAlarmHandlersCS.Enter;
+  try
+    for i:=High(FAlarmHandlers) downto 0 do
+      if (TMethod(FAlarmHandlers[i]).Code=TMethod(Handler).Code) and
+         (TMethod(FAlarmHandlers[i]).Data=TMethod(Handler).Data) then begin
+        for j:=i+1 to High(FAlarmHandlers) do
+          FAlarmHandlers[j-1] := FAlarmHandlers[j];
+        SetLength(FAlarmHandlers, Length(FAlarmHandlers)-1);
+      end;
+  finally
+    FAlarmHandlersCS.Leave;
+  end;
+end;
+
+procedure TS7CommPlusDriver.AlarmRequest(const Languages:array of Cardinal; SendTexts:Boolean; CreditLimit:SmallInt);
+var
+  i:Integer;
+begin
+  LockDriverIO;
+  try
+    FAlarmTexts := SendTexts;
+    FAlarmCredit := CreditLimit;
+    FAlarmRetryAt := 0;
+    SetLength(FAlarmLangs, Length(Languages));
+    for i:=0 to High(Languages) do
+      FAlarmLangs[i] := Languages[i];
+    //a subscription already running with other parameters is dropped; the scan thread makes the new one
+    if (FConnection<>nil) and FConnection.Connected and FConnection.AlarmSubscriptionActive then
+      FConnection.AlarmSubscriptionDelete;
+    FAlarmWanted := true;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+procedure TS7CommPlusDriver.ManageAlarmSubscription(Now_:QWord);
+begin
+  if (not FAlarmWanted) or FConnection.AlarmSubscriptionActive then exit;
+  if Now_<FAlarmRetryAt then exit;
+  if FConnection.AlarmSubscriptionCreate(FAlarmLangs, FAlarmTexts, FAlarmCredit) then begin
+    ConnDebug(Self, 'Subscricao de alarmes criada.');
+    AfterAlarmSubscription;
+  end else begin
+    FAlarmRetryAt := Now_+5000;
+    ConnDebug(Self, 'Falha ao recriar a subscricao de alarmes - nova tentativa em 5 s.');
+  end;
+end;
+
+function TS7CommPlusDriver.AlarmSubscribe(const Languages:array of Cardinal; SendTexts:Boolean;
+                                          CreditLimit:SmallInt):TProtocolIOResult;
+var
+  i:Integer;
+begin
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := FailResult;
+      exit;
+    end;
+    //a new request replaces the one running
+    if FConnection.AlarmSubscriptionActive then
+      FConnection.AlarmSubscriptionDelete;
+    if FConnection.AlarmSubscriptionCreate(Languages, SendTexts, CreditLimit) then begin
+      FAlarmWanted := true;
+      FAlarmTexts := SendTexts;
+      FAlarmCredit := CreditLimit;
+      FAlarmRetryAt := 0;
+      SetLength(FAlarmLangs, Length(Languages));
+      for i:=0 to High(Languages) do
+        FAlarmLangs[i] := Languages[i];
+      AfterAlarmSubscription;
+      Result := ioOk;
+    end else begin
+      FAlarmWanted := false;
+      Result := FailResult;
+    end;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.AlarmUnsubscribe:TProtocolIOResult;
+begin
+  LockDriverIO;
+  try
+    FAlarmWanted := false;
+    Result := ioOk;
+    if (FConnection<>nil) and FConnection.Connected and FConnection.AlarmSubscriptionActive then
+      if not FConnection.AlarmSubscriptionDelete then
+        Result := FailResult;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.AlarmPoll(WaitMs:Integer; out Alarms:TS7PlusAlarmArray):TProtocolIOResult;
+begin
+  SetLength(Alarms, 0);
+  LockDriverIO;
+  try
+    if (not FAlarmWanted) or (not EnsureConnected) then begin
+      Result := FailResult;
+      exit;
+    end;
+    //the session may have been renewed since: subscribe again before waiting
+    ManageAlarmSubscription(GetTickCount64);
+    if not FConnection.AlarmSubscriptionActive then begin
+      Result := FailResult;
+      exit;
+    end;
+    if FConnection.WaitAlarms(WaitMs, Alarms) then
+      Result := ioOk
+    else begin
+      FSubResetPending := true; //the stream is no longer trustworthy
+      Result := FailResult;
+    end;
   finally
     UnlockDriverIO;
   end;

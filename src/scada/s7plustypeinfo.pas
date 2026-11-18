@@ -49,7 +49,12 @@ type
     sdtBLOCKSDB=26, sdtCOUNTER=28, sdtTIMER=29, sdtBBOOL=40, sdtLREAL=48, sdtULINT=49,
     sdtLINT=50, sdtLWORD=51, sdtUSINT=52, sdtUINT=53, sdtUDINT=54, sdtSINT=55, sdtWCHAR=61,
     sdtWSTRING=62, sdtVARIANT=63, sdtLTIME=64, sdtLTOD=65, sdtLDT=66, sdtDTL=67,
-    sdtREMOTE=96, sdtAOMIDENT=128, sdtUNKNOWN=255
+    sdtREMOTE=96, sdtAOMIDENT=128,
+    //-- hardware / connection identifiers: 16-bit unsigned ids, like a Word. Codes seen on a real
+    //-- S7-1500 (the TIA types are those of the members they showed up in: TCON_IP_v4.InterfaceId
+    //-- is HW_ANY, TCON_IP_v4.ID is CONN_OUC; 155 is a HW_ type of an FB's own InterfaceID, assumed HW_INTERFACE)
+    sdtHWANY=144, sdtHWINTERFACE=155, sdtCONNOUC=170,
+    sdtUNKNOWN=255
   );
 
 const
@@ -249,7 +254,7 @@ begin
     sdtBOOL, sdtBYTE, sdtCHAR, sdtWORD, sdtINT, sdtDWORD, sdtDINT, sdtREAL, sdtDATE,
     sdtTIMEOFDAY, sdtTIME, sdtS5TIME, sdtDATEANDTIME, sdtSTRING, sdtPOINTER, sdtANY,
     sdtBBOOL, sdtLREAL, sdtULINT, sdtLINT, sdtLWORD, sdtUSINT, sdtUINT, sdtUDINT, sdtSINT,
-    sdtWCHAR, sdtWSTRING, sdtLTIME, sdtLTOD, sdtLDT:
+    sdtWCHAR, sdtWSTRING, sdtLTIME, sdtLTOD, sdtLDT, sdtHWANY, sdtHWINTERFACE, sdtCONNOUC:
       Result := true;
   else
     Result := false;
@@ -260,7 +265,7 @@ function S7PlusDataTypeSize(Code:Byte; StringLen:Integer):Integer;
 begin
   case TS7PlusSoftDataType(Code) of
     sdtBOOL, sdtBYTE, sdtCHAR, sdtUSINT, sdtSINT, sdtBBOOL: Result := 1;
-    sdtWORD, sdtINT, sdtUINT, sdtDATE, sdtS5TIME, sdtWCHAR: Result := 2;
+    sdtWORD, sdtINT, sdtUINT, sdtDATE, sdtS5TIME, sdtWCHAR, sdtHWANY, sdtHWINTERFACE, sdtCONNOUC: Result := 2;
     sdtDWORD, sdtDINT, sdtREAL, sdtTIMEOFDAY, sdtTIME, sdtUDINT: Result := 4;
     sdtLREAL, sdtULINT, sdtLINT, sdtLWORD, sdtDATEANDTIME, sdtLTIME, sdtLTOD, sdtLDT: Result := 8;
     sdtDTL: Result := 12;
@@ -413,6 +418,9 @@ begin
       for i:=0 to 5 do Info.MDimElementCount[i] := DecU32LE(Data, Offset+i*4);
       Offset := Offset+24;
       Info.HasRelation := true;
+      //an array of FB instances (iCommBLs.BLs: Array[1..34] of FBCommBL) is an array of structures
+      //like any other: without this its elements were not listed, and BLs showed as ONE structure
+      if Info.ArrayElementCount>0 then Info.IsMDim := true;
       Result := Offset;
     end;
   else

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Component palette icon of TSycRFIDReader: an RFID card with the radio waves of the reader. -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48" viewBox="0 0 48 48" id="svg2">
+  <title>TSycRFIDReader</title>
+  <g id="layer1">
+    <rect x="6" y="22" width="36" height="22" rx="3" fill="#dbe7ff" stroke="#000080" stroke-width="2"/>
+    <rect x="11" y="28" width="8" height="7" rx="1" fill="#f5b800" stroke="#7a5a00" stroke-width="1"/>
+    <path d="M 11 39 H 30" stroke="#000080" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="24" cy="16" r="2.5" fill="#c62828"/>
+    <path d="M 17 12 A 10 10 0 0 0 17 20 M 31 12 A 10 10 0 0 1 31 20" fill="none" stroke="#c62828" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 12 8 A 17 17 0 0 0 12 24 M 36 8 A 17 17 0 0 1 36 24" fill="none" stroke="#c62828" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

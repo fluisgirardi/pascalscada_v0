@@ -45,9 +45,10 @@ unit lt.s7plus;
 interface
 
 uses
-  Classes, SysUtils, Math, fpcunit, testregistry,
+  Classes, SysUtils, Math, Types, fpcunit, testregistry,
   Tag, ProtocolTypes, PLCTagNumber, PLCString, PLCBlock, PLCBlockElement, PLCStruct, PLCStructElement, PLCStructString,
-  tcp_udpport, S7PlusFamily, S7PlusConnection, S7PlusTypeInfo, S7PlusTypes, S7PlusTagPlan;
+  PLCNumber, TagBit, tcp_udpport, S7PlusFamily, S7PlusConnection, S7PlusTypeInfo, S7PlusTypes, S7PlusTagPlan,
+  S7PlusBasket, S7PlusAlarms, S7PlusBlockHash;
 
 type
   { TLiveCase }
@@ -71,6 +72,8 @@ type
     procedure AuthWithTheSameCredentialsIsOk;
     procedure ListTagsDescribesTheTestDBs;
     procedure RepeatedListsOfTheDBsAreNoChange;
+    procedure ReadActiveAlarmsAnswersAndTheSessionLives;
+    procedure AlarmSubscriptionIsAcceptedAndTheSessionLives;
   end;
 
   { TTestLiveReads }
@@ -110,6 +113,19 @@ type
     procedure AnOnChangeTagFollowsTheCounter;
     procedure AWholeDBStructureWritesAnItem;
     procedure AnArrayElementTagWritesOnlyItsElement;
+    procedure TheBitsOfABasketDBMatchTheBoolsReadByPath;
+  end;
+
+  { TTestLiveBlockHash }
+
+  //Reads the engineering attributes of a DB and computes the two SHA-1 TIA Portal writes on it (7949 and
+  //7951) to compare them with the ones the PLC reports: the check of the rules of S7PlusBlockHash.
+  TTestLiveBlockHash = class(TLiveCase)
+  private
+    function Describe(const Ids:TCardinalDynArray; const V:TS7PlusAttrValues):String;
+    function CheckDB(const ADb:String; ANumber:Integer):String;
+  published
+    procedure TheHashesOfTheDBsMatchThePLC;
   end;
 
   { TTestLiveReconnect }
@@ -586,6 +602,44 @@ begin
   if GUser='' then Ignore('No S7PLUS_USER: this PLC needs no login.');
   AssertTrue('logged in again', GDriver.Auth(GUser, GPassword)=ioOk);
   AssertTrue('and it still reads', GDriver.ListDataBlocks(GBlocks)=ioOk);
+end;
+
+procedure TTestLiveConnection.ReadActiveAlarmsAnswersAndTheSessionLives;
+var
+  Alarms:TS7PlusAlarmArray;
+  i:Integer;
+begin
+  //the test PLC may have no active alarm: what is checked is that the request is understood
+  //(ReturnValue 0, a reply that decodes) and that the session is still alive afterwards
+  AssertTrue('alarm subsystem answers', GDriver.ReadActiveAlarms([], Alarms)=ioOk);
+  for i:=0 to High(Alarms) do begin
+    AssertTrue('CPU alarm id of #'+IntToStr(i), Alarms[i].CpuAlarmId<>0);
+    AssertTrue('an event of #'+IntToStr(i), Alarms[i].Event<>aeUnknown);
+    TSink(GSink).Debug(Self, S7PlusAlarmToString(Alarms[i], S7PlusLang_English_US));
+  end;
+  AssertTrue('only one language', GDriver.ReadActiveAlarms([S7PlusLang_Portuguese_BR], Alarms)=ioOk);
+  AssertTrue('and the session is alive', GDriver.ListDataBlocks(GBlocks)=ioOk);
+end;
+
+procedure TTestLiveConnection.AlarmSubscriptionIsAcceptedAndTheSessionLives;
+var
+  Alarms:TS7PlusAlarmArray;
+  i:Integer;
+begin
+  //an S7-1200 without TLS refuses the texts and the domain filter: try with them, then without
+  if GDriver.AlarmSubscribe([S7PlusLang_English_US], true)<>ioOk then
+    AssertTrue('subscription without texts', GDriver.AlarmSubscribe([], false)=ioOk);
+  try
+    //nothing may arrive (no alarm changes while the test runs): what is checked is that the wait
+    //works and gives back a well formed list
+    AssertTrue('wait', GDriver.AlarmPoll(500, Alarms)=ioOk);
+    for i:=0 to High(Alarms) do
+      TSink(GSink).Debug(Self, S7PlusAlarmToString(Alarms[i], S7PlusLang_English_US));
+    AssertTrue('and the data reads still work', GDriver.ListDataBlocks(GBlocks)=ioOk);
+  finally
+    GDriver.AlarmUnsubscribe;
+  end;
+  AssertTrue('and the session is alive after it', GDriver.ListDataBlocks(GBlocks)=ioOk);
 end;
 
 procedure TTestLiveConnection.ListTagsDescribesTheTestDBs;
@@ -1392,6 +1446,205 @@ begin
   end;
 end;
 
+//The basket maps a whole DB (children on): every Bool becomes a TTagBit over a byte item of the
+//structure. Each bit must read what the same Bool reads as a tag of its own, by its path.
+procedure TTestLiveTags.TheBitsOfABasketDBMatchTheBoolsReadByPath;
+const
+  MaxBits = 20;
+var
+  Cands:TS7PlusCandidateArray;
+  Vars:TS7PlusVarInfoArray;
+  Entries:TS7PlusBasketEntries;
+  Plan:TS7PlusImportItems;
+  St:TPLCStruct;
+  Items, Bits, Refs:TList;
+  It:TPLCStructItem;
+  Support:TPLCStructItem;
+  Bit:TTagBit;
+  Ref:TPLCTagNumber;
+  N, k, q, c, Mismatches:Integer;
+  Msg:String;
+begin
+  SetLength(Cands, 0);
+  Vars := DbVars('TestDB_Opt', N);
+  S7PlusAddBrowsed(Cands, Vars, 'TestDB_Opt', S7PlusIds_DBAccessAreaBase+Cardinal(N));
+  S7PlusMarkArrays(Cands);
+  GDriver.ResolveStringLengths(Cands);
+
+  SetLength(Entries, 1);
+  AssertTrue('a DB can go into the basket', S7PlusBasketNewDBEntry('TestDB_Opt', 'p', 500, true, Entries[0]));
+  Plan := S7PlusBasketBuild(Cands, Entries);
+  AssertEquals('one structure', 1, Length(Plan));
+  AssertTrue('the DB has Bools', Length(Plan[0].Bits)>0);
+
+  St := TPLCStruct.Create(nil);
+  Own(St);                    //freed last: what refers to it is freed before
+  St.Name := 'live_basket_db';
+  St.LongAddress := Plan[0].Path;
+  St.Size := Plan[0].Size;
+  St.RefreshTime := Plan[0].Scan;
+  St.ProtocolDriver := GDriver;
+
+  Items := TList.Create;
+  Bits := TList.Create;
+  Refs := TList.Create;
+  try
+    for k:=0 to High(Plan[0].StructItems) do begin
+      if Plan[0].StructItems[k].IsString then continue;
+      It := TPLCStructItem.Create(nil);
+      Own(It);
+      It.Name := Plan[0].StructItems[k].CompName;
+      It.PLCBlock := St;
+      It.Index := Plan[0].StructItems[k].Offset;
+      It.TagType := Plan[0].StructItems[k].TagType;
+      It.SwapBytes := Plan[0].StructItems[k].SwapBytes;
+      It.SwapWords := Plan[0].StructItems[k].SwapWords;
+      It.SwapDWords := Plan[0].StructItems[k].SwapDWords;
+      Items.Add(It);
+    end;
+
+    for q:=0 to Min(High(Plan[0].Bits), MaxBits-1) do begin
+      Support := nil;
+      for k:=0 to Items.Count-1 do
+        if TPLCStructItem(Items[k]).Name=Plan[0].Bits[q].SupportName then Support := TPLCStructItem(Items[k]);
+      AssertTrue('the byte item of '+Plan[0].Bits[q].CompName, Support<>nil);
+
+      Bit := TTagBit.Create(nil);
+      Own(Bit);
+      Bit.Name := Plan[0].Bits[q].CompName;
+      Bit.PLCTag := Support;
+      Bit.EndBit := Plan[0].Bits[q].BitIndex;
+      Bit.StartBit := Plan[0].Bits[q].BitIndex;
+      Bits.Add(Bit);
+
+      //the same Bool as a tag of its own, by its path
+      Ref := nil;
+      for c:=0 to High(Cands) do
+        if (Cands[c].Skip=srNone) and (TS7PlusSoftDataType(Cands[c].SoftDataType) in [sdtBOOL, sdtBBOOL]) and
+           (S7PlusSuggestedName(Cands[c].Path, 'p')=Plan[0].Bits[q].CompName) then begin
+          Ref := TPLCTagNumber.Create(nil);
+          Own(Ref);
+          Ref.Name := 'live_ref_'+IntToStr(q);
+          Ref.TagType := pttByte;
+          Ref.RefreshTime := 500;
+          Ref.LongAddress := Cands[c].Path;
+          Ref.ProtocolDriver := GDriver;
+          break;
+        end;
+      AssertTrue('the Bool '+Plan[0].Bits[q].CompName+' by its path', Ref<>nil);
+      Refs.Add(Ref);
+    end;
+
+    Pump(5000);
+
+    Mismatches := 0;
+    Msg := '';
+    for q:=0 to Bits.Count-1 do
+      if (Trunc(TTagBit(Bits[q]).Value)<>0) <> (Trunc(TPLCTagNumber(Refs[q]).Value)<>0) then begin
+        Inc(Mismatches);
+        Msg := Msg+' '+TTagBit(Bits[q]).Name;
+      end;
+    AssertEquals('bits that differ from the Bool read by path:'+Msg, 0, Mismatches);
+  finally
+    Refs.Free;
+    Bits.Free;
+    Items.Free;
+  end;
+end;
+
+//which attributes came and how: what is needed to find out why a hash does not match
+function TTestLiveBlockHash.Describe(const Ids:TCardinalDynArray; const V:TS7PlusAttrValues):String;
+const
+  Kinds:array[TS7PlusAttrKind] of String = ('none', 'number', 'text', 'blob', 'struct', 'list');
+var
+  i:Integer;
+begin
+  Result := '';
+  for i:=0 to High(V) do
+    if not V[i].Found then
+      Result := Result+LineEnding+Format('  %d: absent', [Ids[i]])
+    else
+      Result := Result+LineEnding+Format('  %d: %s, %d bytes, %d items, num %d, bytes %s',
+        [Ids[i], Kinds[V[i].Kind], Length(V[i].Bytes), Length(V[i].Items), V[i].Num,
+         Copy(S7PlusHex(V[i].Bytes), 1, 64)]);
+end;
+
+//'' when both hashes of the DB match what the PLC reports; otherwise what differs
+function TTestLiveBlockHash.CheckDB(const ADb:String; ANumber:Integer):String;
+var
+  Ids:TCardinalDynArray;
+  V:TS7PlusAttrValues;
+  Inp:TS7PlusBlockHashInput;
+  Plc7949, Plc7951, My7949, My7951:TBytes;
+  Info:String;
+begin
+  Result := '';
+  Ids := S7PlusBlockHashAttrIds;
+  if GDriver.ReadObjectAttributes(S7PlusIds_DBAccessAreaBase+Cardinal(ANumber), Ids, V)<>ioOk then begin
+    Result := ADb+' (DB'+IntToStr(ANumber)+'): the attributes could not be read';
+    exit;
+  end;
+  Info := Describe(Ids, V);
+  if not (V[S7PlusHashIdx_IfrHash].Found and (Length(V[S7PlusHashIdx_IfrHash].Bytes)=20)) then begin
+    Result := ADb+' (DB'+IntToStr(ANumber)+'): the PLC reports no 7949'+Info;
+    exit;
+  end;
+  Plc7949 := V[S7PlusHashIdx_IfrHash].Bytes;
+  Inp := S7PlusBlockHashInputFromAttrs(ADb, V, true);
+  My7949 := S7PlusBlockIfrHash(Inp);
+  if S7PlusHex(Plc7949)<>S7PlusHex(My7949) then
+    Result := Format('%s (DB%d): 7949 differs, PLC %s, computed %s%sstream %s%sattributes:%s',
+      [ADb, ANumber, S7PlusHex(Plc7949), S7PlusHex(My7949), LineEnding, S7PlusHex(S7PlusBlockIfrStream(Inp)),
+       LineEnding, Info]);
+
+  if V[S7PlusHashIdx_AlarmIfrHash].Found and (Length(V[S7PlusHashIdx_AlarmIfrHash].Bytes)=20) then begin
+    Plc7951 := V[S7PlusHashIdx_AlarmIfrHash].Bytes;
+    My7951 := S7PlusAlarmIfrHash(S7PlusDictOf(V[S7PlusHashIdx_AlarmDescription]),
+                                 S7PlusDictOf(V[S7PlusHashIdx_AlarmTexts]));
+    if S7PlusHex(Plc7951)<>S7PlusHex(My7951) then
+      Result := Result+Format('%s%s (DB%d): 7951 differs, PLC %s, computed %s', [LineEnding, ADb, ANumber,
+        S7PlusHex(Plc7951), S7PlusHex(My7951)]);
+  end else
+    Result := Result+LineEnding+ADb+' (DB'+IntToStr(ANumber)+'): the PLC reports no 7951';
+end;
+
+//one line to a file in the temp folder (the console runner swallows what a test writes)
+procedure DumpLine(const ALine:String);
+var
+  L:TStringList;
+begin
+  L := TStringList.Create;
+  try
+    L.Add(ALine);
+    L.SaveToFile(GetTempDir+'s7plus_block_hashes.txt');
+  finally
+    L.Free;
+  end;
+end;
+
+//every DB of the PLC (the first MaxDBs), so it also works with other programs than tests/plc
+procedure TTestLiveBlockHash.TheHashesOfTheDBsMatchThePLC;
+const
+  MaxDBs = 8;
+var
+  i, Checked:Integer;
+  R, Report, Names:String;
+begin
+  AssertTrue('the PLC has DBs', Length(GBlocks)>0);
+  Report := '';
+  Names := '';
+  Checked := 0;
+  for i:=0 to Min(High(GBlocks), MaxDBs-1) do begin
+    Names := Names+' '+GBlocks[i].Name;
+    R := CheckDB(GBlocks[i].Name, GBlocks[i].Number);
+    Inc(Checked);
+    if R<>'' then Report := Report+LineEnding+R;
+  end;
+  if GetEnvironmentVariable('S7PLUS_DEBUG')='1' then
+    DumpLine(Format('block hashes: %d DBs checked:%s; differences: %d', [Checked, Names, Length(Report)]));
+  AssertEquals(Format('hashes that differ from the PLC (%d DBs checked:%s)%s', [Checked, Names, Report]), '', Report);
+end;
+
 procedure TTestLiveTags.AnArrayElementTagWritesOnlyItsElement;
 var
   Blk:TPLCBlock;
@@ -1627,6 +1880,7 @@ initialization
   RegisterTest(TTestLiveReads);
   RegisterTest(TTestLiveWrites);
   RegisterTest(TTestLiveTags);
+  RegisterTest(TTestLiveBlockHash);
   RegisterTest(TTestLiveReconnect);
   RegisterTest(TTestLiveReadSomethingAlways);
   RegisterTest(TTestLiveZZRestore);

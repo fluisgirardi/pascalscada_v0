@@ -33,8 +33,8 @@ uses
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
-  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP,
-  SysUtils, pscadalog, ObjInspStrConsts,
+  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, opcuatagassistant, CommPort,
+  SysUtils, pscadalog, ObjInspStrConsts, opcuaserver, opcuaserveredt,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -97,13 +97,15 @@ begin
                                            TInovanceTCPDriver,
                                            TH5UTagTCPDriver,
                                            TS7CommPlusDriver,
-                                           TLGXDriver]);
+                                           TLGXDriver,
+                                           TOPCUADriver]);
   RegisterComponents(strUtilsPallete,     [TScalesQueue,
                                            TLinearScaleProcessor,
                                            TUserScale,
                                            TMutexServer,
                                            TMutexClient,
-                                           TpSCADALogger]);
+                                           TpSCADALogger,
+                                           TOPCUAServer]);
   RegisterComponents(strTagsPallete,      [TPLCTagNumber,
                                            TPLCBlock,
                                            TPLCBlockElement,
@@ -118,6 +120,14 @@ begin
   RegisterPropertyEditor(TypeInfo(TComponent), TpSCADALogger, 'Display', TpSCADALogDisplayPropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ServerCertificate', TS7PlusCertificatePropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ClientCertificate', TS7PlusClientCertificatePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'CertificateFile', TFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'PrivateKeyFile', TFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'LibraryName', TFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'CertificateDir', TDirectoryPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'TrustListDir', TDirectoryPropertyEditor);
+  //the library opens the connection to EndpointUrl: no communication port to pick
+  //(published by TProtocolDriver, a descendant cannot unpublish it - only hide it here)
+  RegisterPropertyEditor(TypeInfo(TCommPortDriver), TOPCUADriver, 'CommunicationPort', THiddenPropertyEditor);
   {$IF defined(WIN32) or defined(WIN64)}
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'DevDir', THiddenPropertyEditor);
   {$IFEND}
@@ -170,6 +180,7 @@ begin
   //RegisterPropertyEditor(TypeInfo(Cardinal),   TComponent,     'Tag'            , TWinControlBoundsEditor);
 
   RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);
+  RegisterComponentEditor(TOPCUAServer,       TOPCUAServerComponentEditor);
   RegisterComponentEditor(TPLCNumberMappable, TTagBitMapperComponentEditor);
   RegisterComponentEditor(TPLCBlock,          TBlockElementMapperComponentEditor);
 
@@ -182,8 +193,6 @@ end;
 initialization
 
 {$I pascalscada.lrs}
-
-{$I xinjeicon.lrs}   // icones do painel de componentes (XPM)
 
 end.
 

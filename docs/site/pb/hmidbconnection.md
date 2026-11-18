@@ -92,6 +92,10 @@ SQL := 'INSERT INTO eventos (mensagem, valor, quando, id) VALUES (' +
 DBConn.ExecSQL(SQL, nil, false);
 ```
 
+##### Log
+
+Conexões, cada comando, transações e falhas são publicados no [log](/pb/logging/) (`lcDatabase`): falhas como avisos/erros, o texto do SQL em `llDebug`.
+
 ##### Exemplo passo a passo
 
 Gravar um evento de forma assíncrona, sem travar a tela:

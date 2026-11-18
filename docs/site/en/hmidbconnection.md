@@ -92,6 +92,10 @@ SQL := 'INSERT INTO events (message, value, at, id) VALUES (' +
 DBConn.ExecSQL(SQL, nil, false);
 ```
 
+##### Logging
+
+Connections, each command, transactions and failures are posted to the [logger](/logging/) (`lcDatabase`): failures as warnings/errors, the SQL text at `llDebug`.
+
 ##### Step-by-step example
 
 Record an event asynchronously, without freezing the screen:

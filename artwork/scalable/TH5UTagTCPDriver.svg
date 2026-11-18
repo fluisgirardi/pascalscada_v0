@@ -1,20 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   xmlns="http://www.w3.org/2000/svg"
-   width="48"
-   height="48"
-   viewBox="0 0 48 48"
-   id="svg2"
-   version="1.1"
-  >
-  <g id="layer1">
-    <rect x="2" y="8" width="44" height="32" rx="3" ry="3"
-          style="fill:#008000;stroke:#000000;stroke-width:1.5" id="body" />
-    <text x="24" y="29" text-anchor="middle"
-          style="font-size:12px;font-weight:bold;font-family:sans-serif;fill:#ffffff" id="brand">H5U</text>
-    <path d="M 10,34 L 38,34"
-          style="stroke:#ffffff;stroke-width:1.2;fill:none" id="rule" />
-    <path d="M 7,42 L 13,42 M 35,42 L 41,42"
-          style="stroke:#666666;stroke-width:2;fill:none" id="pins" />
+<!-- Component palette icon of TH5UTagTCPDriver, redrawn as vector from the 24x24 pixel icon (xinjeicon.lrs): one unit per pixel. -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="51.2" height="51.2" viewBox="0 0 24 24" id="svg2">
+  <title>TH5UTagTCPDriver</title>
+  <g id="layer1" shape-rendering="crispEdges">
+    <g id="c6d28d9" fill="#6d28d9">
+      <rect x="3" y="6" width="5" height="2"/>
+      <rect x="10" y="6" width="3" height="2"/>
+      <rect x="16" y="6" width="3" height="2"/>
+      <rect x="5" y="8" width="1" height="12"/>
+      <rect x="9" y="8" width="1" height="4"/>
+      <rect x="13" y="8" width="1" height="4"/>
+      <rect x="15" y="8" width="1" height="10"/>
+      <rect x="19" y="8" width="1" height="2"/>
+      <rect x="9" y="12" width="5" height="2"/>
+      <rect x="17" y="12" width="3" height="2"/>
+      <rect x="9" y="14" width="1" height="6"/>
+      <rect x="13" y="14" width="1" height="6"/>
+      <rect x="19" y="14" width="1" height="4"/>
+      <rect x="16" y="18" width="3" height="2"/>
+    </g>
+    <g id="ca78bfa" fill="#a78bfa">
+      <rect x="3" y="22" width="18" height="2"/>
+    </g>
   </g>
 </svg>

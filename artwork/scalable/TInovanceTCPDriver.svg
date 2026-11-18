@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   xmlns="http://www.w3.org/2000/svg"
-   width="48"
-   height="48"
-   viewBox="0 0 48 48"
-   id="svg2"
-   version="1.1"
-  >
-  <g id="layer1">
-    <rect x="2" y="8" width="44" height="32" rx="3" ry="3"
-          style="fill:#008000;stroke:#000000;stroke-width:1.5" id="body" />
-    <text x="24" y="29" text-anchor="middle"
-          style="font-size:12px;font-weight:bold;font-family:sans-serif;fill:#ffffff" id="brand">IA</text>
-    <path d="M 10,34 L 38,34"
-          style="stroke:#ffffff;stroke-width:1.2;fill:none" id="rule" />
-    <path d="M 7,42 L 13,42 M 35,42 L 41,42"
-          style="stroke:#666666;stroke-width:2;fill:none" id="pins" />
+<!-- Component palette icon of TInovanceTCPDriver, redrawn as vector from the 24x24 pixel icon (xinjeicon.lrs): one unit per pixel. -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="51.2" height="51.2" viewBox="0 0 24 24" id="svg2">
+  <title>TInovanceTCPDriver</title>
+  <g id="layer1" shape-rendering="crispEdges">
+    <g id="ce8590c" fill="#e8590c">
+      <rect x="4" y="8" width="6" height="2"/>
+      <rect x="6" y="10" width="2" height="10"/>
+      <rect x="4" y="20" width="6" height="2"/>
+    </g>
+    <g id="cf07f24" fill="#f07f24">
+      <rect x="12" y="8" width="2" height="8"/>
+      <rect x="16" y="8" width="2" height="8"/>
+      <rect x="14" y="16" width="2" height="6"/>
+    </g>
+    <g id="cc2410c" fill="#c2410c">
+      <rect x="3" y="22" width="18" height="1"/>
+    </g>
   </g>
 </svg>

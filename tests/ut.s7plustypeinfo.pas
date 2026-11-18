@@ -57,6 +57,8 @@ type
     procedure OffsetInfoType8ReadsTheOptimisedOneFirst;
     procedure OffsetInfoType1ReversesTheOrder;
     procedure ArrayOffsetInfoCarriesTheLowerBoundAndTheCount;
+    procedure AnArrayOfFBInstancesIsAnArrayOfStructures;
+    procedure HardwareAndConnectionIdsAreWords;
 
     //elementos e listas / elements and lists
     procedure AVartypeElementMixesLittleAndBigEndian;
@@ -243,6 +245,39 @@ begin
   AssertEquals('how many elements',10, info.ArrayElementCount);
   AssertTrue  ('marked as one dimension', info.Is1Dim);
   AssertEquals('bytes read',      20, fim);
+end;
+
+procedure TTestS7PlusTypeInfo.AnArrayOfFBInstancesIsAnArrayOfStructures;
+var
+  info:TS7PlusOffsetInfo;
+  b:TBytes;
+  fim:Integer;
+begin
+  //OffsetInfoType 0 (FbArray) of iCommBLs.BLs on a real PLC: Array[1..34] of FBCommBL. 12 bytes of
+  //addresses, the relation id, 16 more, the count (the third of 6 values) and the MDim bounds/counts
+  SetLength(b, 104);
+  FillChar(b[0], Length(b), 0);
+  b[12] := $2A;                 //relation id = 42
+  b[12+20+8] := 34;             //element count
+  b[12+20+24] := 1;             //lower bound of the first dimension
+  b[12+20+24+24] := 34;         //count of the first dimension
+  fim := ParseOffsetInfo(b, 0, 0, info);
+  AssertEquals('bytes read', 104, fim);
+  AssertEquals('how many elements', 34, info.ArrayElementCount);
+  AssertTrue('it has a structure type', info.HasRelation);
+  AssertEquals('which one', 42, info.RelationId);
+  AssertTrue('and it is an array, so its elements are listed', info.IsMDim);
+end;
+
+procedure TTestS7PlusTypeInfo.HardwareAndConnectionIdsAreWords;
+var
+  c:Byte;
+begin
+  //HW_ANY, HW_INTERFACE and CONN_OUC members (TCON_IP_v4.InterfaceId / .ID) were left out of the list
+  for c in [144, 155, 170] do begin
+    AssertTrue(IntToStr(c)+' is a leaf', IsSoftDataTypeSupported(c));
+    AssertEquals(IntToStr(c)+' is 16 bits', 2, S7PlusDataTypeSize(c, 0));
+  end;
 end;
 
 procedure TTestS7PlusTypeInfo.AVartypeElementMixesLittleAndBigEndian;

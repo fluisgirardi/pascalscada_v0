@@ -1,0 +1,129 @@
+# Records written by hand in open62541.pas, checked by tools/check_layout.
+# "<type>" checks SizeOf; "<type> <field>" checks the offset of a field
+# ("<type> <cfield> <pascalfield>" when the names differ).
+UA_String
+UA_String length
+UA_String data
+UA_DateTimeStruct
+UA_DateTimeStruct year
+UA_Guid
+UA_Guid data2
+UA_Guid data3
+UA_Guid data4
+UA_NodeId
+UA_NodeId identifierType
+UA_NodeId identifier
+UA_ExpandedNodeId
+UA_ExpandedNodeId namespaceUri
+UA_ExpandedNodeId serverIndex
+UA_QualifiedName
+UA_QualifiedName name
+UA_LocalizedText
+UA_LocalizedText text
+UA_NumericRange
+UA_NumericRange dimensions
+UA_Variant
+UA_Variant type _type
+UA_Variant storageType
+UA_Variant arrayLength
+UA_Variant data
+UA_Variant arrayDimensionsSize
+UA_Variant arrayDimensions
+UA_ExtensionObject
+UA_ExtensionObject content
+UA_ExtensionObject content.encoded.body content.encoded.body
+UA_ExtensionObject content.decoded.data content.decoded.data
+UA_DataValue
+UA_DataValue sourceTimestamp
+UA_DataValue serverTimestamp
+UA_DataValue serverPicoseconds
+UA_DataValue status
+UA_DiagnosticInfo
+UA_DiagnosticInfo symbolicId
+UA_DiagnosticInfo additionalInfo
+UA_DiagnosticInfo innerStatusCode
+UA_DiagnosticInfo innerDiagnosticInfo
+UA_DataTypeMember
+UA_DataTypeMember memberType
+UA_DataType
+UA_DataType typeId
+UA_DataType binaryEncodingId
+UA_DataType xmlEncodingId
+UA_DataType members
+UA_DataTypeArray
+UA_DataTypeArray types
+UA_DataTypeArray cleanup
+UA_KeyValueMap
+UA_KeyValueMap map
+UA_ConnectionConfig
+UA_Logger
+UA_Logger context
+UA_Logger clear
+UA_CertificateGroup
+UA_CertificateGroup context
+UA_CertificateGroup logging
+UA_CertificateGroup verifyCertificate
+UA_CertificateGroup clear
+UA_ClientConfig_PolicyHistory
+UA_ClientConfig
+UA_ClientConfig logging
+UA_ClientConfig timeout
+UA_ClientConfig clientDescription
+UA_ClientConfig endpointUrl
+UA_ClientConfig userIdentityToken
+UA_ClientConfig sessionName
+UA_ClientConfig sessionLocaleIds
+UA_ClientConfig sessionLocaleIdsSize
+UA_ClientConfig noSession
+UA_ClientConfig noReconnect
+UA_ClientConfig noNewSession
+UA_ClientConfig secureChannelLifeTime
+UA_ClientConfig requestedSessionTimeout
+UA_ClientConfig localConnectionConfig
+UA_ClientConfig connectivityCheckInterval
+UA_ClientConfig tcpReuseAddr
+UA_ClientConfig endpoint
+UA_ClientConfig userTokenPolicy
+UA_ClientConfig applicationUri
+UA_ClientConfig securityMode
+UA_ClientConfig securityPolicyUri
+UA_ClientConfig authSecurityPolicyUri
+UA_ClientConfig securityPoliciesSize
+UA_ClientConfig securityPolicies
+UA_ClientConfig certificateVerification
+UA_ClientConfig authSecurityPoliciesSize
+UA_ClientConfig authSecurityPolicies
+UA_ClientConfig securityPolicyHistory
+UA_ClientConfig allowNonePolicyPassword
+UA_ClientConfig maxTrustListSize
+UA_ClientConfig maxRejectedListSize
+UA_ClientConfig privateKeyPasswordCallback
+UA_ClientConfig customDataTypes
+UA_ClientConfig namespaces
+UA_ClientConfig namespacesSize
+UA_ClientConfig globalNotificationCallback
+UA_ClientConfig lifecycleNotificationCallback
+UA_ClientConfig serviceNotificationCallback
+UA_ClientConfig stateCallback
+UA_ClientConfig inactivityCallback
+UA_ClientConfig subscriptionInactivityCallback
+UA_ClientConfig outStandingPublishRequests
+UA_ClientConfig eventLoop
+UA_ClientConfig externalEventLoop
+UA_ServerConfig logging
+UA_AttributeId
+UA_SecureChannelState
+UA_SessionState
+UA_LogLevel
+UA_LogCategory
+# UA_NodeIdType is "enum UA_NodeIdType" in C: covered by "UA_NodeId identifier"
+UA_VariantStorageType
+UA_ExtensionObjectEncoding
+UA_DataTypeKind
+UA_ApplicationNotificationType
+UA_CertificateFormat
+UA_UsernamePasswordLogin
+UA_UsernamePasswordLogin password
+UA_CallbackValueSource
+UA_CallbackValueSource read
+UA_CallbackValueSource write

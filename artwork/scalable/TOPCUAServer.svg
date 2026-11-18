@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Component palette icon of TOPCUAServer: a server rack publishing (waves) with a UA badge, drawn with strokes (no font). -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48" viewBox="0 0 48 48" id="svg2">
+  <title>TOPCUAServer</title>
+  <g id="layer1">
+    <!-- the rack -->
+    <rect x="3" y="15" width="25" height="30" rx="2.5" fill="#4a4f57" stroke="#22252a" stroke-width="1.5"/>
+    <rect x="6" y="19" width="19" height="7" rx="1" fill="#2c3036"/>
+    <rect x="6" y="29" width="19" height="7" rx="1" fill="#2c3036"/>
+    <circle cx="9.5" cy="22.5" r="1.8" fill="#4caf50"/>
+    <circle cx="9.5" cy="32.5" r="1.8" fill="#4caf50"/>
+    <path d="M 14 22.5 H 22 M 14 32.5 H 22" stroke="#8a9099" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 8 41 H 23" stroke="#8a9099" stroke-width="2" stroke-linecap="round"/>
+    <!-- publishing -->
+    <g fill="none" stroke="#1f6fb2" stroke-width="2.6" stroke-linecap="round">
+      <path d="M 33 26 A 7 7 0 0 1 33 38"/>
+      <path d="M 38 22 A 12 12 0 0 1 38 42"/>
+    </g>
+    <!-- UA badge -->
+    <rect x="21" y="1.5" width="25.5" height="15.5" rx="3.5" fill="#1f6fb2" stroke="#ffffff" stroke-width="1.5"/>
+    <g fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 25.5 5.5 V 10.5 A 3 3 0 0 0 31.5 10.5 V 5.5"/>
+      <path d="M 34.5 13.5 L 37.5 5 L 40.5 13.5 M 35.6 10.5 H 39.4"/>
+    </g>
+  </g>
+</svg>

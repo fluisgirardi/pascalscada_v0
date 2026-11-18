@@ -130,14 +130,22 @@ type
     procedure SetValue(Value:UTF8String);
     function  CalcBlockSize(IsWrite:Boolean):Cardinal;
     function  ArrayOfValuesToString(values:TArrayOfDouble):UTF8String;
-    function  StringToArrayOfValues(value: UTF8String): TArrayOfDouble;
-    
+
     function  GetValueAsText(Prefix, Sufix, Format:UTF8String; FormatDateTimeOptions:TFormatDateTimeOptions=[]):UTF8String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
     function  GetClockMonotonicTimestamp:QWord;
+  public
+    {$IFDEF PORTUGUES}
+    //: O texto como os valores do bloco (o que ScanWrite/Write recebem), na codificacao do tag.
+    {$ELSE}
+    //: The text as the values of the block (what ScanWrite/Write take), in the tag's encoding.
+    {$ENDIF}
+    function  StringToArrayOfValues(value: UTF8String): TArrayOfDouble;
   protected
+    //: The text between quotes.
+    function GetLogValueText:AnsiString; override;
     //: @seealso(TTag.AsyncNotifyChange)
     procedure AsyncNotifyChange(data:Pointer); override;
     //: @seealso(TTag.GetValueChangeData)
@@ -272,6 +280,11 @@ type
 implementation
 
 uses variants, hsstrings{$IFDEF FPC}, LazUTF8{$ENDIF};
+
+function TPLCString.GetLogValueText:AnsiString;
+begin
+  Result := '"'+PValue+'"';
+end;
 
 constructor TPLCString.Create(AOwner:TComponent);
 begin
@@ -762,6 +775,8 @@ var
   notify:Boolean;
 begin
   if (csDestroying in ComponentState) then exit;
+  //does not call the inherited one: posts the result here
+  LogCommandResult(ReqID, TagCommand, LastResult);
   try
     notify := false;
     case TagCommand of

@@ -115,6 +115,19 @@ type
     procedure AnAreaIsNotADBStructure;
     procedure ADBStructureHasItsStringsAndTheElementsOfItsArrays;
     procedure ADBStructureHasTheMembersOfEveryIndexOfAnArrayOfStructures;
+    procedure ATickedParentCreatesAllItsSubItems;
+    procedure AParentTickedAsAGroupCreatesWhatIsUnderIt;
+    procedure TheElementLevelOfAnArrayOfStructuresIsAGroup;
+    procedure ATickedArrayOfStructuresMapsEveryMember;
+    procedure TickedSubItemsDoNotTickTheParent;
+    procedure AGroupThatIsAnArrayCoversItsElements;
+    procedure TheElementsOfAnArrayAreSimpleTags;
+    procedure ATickedArrayInTheSimpleModeCreatesAllItsElements;
+    procedure OnlyTheTickedElementsOfAnArrayAreCreated;
+    procedure AnElementOfAnArrayInsideAnElementOfAnArrayOfStructuresIsASimpleTag;
+    procedure AnArrayOfStructuresWhoseElementsHoldAnArrayOfScalarsIsRecognized;
+    procedure TheElementsOfTheInnerArrayAreMembersAtTheirPlaceInTheArray;
+    procedure HardwareAndConnectionIdsAreWordTags;
     procedure ANegativeIndexIsNotTheSameNameAsThePositiveOne;
     procedure AnAreaTagHasTheAreaAsItsParent;
   end;
@@ -940,9 +953,10 @@ begin
   L := ListSized(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]', 'DB5.S', 'DB5.S.a', 'DB5.x'],
                  [6, 6, 6, 17, 7, 7], [0, -1, -1, 8, 8, 12], [0, -1, -1, 8, 8, 12]);
   P := S7PlusBuildImportPlan(L, AllChecked(Length(L)), imSimple, 'tag', 0, true);
-  AssertEquals('only S.a and x', 2, Length(P));
-  AssertEquals('DB5.S.a', P[0].Path);
-  AssertEquals('DB5.x', P[1].Path);
+  AssertEquals('the two elements of the array, S.a and x - not the array nor the structures', 4, Length(P));
+  AssertEquals('DB5.Teste[0]', P[0].Path);
+  AssertEquals('DB5.S.a', P[2].Path);
+  AssertEquals('DB5.x', P[3].Path);
   L := StructArrayList(false);
   P := S7PlusBuildImportPlan(L, AllChecked(Length(L)), imSimple, 'tag', 0, true);
   for i:=0 to High(P) do
@@ -1145,8 +1159,9 @@ var
   P:TS7PlusImportItems;
 begin
   L := StructArrayList(false);
-  P := S7PlusBuildImportPlan(L, Ticked(Length(L), [0, 1, 5, 6]), imStructArray, 'tag', 0, true);
-  AssertEquals('the array, the element and the second element are not members of the first', 0, Length(P));
+  //the second element is not offered, and the element is only a level: nothing to map
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), [5, 6]), imStructArray, 'tag', 0, true);
+  AssertEquals(0, Length(P));
 end;
 
 procedure TTestS7PlusTagPlan.StructArrayModeLeavesOutAStringWithoutLength;
@@ -1268,6 +1283,182 @@ begin
   AssertEquals('var28[0].Dint1', 526, P[0].StructItems[0].Offset);
   AssertEquals('var28[1].aInt', 540, P[0].StructItems[5].Offset);
   AssertEquals('the DB read covers the array', 526+16, P[0].Size);
+end;
+
+procedure TTestS7PlusTagPlan.ATickedParentCreatesAllItsSubItems;
+var
+  L:TS7PlusCandidateArray;
+  E:TBooleanDynArray;
+begin
+  L := Db4Like;
+  //only the structure ticked: every member under it counts as ticked, the rest does not
+  E := S7PlusEffectiveChecked(L, Ticked(Length(L), [2]), []);
+  AssertFalse('Var1 is not under it', E[0]);
+  AssertTrue('the structure', E[2]);
+  AssertTrue('v1', E[3]);
+  AssertTrue('Static_4', E[10]);
+end;
+
+procedure TTestS7PlusTagPlan.AParentTickedAsAGroupCreatesWhatIsUnderIt;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := Db4Like;
+  //Var26 is a level of the tree (not a tag in the simple mode): ticked as a group
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), []), ['DB4.Var26'], imSimple, 'tag', 0, true);
+  AssertEquals('the 8 members of Var26', 8, Length(P));
+  AssertEquals('DB4.Var26.v1', P[0].Path);
+  //the whole DB ticked
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), []), ['DB4'], imSimple, 'tag', 0, true);
+  AssertEquals('every scalar of the DB', 10, Length(P));
+end;
+
+procedure TTestS7PlusTagPlan.TheElementLevelOfAnArrayOfStructuresIsAGroup;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := StructArrayList(false);
+  //the level "var28[1]" of the tree: the simple tags of that element only
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), []), ['DB4.var28[1]'], imSimple, 'tag', 0, true);
+  AssertEquals(3, Length(P));
+  AssertEquals('DB4.var28[1].Dint1', P[0].Path);
+end;
+
+procedure TTestS7PlusTagPlan.ATickedArrayOfStructuresMapsEveryMember;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := StructArrayList(false);
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), [0]), imStructArray, 'tag', 0, true);
+  AssertEquals(1, Length(P));
+  AssertEquals('3 members x 2 indexes', 6, Length(P[0].StructItems));
+  //and the same when the array is covered by its DB
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), []), ['DB4'], imStructArray, 'tag', 0, true);
+  AssertEquals(6, Length(P[0].StructItems));
+end;
+
+procedure TTestS7PlusTagPlan.TickedSubItemsDoNotTickTheParent;
+var
+  L:TS7PlusCandidateArray;
+  E:TBooleanDynArray;
+begin
+  L := Db4Like;
+  E := S7PlusEffectiveChecked(L, Ticked(Length(L), [3]), []);
+  AssertTrue(E[3]);
+  AssertFalse('the structure above is not ticked', E[2]);
+  AssertFalse('nor the siblings', E[4]);
+end;
+
+procedure TTestS7PlusTagPlan.AGroupThatIsAnArrayCoversItsElements;
+var
+  L:TS7PlusCandidateArray;
+  E:TBooleanDynArray;
+begin
+  L := ListSized(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]', 'DB5.x'], [6, 6, 6, 7], [0, -1, -1, 12], [0, -1, -1, 12]);
+  E := S7PlusEffectiveChecked(L, Ticked(Length(L), [0]), []);
+  AssertTrue('the elements are under the array', E[1] and E[2]);
+  AssertFalse('the other variable is not', E[3]);
+end;
+
+procedure TTestS7PlusTagPlan.TheElementsOfAnArrayAreSimpleTags;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListSized(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]'], [6, 6, 6], [0, -1, -1], [0, -1, -1]);
+  AssertTrue('the element stays "an array element" for the common list', L[1].Skip=srArrayElement);
+  AssertTrue('but is a tag by itself', L[1].IsElement);
+  AssertTrue('selectable in the simple mode', S7PlusSelectable(L[1], imSimple, false));
+  AssertFalse('and not in the array mode', S7PlusSelectable(L[1], imArray, false));
+  AssertTrue('a DWord, swapped', (L[1].TagType=pttDWord) and L[1].SwapBytes and L[1].SwapWords);
+  AssertFalse('the array itself is not', S7PlusSelectable(L[0], imSimple, false));
+end;
+
+procedure TTestS7PlusTagPlan.ATickedArrayInTheSimpleModeCreatesAllItsElements;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := ListSized(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]', 'DB5.Teste[2]', 'DB5.x'], [6, 6, 6, 6, 7],
+                 [0, -1, -1, -1, 12], [0, -1, -1, -1, 12]);
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), [0]), imSimple, 'tag', 0, true);
+  AssertEquals('the three elements, not x', 3, Length(P));
+  AssertFalse(P[0].IsBlock);
+  AssertEquals('DB5.Teste[2]', P[2].Path);
+end;
+
+procedure TTestS7PlusTagPlan.OnlyTheTickedElementsOfAnArrayAreCreated;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := ListSized(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]', 'DB5.Teste[2]'], [6, 6, 6, 6],
+                 [0, -1, -1, -1], [0, -1, -1, -1]);
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), [2]), imSimple, 'tag', 0, true);
+  AssertEquals('one element, not the array', 1, Length(P));
+  AssertEquals('DB5.Teste[1]', P[0].Path);
+  AssertEquals('tagDB5_Teste_1', P[0].CompName);
+end;
+
+procedure TTestS7PlusTagPlan.AnElementOfAnArrayInsideAnElementOfAnArrayOfStructuresIsASimpleTag;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListSized(['DB4.Arr', 'DB4.Arr[0]', 'DB4.Arr[0].V', 'DB4.Arr[0].V[1]', 'DB4.Arr[0].V[2]'],
+                 [17, 17, 5, 5, 5], [0, 0, 0, 0, 2], [0, -1, -1, -1, -1]);
+  AssertTrue('V[1]', L[3].IsElement);
+  AssertTrue('V is an array of scalars inside the element', L[2].IsArray);
+end;
+
+//the shape of DBCfgs_RO.IPV4Addr_BL on a real PLC: Array[1..2] of Struct { ADDR: Array[1..4] of Byte }; the
+//elements of the inner array have no offset of their own (-1)
+function InnerArrayList:TS7PlusCandidateArray;
+begin
+  Result := ListSized(['DB7.Arr', 'DB7.Arr[1]', 'DB7.Arr[1].ADDR', 'DB7.Arr[1].ADDR[1]', 'DB7.Arr[1].ADDR[2]',
+                       'DB7.Arr[1].ADDR[3]', 'DB7.Arr[1].ADDR[4]',
+                       'DB7.Arr[2]', 'DB7.Arr[2].ADDR', 'DB7.Arr[2].ADDR[1]', 'DB7.Arr[2].ADDR[2]',
+                       'DB7.Arr[2].ADDR[3]', 'DB7.Arr[2].ADDR[4]'],
+                      [17, 17, 2, 2, 2, 2, 2, 17, 2, 2, 2, 2, 2],
+                      [0, 0, 0, -1, -1, -1, -1, 4, 4, -1, -1, -1, -1],
+                      [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]);
+end;
+
+procedure TTestS7PlusTagPlan.AnArrayOfStructuresWhoseElementsHoldAnArrayOfScalarsIsRecognized;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := InnerArrayList;
+  AssertTrue('an array of structures', L[0].IsStructArray);
+  AssertEquals('two elements', 2, L[0].ElementCount);
+  AssertEquals('of 4 bytes', 4, L[0].ElementSize);
+end;
+
+procedure TTestS7PlusTagPlan.TheElementsOfTheInnerArrayAreMembersAtTheirPlaceInTheArray;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := InnerArrayList;
+  AssertEquals('the four bytes of ADDR', 4, Length(L[0].Members));
+  AssertEquals('ADDR[1]', 'ADDR[1]', L[0].Members[0].Name);
+  AssertEquals('at 0', 0, L[0].Members[0].Offset);
+  AssertEquals('ADDR[4] at 3', 3, L[0].Members[3].Offset);
+  AssertTrue('and an item', L[0].Members[3].Supported);
+end;
+
+procedure TTestS7PlusTagPlan.HardwareAndConnectionIdsAreWordTags;
+var
+  T:TTagType;
+  B, W, D:Boolean;
+  c:Byte;
+begin
+  for c in [144, 155, 170] do begin
+    AssertTrue(IntToStr(c), S7PlusTagTypeOf(c, T, B, W, D));
+    AssertTrue('a Word, swapped', (T=pttWord) and B and (not W));
+  end;
+  AssertEquals('HW_ANY', S7PlusSoftTypeName(144));
+  AssertEquals('CONN_OUC', S7PlusSoftTypeName(170));
 end;
 
 procedure TTestS7PlusTagPlan.ANegativeIndexIsNotTheSameNameAsThePositiveOne;

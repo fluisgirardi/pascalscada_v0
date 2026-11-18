@@ -1,0 +1,176 @@
+object FormMain: TFormMain
+  Left = 300
+  Height = 430
+  Top = 200
+  Width = 620
+  Caption = 'PascalSCADA OPC UA server demonstration'
+  ClientHeight = 430
+  ClientWidth = 620
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  object LabelTemperatureCaption: TLabel
+    Left = 16
+    Height = 17
+    Top = 16
+    Width = 90
+    Caption = 'Temperature'
+  end
+  object ShowTemperature: THMILabel
+    Left = 160
+    Height = 17
+    Top = 16
+    Width = 100
+    PLCTag = Temperature
+    NumberFormat = '0.00'
+    Sufix = ' °C'
+  end
+  object LabelSetpointCaption: TLabel
+    Left = 16
+    Height = 17
+    Top = 50
+    Width = 60
+    Caption = 'Setpoint'
+  end
+  object EditSetpoint: THMIEdit
+    Left = 160
+    Height = 27
+    Top = 45
+    Width = 100
+    PLCTag = Setpoint
+    NumberFormat = '0'
+    TabOrder = 0
+  end
+  object LabelPumpCaption: TLabel
+    Left = 16
+    Height = 17
+    Top = 86
+    Width = 90
+    Caption = 'Pump on (0/1)'
+  end
+  object ShowPump: THMILabel
+    Left = 160
+    Height = 17
+    Top = 86
+    Width = 100
+    PLCTag = PumpOn
+    NumberFormat = '0'
+  end
+  object LabelMessageCaption: TLabel
+    Left = 16
+    Height = 17
+    Top = 116
+    Width = 60
+    Caption = 'Message'
+  end
+  object ShowMessage: THMILabel
+    Left = 160
+    Height = 17
+    Top = 116
+    Width = 400
+    PLCTag = Message
+  end
+  object LabelStatus: TLabel
+    Left = 16
+    Height = 17
+    Top = 150
+    Width = 60
+    Caption = 'Starting...'
+  end
+  object MemoHelp: TMemo
+    Left = 16
+    Height = 230
+    Top = 180
+    Width = 588
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Lines.Strings = (
+      'Connect an OPC UA client (UaExpert, for instance) to the address above.'
+      'The variables are in Objects / PascalSCADA demo / Process:'
+      '  Temperature  read only, follows the setpoint while the pump is on'
+      '  Setpoint     writable'
+      '  PumpOn       writable (Boolean, bit 0 of the Status word)'
+      '  Message      writable (String)'
+      '  Trend        read only, the last 10 temperatures (array)'
+      ''
+      'A value written by a client shows here; a value typed in the Setpoint'
+      'field shows in the client. A tag of a protocol driver is published the'
+      'same way: a write of a client goes to the device and the client gets the'
+      'device''s result.'
+      ''
+      'This demonstration has no security. See the Security, Users and'
+      'OnCanWrite properties of OPCUAServer1 for encrypted sessions, logins and'
+      'write permissions.'
+    )
+    ReadOnly = True
+    ScrollBars = ssAutoVertical
+    TabOrder = 1
+  end
+  object Temperature: TPLCTagNumber
+    TagType = pttFloat
+    Left = 520
+    Top = 16
+  end
+  object Setpoint: TPLCTagNumber
+    TagType = pttWord
+    Left = 560
+    Top = 16
+  end
+  object Status: TPLCTagNumber
+    TagType = pttWord
+    Left = 520
+    Top = 56
+  end
+  object PumpOn: TTagBit
+    PLCTag = Status
+    StartBit = 0
+    EndBit = 0
+    Left = 560
+    Top = 56
+  end
+  object Message: TPLCString
+    StringSize = 32
+    Left = 520
+    Top = 96
+  end
+  object Trend: TPLCBlock
+    TagType = pttWord
+    Size = 10
+    Left = 560
+    Top = 96
+  end
+  object OPCUAServer1: TOPCUAServer
+    Active = True
+    ServerName = 'PascalSCADA demo'
+    Items = <
+      item
+        Tag = Temperature
+        Folder = 'Process'
+      end
+      item
+        Tag = Setpoint
+        Folder = 'Process'
+        Writable = True
+      end
+      item
+        Tag = PumpOn
+        Folder = 'Process'
+        Writable = True
+      end
+      item
+        Tag = Message
+        Folder = 'Process'
+        Writable = True
+      end
+      item
+        Tag = Trend
+        Folder = 'Process'
+      end>
+    Left = 520
+    Top = 140
+  end
+  object Simulation: TTimer
+    Interval = 500
+    OnTimer = SimulationTimer
+    Left = 560
+    Top = 140
+  end
+end

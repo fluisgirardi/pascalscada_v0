@@ -1,20 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   xmlns="http://www.w3.org/2000/svg"
-   width="48"
-   height="48"
-   viewBox="0 0 48 48"
-   id="svg2"
-   version="1.1"
-  >
+<!-- Component palette icon of THMIFlowVectorControl: a vector drawing (a pipe curve) with the flow arrows. -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48" viewBox="0 0 48 48" id="svg2">
+  <title>THMIFlowVectorControl</title>
   <g id="layer1">
-    <circle cx="24" cy="24" r="12"
-            style="fill:#cccccc;stroke:#000000;stroke-width:1.5" id="motor" />
-    <path d="M 24,24 L 24,14 M 24,24 L 31,31 M 24,24 L 17,31 M 24,24 L 14,20"
-          style="stroke:#666666;stroke-width:1.5;fill:none" id="rotor" />
-    <path d="M 4,24 L 10,24 M 38,24 L 44,24"
-          style="stroke:#ff0000;stroke-width:2;fill:none" id="flow-line" />
-    <path d="M 2,24 L 6,21 M 2,24 L 6,27 M 42,21 L 46,24 L 42,27"
-          style="stroke:#ff0000;stroke-width:1.5;fill:none" id="flow-arrow" />
+    <path d="M 5 38 C 5 12 43 36 43 10" fill="none" stroke="#555555" stroke-width="11" stroke-linecap="butt"/>
+    <path d="M 5 38 C 5 12 43 36 43 10" fill="none" stroke="#2a8bf2" stroke-width="7" stroke-linecap="butt"/>
+    <path d="M 15 22 L 22 26 L 15 30 Z M 30 31 L 37 24 L 38 33 Z" fill="#ffffff"/>
+    <rect x="2" y="35" width="6" height="6" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
+    <rect x="40" y="7" width="6" height="6" fill="#ffffff" stroke="#000000" stroke-width="1.5"/>
   </g>
 </svg>

@@ -191,7 +191,7 @@ type
 
 implementation
 
-uses pascalScadaMTPCPU{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses pascalScadaMTPCPU, pscadalog{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanThread
@@ -230,6 +230,9 @@ begin
       if NeedSleep<0 then
         CrossThreadSwitch;
     except
+      //the scan goes on as before, but the failure is no longer silent
+      on E: Exception do
+        Log(lcScan, llError, Format('scan read raised %s: %s', [E.ClassName, E.Message]));
       //on E: Exception do begin
       //  {$IFDEF FDEBUG}
       //  DebugLn('TScanThread.Execute::' + e.Message);
@@ -263,6 +266,8 @@ begin
             FDoScanMultiWrite(multi^.Requests);
           except
             //whoever asked still has to be answered (each request carries its own result)
+            on E: Exception do
+              Log(lcScan, llError, Format('multiple write raised %s: %s', [E.ClassName, E.Message]));
           end;
         end;
         //each request now goes on exactly like a single scan write: with an updater it takes

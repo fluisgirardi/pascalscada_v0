@@ -28,8 +28,8 @@
     <Description Value="PascalSCADA visual controls
 Built on top of LCL controls, added SCADA features like Tag link and security"/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="7" Release="7"/>
-    <Files Count="61">
+    <Version Minor="8" Release="1"/>
+    <Files Count="63">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -269,39 +269,43 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
         <UnitName Value="TagLinkedSeriesSource"/>
       </Item59>
       <Item60>
-        <Filename Value="src/hmi/hmirecipe.pas"/>
-        <UnitName Value="HMIRecipe"/>
+        <Filename Value="src/hmi/hmis7plusalarmlogger.pas"/>
+        <UnitName Value="HMIS7PlusAlarmLogger"/>
       </Item60>
-      <Item61>
-        <Filename Value="src/hmi/hmirecipebutton.pas"/>
-        <UnitName Value="HMIRecipeButton"/>
-      </Item61>
       <Item61>
         <Filename Value="src/hmi/hmilogmemo.pas"/>
         <UnitName Value="hmilogmemo"/>
       </Item61>
+      <Item62>
+        <Filename Value="src/hmi/hmirecipe.pas"/>
+        <UnitName Value="HMIRecipe"/>
+      </Item62>
+      <Item63>
+        <Filename Value="src/hmi/hmirecipebutton.pas"/>
+        <UnitName Value="HMIRecipeButton"/>
+      </Item63>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="8">
       <Item1>
         <PackageName Value="pascalscada_db"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Release="1" Valid="True"/>
       </Item1>
       <Item2>
         <PackageName Value="pascalscada"/>
         <MaxVersion Minor="7" Release="6"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Release="1" Valid="True"/>
         <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
       </Item2>
       <Item3>
         <PackageName Value="pascalscada_common"/>
         <MaxVersion Minor="7" Release="6"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Release="1" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
       </Item3>
       <Item4>
         <PackageName Value="pascalscada_dsng"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Release="1" Valid="True"/>
         <DefaultFilename Value="pascalscada_dsng.lpk" Prefer="True"/>
       </Item4>
       <Item5>

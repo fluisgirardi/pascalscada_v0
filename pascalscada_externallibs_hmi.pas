@@ -8,7 +8,7 @@ unit pascalscada_externallibs_hmi;
 interface
 
 uses
-  sycreader_rfid_reader, LazarusPackageIntf;
+  sycreader_rfid_reader, sycreader_keydecoder, LazarusPackageIntf;
 
 implementation
 

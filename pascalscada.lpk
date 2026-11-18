@@ -30,8 +30,8 @@
     </CompilerOptions>
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="7" Release="7"/>
-    <Files Count="106">
+    <Version Minor="8" Release="1"/>
+    <Files Count="115">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -456,18 +456,58 @@
         <Filename Value="src\scada\H5UTagTCP.pas"/>
         <UnitName Value="H5UTagTCP"/>
       </Item106>
+      <Item107>
+        <Filename Value="src\scada\s7plusalarms.pas"/>
+        <UnitName Value="S7PlusAlarms"/>
+      </Item107>
+      <Item108>
+        <Filename Value="src\scada\s7plusalarmtracker.pas"/>
+        <UnitName Value="S7PlusAlarmTracker"/>
+      </Item108>
+      <Item109>
+        <Filename Value="src\scada\s7plusbasket.pas"/>
+        <UnitName Value="S7PlusBasket"/>
+      </Item109>
+      <Item110>
+        <Filename Value="src\scada\s7plusblockhash.pas"/>
+        <UnitName Value="S7PlusBlockHash"/>
+      </Item110>
+      <Item111>
+        <Filename Value="src\scada\s7plusreturnvalue.pas"/>
+        <UnitName Value="S7PlusReturnValue"/>
+      </Item111>
+      <Item112>
+        <Filename Value="src\scada\opcuavalues.pas"/>
+        <UnitName Value="OPCUAValues"/>
+      </Item112>
+      <Item113>
+        <Filename Value="src\scada\opcuaclient.pas"/>
+        <UnitName Value="OPCUAClient"/>
+      </Item113>
+      <Item114>
+        <Filename Value="src\scada\opcuadriver.pas"/>
+        <UnitName Value="OPCUADriver"/>
+      </Item114>
+      <Item115>
+        <Filename Value="src\scada\opcuaserver.pas"/>
+        <UnitName Value="opcuaserver"/>
+      </Item115>
     </Files>
     <CompatibilityMode Value="True"/>
-    <RequiredPkgs Count="2">
+    <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="LCLBase"/>
       </Item1>
       <Item2>
         <PackageName Value="pascalscada_common"/>
         <MaxVersion Minor="7" Release="6"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Release="1" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
       </Item2>
+      <Item3>
+        <PackageName Value="fpopen62541"/>
+        <DefaultFilename Value="src\external\fpopen62541\fpopen62541.lpk" Prefer="True"/>
+      </Item3>
     </RequiredPkgs>
     <UsageOptions>
       <CustomOptions Value="-dUseCThreads"/>

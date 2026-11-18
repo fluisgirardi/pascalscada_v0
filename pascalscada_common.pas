@@ -9,7 +9,8 @@ interface
 
 uses
   CrossEvent, hsstrings, hsutils, MessageSpool, pascalScadaMTPCPU, 
-  pscada_common, pscommontypes, pSCADAVersion, crossthreads, PropValueParsing;
+  pscada_common, pscommontypes, pSCADAVersion, crossthreads, PropValueParsing, 
+  pscadalog;
 
 implementation
 

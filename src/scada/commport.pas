@@ -21,7 +21,7 @@ unit CommPort;
 interface
 
 uses
-  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, crossthreads, fgl
+  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, crossthreads, fgl, pscadalog
   {$IFNDEF FPC}, Windows{$ENDIF}
   {$IF defined(WIN32) or defined(WIN64)}, windows{$IFEND};
 
@@ -626,6 +626,25 @@ type
     procedure RefreshLastOSError;
 
     {$IFDEF PORTUGUES}
+    {:
+    Descricao curta da porta nas mensagens de log (ex.: '192.168.0.1:502 TCP',
+    'COM1 19200 8N1'). Vazio na classe base.
+    }
+    {$ELSE}
+    {:
+    Short description of the port in the log messages (e.g. '192.168.0.1:502
+    TCP', 'COM1 19200 8N1'). Empty in the base class.
+    }
+    {$ENDIF}
+    function LogDescription:String; virtual;
+
+    //: Posts the bytes of an I/O command to the log (lcComm, llTrace).
+    procedure LogIOTraffic(cmd:TIOCommand; const Packet:TIOPacket);
+
+    //: Posts a connection message (lcConnection) with the port description.
+    procedure LogConnection(Level:TpSCADALogLevel; const Msg:String; WithOSError:Boolean = false);
+
+    {$IFDEF PORTUGUES}
     //: Evento chamado quando uma falha de leitura ocorre na porta de comunicação.
     {$ELSE}
     //: Event called when a read error occurs on communication port.
@@ -1071,6 +1090,19 @@ implementation
 
 uses SysUtils, ProtocolDriver, hsstrings, pascalScadaMTPCPU;
 
+function IOResultName(res:TIOResult):String;
+begin
+  case res of
+    iorOK:        Result := 'iorOK';
+    iorTimeOut:   Result := 'iorTimeOut';
+    iorNotReady:  Result := 'iorNotReady';
+    iorNone:      Result := 'iorNone';
+    iorPortError: Result := 'iorPortError';
+  else
+    Result := 'iorUnknown';
+  end;
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 //  THREAD DE NOTIFICAÇÃO DE EVENTOS DE COMUNICAÇÃO.
@@ -1389,9 +1421,14 @@ begin
 end;
 
 procedure TCommPortDriver.CommError(WriteCmd:Boolean; Error:TIOResult);
+const
+  What:array[Boolean] of String = ('read', 'write');
 var
   evt:TCommPortErrorEvent;
 begin
+  if PSLogWants(lcComm, llWarning) then
+    PSLog(Self, lcComm, llWarning, What[WriteCmd]+' failed: '+IOResultName(Error));
+
   if WriteCmd then begin
     evt := @DoWriteError
   end else begin
@@ -1424,6 +1461,7 @@ end;
 procedure TCommPortDriver.CommPortOpenError;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
+  LogConnection(llError, 'open failed', true);
 
   if MainThreadID=GetCurrentThreadId then
     DoPortOpenError(self)
@@ -1450,6 +1488,7 @@ end;
 procedure TCommPortDriver.CommPortCloseError;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
+  LogConnection(llError, 'close failed', true);
 
   if MainThreadID=GetCurrentThreadId then
     DoPortCloseError(self)
@@ -1462,6 +1501,7 @@ var
   c:LongInt;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
+  LogConnection(llWarning, 'connection lost', true);
 
   if MainThreadID=GetCurrentThreadId then
     DoPortDisconnected(Self)
@@ -1866,6 +1906,8 @@ begin
      end;
      // dados de bytes
      Traffic(cmd, Packet^);
+     if PSLogWants(lcComm, llTrace) then
+       LogIOTraffic(cmd, Packet^);
      if FLogActions then
        LogAction(cmd, Packet^);
   finally
@@ -1879,9 +1921,10 @@ begin
      PIOCmdCS.Enter;
      PortStart(ok);
      RefreshLastOSError;
-     if Ok then
-       CommPortOpened
-     else
+     if Ok then begin
+       LogConnection(llInfo, 'port started');
+       CommPortOpened;
+     end else
        CommPortOpenError;
   finally
      PIOCmdCS.Leave;
@@ -1894,9 +1937,10 @@ begin
      PIOCmdCS.Enter;
      PortStop(ok);
      RefreshLastOSError;
-     if Ok then
-       CommPortClose
-     else
+     if Ok then begin
+       LogConnection(llInfo, 'port stopped');
+       CommPortClose;
+     end else
        CommPortCloseError;
   finally
      PIOCmdCS.Leave;
@@ -2068,6 +2112,51 @@ begin
 end;
 
 // efetua amostragem do trafefgo recebidos e enviados //////////////////////////
+function TCommPortDriver.LogDescription:String;
+begin
+  Result := '';
+end;
+
+procedure TCommPortDriver.LogConnection(Level:TpSCADALogLevel; const Msg:String;
+  WithOSError:Boolean);
+var
+  s, d:String;
+begin
+  if not PSLogWants(lcConnection, Level) then exit;
+  s := Msg;
+  d := LogDescription;
+  if d<>'' then s := s+' ('+d+')';
+  if WithOSError and (FLastOSErrorNumber<>0) then
+    s := s+Format(': OS error %d, %s', [FLastOSErrorNumber, Trim(FLastOSErrorMessage)]);
+  PSLog(Self, lcConnection, Level, s);
+end;
+
+procedure TCommPortDriver.LogIOTraffic(cmd:TIOCommand; const Packet:TIOPacket);
+
+  procedure LogWrite;
+  begin
+    PSLog(Self, lcComm, llTrace,
+          Format('TX %d/%d %s', [Packet.Written, Packet.ToWrite, IOResultName(Packet.WriteIOResult)]),
+          Copy(Packet.BufferToWrite, 0, Packet.Written));
+  end;
+
+  procedure LogRead;
+  begin
+    PSLog(Self, lcComm, llTrace,
+          Format('RX %d/%d %s', [Packet.Received, Packet.ToRead, IOResultName(Packet.ReadIOResult)]),
+          Copy(Packet.BufferToRead, 0, Packet.Received));
+  end;
+
+begin
+  //in the order the port did them
+  case cmd of
+    iocWrite:     LogWrite;
+    iocRead:      LogRead;
+    iocWriteRead: begin LogWrite; LogRead; end;
+    iocReadWrite: begin LogRead; LogWrite; end;
+  end;
+end;
+
 procedure  TCommPortDriver.Traffic(cmd:TIOCommand; Packet:TIOPacket);
   function bufferToHex(Buf:BYTES):AnsiString;
   var

@@ -1,0 +1,279 @@
+object TestOpcUaForm: TTestOpcUaForm
+  Left = 384
+  Height = 525
+  Top = 223
+  Width = 541
+  Caption = 'Test OPC UA'
+  ClientHeight = 525
+  ClientWidth = 541
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  LCLVersion = '2.0.10.0'
+  object Memo1: TMemo
+    Left = 8
+    Height = 170
+    Top = 272
+    Width = 521
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ScrollBars = ssAutoVertical
+    TabOrder = 0
+  end
+  object Memo2: TMemo
+    Left = 8
+    Height = 66
+    Top = 448
+    Width = 521
+    Anchors = [akLeft, akRight, akBottom]
+    ScrollBars = ssVertical
+    TabOrder = 1
+  end
+  object PageControl1: TPageControl
+    Left = 8
+    Height = 256
+    Top = 8
+    Width = 525
+    ActivePage = tabClient
+    Anchors = [akTop, akLeft, akRight]
+    TabIndex = 0
+    TabOrder = 2
+    object tabClient: TTabSheet
+      Caption = 'OPC UA Client'
+      ClientHeight = 230
+      ClientWidth = 517
+      object Label1: TLabel
+        Left = 8
+        Height = 13
+        Top = 16
+        Width = 73
+        Caption = 'OPC UA Server'
+        ParentColor = False
+      end
+      object cbServer: TComboBox
+        Left = 96
+        Height = 21
+        Top = 12
+        Width = 324
+        ItemHeight = 13
+        Items.Strings = (
+          'opc.tcp://localhost:53530/OPCUA/SimulationServer'
+          'opc.tcp://localhost:4840/'
+          'opc.tcp://192.168.10.10:4840/'
+          'opc.tcp://opcua.rocks:4840/'
+        )
+        TabOrder = 0
+      end
+      object btnConnect: TButton
+        Left = 434
+        Height = 25
+        Top = 10
+        Width = 75
+        Caption = 'Connect'
+        OnClick = btnConnectClick
+        TabOrder = 1
+      end
+      object gbVariables: TGroupBox
+        Left = 4
+        Height = 176
+        Top = 48
+        Width = 513
+        Caption = 'Variables'
+        ClientHeight = 158
+        ClientWidth = 509
+        TabOrder = 2
+        object lNamespace: TLabel
+          Left = 11
+          Height = 13
+          Top = 16
+          Width = 55
+          Caption = 'Namespace'
+          ParentColor = False
+        end
+        object cbNS: TComboBox
+          Left = 96
+          Height = 21
+          Top = 8
+          Width = 48
+          ItemHeight = 13
+          ItemIndex = 1
+          Items.Strings = (
+            '1'
+            '3'
+            '4'
+            '5'
+            ''
+          )
+          TabOrder = 0
+          Text = '3'
+        end
+        object lNodeType: TLabel
+          Left = 11
+          Height = 13
+          Top = 40
+          Width = 65
+          Caption = 'Node Id Type'
+          ParentColor = False
+        end
+        object cbNodeType: TComboBox
+          Left = 96
+          Height = 21
+          Top = 32
+          Width = 72
+          ItemHeight = 13
+          ItemIndex = 1
+          Items.Strings = (
+            'numeric'
+            'string'
+          )
+          Style = csDropDownList
+          TabOrder = 1
+          Text = 'string'
+        end
+        object lNodeId: TLabel
+          Left = 11
+          Height = 13
+          Top = 68
+          Width = 38
+          Caption = 'Node Id'
+          ParentColor = False
+        end
+        object eNodeId: TEdit
+          Left = 96
+          Height = 21
+          Top = 60
+          Width = 312
+          TabOrder = 2
+        end
+        object btnReadVariable: TButton
+          Left = 96
+          Height = 25
+          Top = 120
+          Width = 75
+          Caption = 'Read'
+          OnClick = btnReadVariableClick
+          TabOrder = 4
+        end
+        object btnWriteVariable: TButton
+          Left = 208
+          Height = 25
+          Top = 120
+          Width = 75
+          Caption = 'Write'
+          OnClick = btnWriteVariableClick
+          TabOrder = 5
+        end
+        object lNodeValue: TLabel
+          Left = 11
+          Height = 13
+          Top = 96
+          Width = 26
+          Caption = 'Value'
+          ParentColor = False
+        end
+        object eNodeValue: TEdit
+          Left = 96
+          Height = 21
+          Top = 88
+          Width = 312
+          TabOrder = 3
+        end
+      end
+    end
+    object tabServer: TTabSheet
+      Caption = 'OPC UA Server'
+      ClientHeight = 230
+      ClientWidth = 517
+      object btnServerStart: TToggleBox
+        Left = 434
+        Height = 25
+        Top = 10
+        Width = 75
+        Caption = 'Start'
+        OnClick = btnServerStartClick
+        TabOrder = 0
+      end
+      object gbServerVariable: TGroupBox
+        Left = 4
+        Height = 176
+        Top = 48
+        Width = 513
+        Caption = 'Variable'
+        ClientHeight = 158
+        ClientWidth = 509
+        TabOrder = 1
+        object lNamespace1: TLabel
+          Left = 11
+          Height = 13
+          Top = 16
+          Width = 55
+          Caption = 'Namespace'
+          ParentColor = False
+        end
+        object cbServerNS: TComboBox
+          Left = 96
+          Height = 21
+          Top = 8
+          Width = 48
+          ItemHeight = 13
+          ItemIndex = 0
+          Items.Strings = (
+            '1'
+            '3'
+          )
+          TabOrder = 0
+          Text = '1'
+        end
+        object lVariableName: TLabel
+          Left = 11
+          Height = 13
+          Top = 40
+          Width = 67
+          Caption = 'Variable name'
+          ParentColor = False
+        end
+        object eServerVariableName: TEdit
+          Left = 96
+          Height = 21
+          Top = 32
+          Width = 312
+          TabOrder = 1
+          Text = 'Variable1'
+        end
+        object lNodeValue1: TLabel
+          Left = 11
+          Height = 13
+          Top = 96
+          Width = 26
+          Caption = 'Value'
+          ParentColor = False
+        end
+        object eServerVariableValue: TEdit
+          Left = 96
+          Height = 21
+          Top = 88
+          Width = 312
+          TabOrder = 3
+          Text = '123'
+        end
+        object btnServerAddVariable: TButton
+          Left = 96
+          Height = 25
+          Top = 56
+          Width = 75
+          Caption = 'Add Variable'
+          OnClick = btnServerAddVariableClick
+          TabOrder = 2
+        end
+        object btnServerWriteVariable: TButton
+          Left = 95
+          Height = 25
+          Top = 112
+          Width = 75
+          Caption = 'Write Value'
+          OnClick = btnServerWriteVariableClick
+          TabOrder = 4
+        end
+      end
+    end
+  end
+end

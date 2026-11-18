@@ -23,6 +23,7 @@ uses
   //apoio aos testes / test support
   testsupport.faketag,
   testsupport.httpstub,
+  testsupport.logcollector,
   //casos de teste / test cases
   ut.usermanagement,
   ut.hmizones,
@@ -45,8 +46,6 @@ uses
   ut.numericcontrols,
   ut.hmiedit,
   ut.hmibutton,
-  ut.hmirecipe,
-  ut.hmirecipebutton,
   ut.hmicombobox,
   ut.smallcontrols,
   ut.hmiflowimage,
@@ -62,7 +61,14 @@ uses
   ut.eletricmotor,
   ut.faceplate,
   ut.hmimouse,
-  ut.hmidbconnection;
+  ut.hmidbconnection,
+  ut.sycreaderkeydecoder,
+  ut.hmilogmemo,
+  ut.hmilog,
+  ut.hmirecipe,
+  ut.hmirecipebutton,
+  ut.opcuaserveredt{$IFDEF WINDOWS},
+  ut.sycrfidreaderwin{$ENDIF};
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

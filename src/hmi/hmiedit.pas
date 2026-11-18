@@ -786,7 +786,7 @@ begin
 
     if not SendIt then exit;
 
-    (FTag as ITagNumeric).Value := x;
+    HMIWriteTagNumber(Self, FTag, x);
     DoAfterSendValue;
     exit;
   end;
@@ -794,7 +794,7 @@ begin
   if not SendIt then exit;
 
   if Supports(FTag, ITagString) then begin
-    (FTag as ITagString).Value := Txt;
+    HMIWriteTagString(Self, FTag, Txt);
     DoAfterSendValue;
     exit;
   end;

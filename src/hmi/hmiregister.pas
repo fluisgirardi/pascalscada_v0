@@ -15,7 +15,8 @@ unit hmiregister;
 
 interface
 
-uses hmifaceplatecontainer, HMIEventLogger, HMIAlarmLogger;
+uses hmifaceplatecontainer, HMIEventLogger, HMIAlarmLogger, HMIS7PlusAlarmLogger,
+     hmilogmemo;
 
 procedure Register;
 
@@ -26,7 +27,7 @@ uses
   HMITrackBar, HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar,
   HMIAnimation, HMIText, HMIZones, hmipropeditor, HMIControlDislocatorAnimation,
   ControlSecurityManager, ActnList, CustomizedUserManagement, Controls,
-  scadapropeditor, HMIFlowImage, hmifaceplatedsgn, hmilogmemo,
+  scadapropeditor, HMIFlowImage, hmifaceplatedsgn,
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
   {$IFEND}
@@ -35,10 +36,9 @@ uses
   hmibooleanpropertyconnector, HMIComboBox, HMIKeyboardManager,
   hmi_draw_elevador, hmi_draw_fita, hmi_draw_redler, hmi_draw_rosca,
   hmi_polyline, hmicolorpropertyconnector, HMITransparentButton, HMIButton,
-  HMIRecipe, HMIRecipeButton,
   HMI_Draw_Valves, HMIBasicEletricMotor, hmi_draw_flow_valve,
   hmi_draw_flow_pump, hmi_draw_basic_vector_control, HMIBandeja,
-  CentralUserManagement, TagLinkedSeriesSource,
+  CentralUserManagement, TagLinkedSeriesSource, HMIRecipe, HMIRecipeButton,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -97,9 +97,6 @@ begin
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   RegisterComponents(strControlsPallete,  [THMIComboBox]);
   RegisterComponents(strControlsPallete,  [THMIKeyboardManager]);
-  //destino de tela do TpSCADALogger (registrado no pacote dsng)
-  //screen target of TpSCADALogger (registered by the dsng package)
-  RegisterComponents(strUtilsPallete,     [TpSCADALogMemo]);
   RegisterComponents(strControlsPallete,  [THMIFitaBasica,
                                            THMIElevadorBasico,
                                            THMIRedlerBasico,
@@ -119,6 +116,7 @@ begin
                                            THMIBandeja,
                                            THMIEventLogger,
                                            THMIAlarmLogger,
+                                           THMIS7PlusAlarmLogger,
                                            TTagLinkedSeriesSource]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
@@ -126,6 +124,10 @@ begin
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   RegisterComponents(strUserManagement,   [TWinCCUserManagement]);
   {$IFEND}
+  //destino de tela do TpSCADALogger (registrado no pacote dsng)
+  //screen target of TpSCADALogger (registered by the dsng package)
+  RegisterComponents(strUtilsPallete,     [TpSCADALogMemo]);
+
   RegisterComponents(strUserManagement,   [TCustomizedUserManagement,
                                            TCentralUserManagement
                                           ]);
@@ -164,8 +166,6 @@ begin
   RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphUpFile',                   TImageFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphDownFile',                 TImageFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphGrayedFile',               TImageFileNamePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(AnsiString), THMIRecipeButton,                         'GlyphUpFile',                   TImageFileNamePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(AnsiString), THMIRecipeButton,                         'GlyphDownFile',                 TImageFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADASecureAction,                 'SecurityCode',                  TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADACheckSpecialTokenAction,      'SecurityCode',                  TSecurityCodePropertyEditor);
 
