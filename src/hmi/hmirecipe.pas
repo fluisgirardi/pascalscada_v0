@@ -761,12 +761,26 @@ end;
 procedure THMIRecipeGrid.FillCells;
 var
   i: Integer;
+  TargetCols: Integer;
 begin
   if csDestroying in ComponentState then exit;
   FUpdating := True;
   try
-    if ColCount <> FFields.Count + 1 then
-      ColCount := FFields.Count + 1;
+    //minimo duas colunas (nome + uma de parametro, vazia) e duas linhas
+    //(cabecalho + uma de receita): uma grade de coluna unica faria qualquer
+    //leitura de Cells[1,x] - nossa, do LCL ou do usuario - levantar
+    //EGridException "Index Out of range Cell[Col=1 Row=0]".
+    //
+    //minimum of two columns (the name + one empty parameter column) and two
+    //rows (the header + one recipe row): a single column grid makes any
+    //Cells[1,x] read - ours, the LCL's or the user's - raise EGridException
+    //"Index Out of range Cell[Col=1 Row=0]".
+    if FFields.Count + 1 < 2 then
+      TargetCols := 2
+    else
+      TargetCols := FFields.Count + 1;
+    if ColCount <> TargetCols then
+      ColCount := TargetCols;
     if RowCount <> FRecipes.Count + 1 then
       RowCount := FRecipes.Count + 1;
     if RowCount < 2 then
@@ -783,7 +797,7 @@ begin
     //empty row left over when there is no recipe at all.
     if FRecipes.Count = 0 then begin
       Cells[0, 1] := '';
-      for i := 0 to FFields.Count-1 do
+      for i := 0 to ColCount-2 do
         Cells[i+1, 1] := '';
     end;
   finally

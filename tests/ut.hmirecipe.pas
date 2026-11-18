@@ -28,7 +28,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Graphics, Grids, fpcunit, testregistry,
-  HMIRecipe, PLCTag, PLCNumber, ProtocolTypes, testsupport.faketag;
+  LResources, HMIRecipe, PLCTag, PLCNumber, ProtocolTypes, testsupport.faketag;
 
 type
   { TRecipeGridProbe }
@@ -76,6 +76,10 @@ type
     procedure DownloadWithNoNumericTagReportsAnError;
     procedure AddingAFieldGivesEveryRecipeAColumn;
     procedure DownloadWithAnEmptyLibraryReportsAnError;
+    procedure ManyFieldsCreatedAtRuntimeStayInRange;
+    procedure StreamingFourFieldsFromALfmStaysInRange;
+    procedure AnEmptyGridKeepsOneUsableParameterColumn;
+    procedure StreamingAStaleSingleColumnEmptyGridHeals;
   end;
 
 implementation
@@ -353,6 +357,209 @@ begin
   FGrid.Download;
   AssertEquals('avisou', 1, FErrors);
   AssertEquals('nada escrito', 0, FTemp.Escritas);
+end;
+
+procedure TTestHMIRecipe.ManyFieldsCreatedAtRuntimeStayInRange;
+var
+  i: Integer;
+begin
+  //o erro do problema real: muitas colunas e a grade pintando depois disso.
+  //the real issue: many columns and the grid painting afterwards.
+  for i := 1 to 6 do
+    FGrid.Fields.Add.Name := 'Field' + IntToStr(i);
+  FGrid.AddRecipe('A');
+  FGrid.RefreshCells;
+
+  AssertEquals('uma coluna de nome + oito de parametro (2 do SetUp + 6 novas)',
+               9, FGrid.ColCount);
+  AssertEquals('cabecalho da ultima coluna', 'Field6', FGrid.Cells[8, 0]);
+  AssertEquals('titulo da primeira linha', 'Recipe', FGrid.Cells[0, 0]);
+  AssertEquals('nome da receita', 'A', FGrid.Cells[0, 1]);
+end;
+
+procedure TTestHMIRecipe.StreamingFourFieldsFromALfmStaysInRange;
+var
+  lfm: TStringStream;
+  bin: TMemoryStream;
+  Reader: TReader;
+  Grid: THMIRecipeGrid;
+  Form: TForm;
+
+  function FieldItems: string;
+  begin
+    Result :=
+      '    item' + LineEnding +
+      '      Name = '#39'F1'#39 + LineEnding +
+      '    end' + LineEnding +
+      '    item' + LineEnding +
+      '      Name = '#39'F2'#39 + LineEnding +
+      '    end' + LineEnding +
+      '    item' + LineEnding +
+      '      Name = '#39'F3'#39 + LineEnding +
+      '    end' + LineEnding +
+      '    item' + LineEnding +
+      '      Name = '#39'F4'#39 + LineEnding +
+      '    end>';
+  end;
+
+  function BuildLFM(const aColCount: string): string;
+  begin
+    //a ordem do designer: primeiro as propriedades herdadas, depois as
+    //proprias do THMIRecipeGrid (Fields, NameColumnTitle...). ColCount so'
+    //entra no .lfm quando difere do padrao (5).
+    //
+    //designer order: inherited properties first, then the THMIRecipeGrid
+    //ones (Fields, NameColumnTitle...). ColCount only goes into the .lfm
+    //when it differs from the default (5).
+    Result :=
+      'object RecipeGrid1: THMIRecipeGrid' + LineEnding +
+      '  Left = 0' + LineEnding +
+      '  Height = 250' + LineEnding +
+      '  Top = 0' + LineEnding +
+      '  Width = 500' + LineEnding;
+    if aColCount <> '' then
+      Result := Result + '  ColCount = ' + aColCount + LineEnding;
+    Result := Result +
+      '  DefaultColWidth = 100' + LineEnding +
+      '  DefaultRowHeight = 22' + LineEnding +
+      '  Options = [goEditing, goColSizing, goTabs]' + LineEnding +
+      '  RowCount = 2' + LineEnding +
+      '  TabOrder = 0' + LineEnding +
+      '  Fields = <' + LineEnding +
+      FieldItems + LineEnding +
+      '  NameColumnTitle = '#39'Recipe'#39 + LineEnding +
+      'end';
+  end;
+
+  procedure TryStream(const aLabel, aLFM: string);
+  begin
+    lfm := TStringStream.Create(aLFM);
+    bin := TMemoryStream.Create;
+    try
+      lfm.Position := 0;
+      LRSObjectTextToBinary(lfm, bin);
+      bin.Position := 0;
+      Reader := TReader.Create(bin, 4096);
+      try
+        Grid := THMIRecipeGrid(Reader.ReadRootComponent(nil));
+        Form := TForm.CreateNew(nil);
+        try
+          AssertEquals(aLabel + ': quatro campos + coluna do nome', 5,
+                       Grid.ColCount);
+          AssertEquals(aLabel + ': cabecalho da ultima coluna', 'F4',
+                       Grid.Cells[4, 0]);
+          AssertEquals(aLabel + ': titulo da coluna do nome', 'Recipe',
+                       Grid.Cells[0, 0]);
+
+          //forca o caminho completo do formulario: janela real, carregada e
+          //pintada - e' onde a LCL costuma esbarrar em cache de tamanho antigo.
+          //forces the full form path: a real window, loaded and painted -
+          //that is where the LCL usually trips over a stale size cache.
+          Grid.Parent := Form;
+          Form.Show;
+          Application.ProcessMessages;
+          AssertEquals(aLabel + ': depois de pintar, ColCount continua certo',
+                       5, Grid.ColCount);
+        finally
+          Form.Free;
+          Grid.Free;
+        end;
+      finally
+        Reader.Free;
+      end;
+    finally
+      lfm.Free;
+      bin.Free;
+    end;
+  end;
+
+begin
+  //reproduz o caminho do formulario: com 4 campos o ColCount de projeto (5)
+  //iguala o padrao e o designer nao grava; com 3 campos grava 4; e um projeto
+  //salvo com a grade vazia grava 1 (a grade vazia de projeto fica com uma
+  //coluna so').
+  //
+  //replays the form path: with 4 fields the design ColCount (5) equals the
+  //default and the designer stores nothing; with 3 fields it stores 4; and a
+  //project saved with an empty grid stores 1 (the empty design grid has a
+  //single column).
+  RegisterClass(THMIRecipeGrid);
+  RegisterClass(TRecipeFields);
+  RegisterClass(TRecipeField);
+
+  TryStream('ColCount ausente', BuildLFM(''));
+  TryStream('ColCount = 4',    BuildLFM('4'));
+  TryStream('ColCount = 1',    BuildLFM('1'));
+end;
+
+procedure TTestHMIRecipe.AnEmptyGridKeepsOneUsableParameterColumn;
+var
+  Grid: THMIRecipeGrid;
+begin
+  //a grade vazia de projeto tinha uma unica coluna (so' o nome) e qualquer
+  //leitura de Cells[1,x] levantava EGridException. Hoje ela nasce com nome
+  //mais uma coluna de parametro vazia.
+  //
+  //the empty design grid used to have a single column (the name only) and
+  //any Cells[1,x] read raised EGridException. Now it starts with the name
+  //plus one empty parameter column.
+  Grid := THMIRecipeGrid.Create(nil);
+  try
+    AssertEquals('nome + uma coluna de parametro vazia', 2, Grid.ColCount);
+    AssertEquals('a coluna extra esta vazia', '', Grid.Cells[1, 0]);
+    AssertEquals('a linha de receita vazia esta vazia', '', Grid.Cells[1, 1]);
+  finally
+    Grid.Free;
+  end;
+end;
+
+procedure TTestHMIRecipe.StreamingAStaleSingleColumnEmptyGridHeals;
+var
+  lfm: TStringStream;
+  bin: TMemoryStream;
+  Reader: TReader;
+  Grid: THMIRecipeGrid;
+begin
+  //um projeto salvo com a grade sem campos guarda ColCount = 1; depois de
+  //carregar a grade tem de voltar a ter nome + uma coluna utilizavel.
+  //
+  //a project saved with a fieldless grid stores ColCount = 1; after loading,
+  //the grid has to be back to the name + one usable column.
+  RegisterClass(THMIRecipeGrid);
+  RegisterClass(TRecipeFields);
+  RegisterClass(TRecipeField);
+
+  lfm := TStringStream.Create(
+    'object RecipeGrid1: THMIRecipeGrid' + LineEnding +
+    '  Left = 0' + LineEnding +
+    '  Height = 250' + LineEnding +
+    '  Top = 0' + LineEnding +
+    '  Width = 500' + LineEnding +
+    '  ColCount = 1' + LineEnding +
+    '  RowCount = 2' + LineEnding +
+    '  TabOrder = 0' + LineEnding +
+    'end');
+  bin := TMemoryStream.Create;
+  try
+    lfm.Position := 0;
+    LRSObjectTextToBinary(lfm, bin);
+    bin.Position := 0;
+    Reader := TReader.Create(bin, 4096);
+    try
+      Grid := THMIRecipeGrid(Reader.ReadRootComponent(nil));
+      try
+        AssertEquals('nome + uma coluna de parametro vazia', 2, Grid.ColCount);
+        AssertEquals('a coluna extra esta vazia', '', Grid.Cells[1, 0]);
+      finally
+        Grid.Free;
+      end;
+    finally
+      Reader.Free;
+    end;
+  finally
+    lfm.Free;
+    bin.Free;
+  end;
 end;
 
 initialization
