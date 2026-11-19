@@ -4,11 +4,13 @@ Antes de mais nada, sinta-se livre para enviar correções e alternativas para e
 
 O objetivo principal desta página é ensinar como instalar a versão atual do PascalSCADA na versão atual do Lazarus. Instalar em versões antigas do Lazarus é assunto para outra página — ou, se quiser, sinta-se livre para escrever as instruções da IDE desejada.
 
+> **Recomendado: instale pelo Online Package Manager (OPM) do Lazarus.** *Package → Online Package Manager*, procure por *PascalSCADA*, marque e clique em *Install* — o OPM baixa o PascalSCADA **0.8.0** e as dependências (inclusive o BGRABitmap) e recompila a IDE sozinho ([veja como, com vídeo](/pb/2017/04/04/pascalscada-on-opm-repository/)). A instalação manual pelo GitHub, descrita abaixo, é para quem quer o código em desenvolvimento.
+
 **Atenção**: o PascalSCADA depende de outros pacotes, que precisam estar instalados (ou serão instalados junto):
 
 * **BGRABitmap** — usado pelos controles gráficos da HCl. Está no *Online Package Manager* do Lazarus.
 * **TAChart** — usado pelo `TTagLinkedSeriesSource`. Já vem com o Lazarus.
-* **SQLDB** (`SQLDBLaz`) — usado pelo `THMIDBConnection`. Já vem com o Lazarus. *O ZeosLib não é mais necessário desde a versão 0.7.7.*
+* **SQLDB** (`SQLDBLaz`) — usado pelo `THMIDBConnection`. Já vem com o Lazarus. *O ZeosLib não é necessário na versão 0.8.0.*
 
 **ATENÇÃO DOBRADA:** O PascalSCADA não é como outros sistemas SCADA. Ele é um pacote, plugin ou addon (chame como quiser) que permite que o Lazarus crie aplicações HMI/SCADA. Portanto, um assistente de instalação com os botões "Next", "Next" e "Finish" não está disponível.
 
@@ -16,8 +18,8 @@ O objetivo principal desta página é ensinar como instalar a versão atual do P
 
 1. **Lazarus**, versão 2.0 ou mais nova, com **Free Pascal 3.0 ou mais novo** — o PascalSCADA é desenvolvido e testado com FPC 3.2.2 e a versão estável mais recente do Lazarus. Se você é usuário de Windows, você pode obter o Lazarus na página oficial: [http://www.lazarus-ide.org/](http://www.lazarus-ide.org/). Se você é usuário de Linux/FreeBSD, você pode obtê-lo a partir do repositório de software do seu sistema operacional ou, para ter a versão mais nova, com o [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe).
 2. **O código do PascalSCADA**, de uma destas duas fontes:
-    * **GitHub** (recomendado — é onde o desenvolvimento acontece): `git clone https://github.com/fluisgirardi/pascalscada_v0.git`, ou baixe o [ZIP do branch master](https://github.com/fluisgirardi/pascalscada_v0/archive/refs/heads/master.zip) e descompacte numa pasta de sua escolha.
-    * **Online Package Manager** do Lazarus (*Package → Online Package Manager*): procure por *PascalSCADA*. É o caminho mais curto, mas o pacote publicado lá é a versão 0.7.7 (2021); o GitHub tem as correções e os drivers mais recentes.
+    * **Online Package Manager** do Lazarus (*Package → Online Package Manager*), **recomendado**: procure por *PascalSCADA*. É o caminho mais curto e instala a versão 0.8.0 com as dependências.
+    * **GitHub** (onde o desenvolvimento acontece, para o código mais recente): `git clone https://github.com/fluisgirardi/pascalscada_v0.git`, ou baixe o [ZIP do branch master](https://github.com/fluisgirardi/pascalscada_v0/archive/refs/heads/master.zip) e descompacte numa pasta de sua escolha.
 3. Um programa para descompactar `.zip`, se não usar o `git`.
 
 O SourceForge e o SVN citados em versões antigas desta página não são mais usados.

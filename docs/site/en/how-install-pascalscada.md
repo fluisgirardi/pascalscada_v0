@@ -4,11 +4,13 @@ First of all, feel free to send corrections or alternative ways to this method �
 
 The main goal of this page is to show how to install the current PascalSCADA on the current **Lazarus** version. Installing it on outdated Lazarus versions is a matter for another page — or feel free to write the instructions for the IDE you want.
 
+> **Recommended: install through Lazarus' Online Package Manager (OPM).** *Package → Online Package Manager*, search for *PascalSCADA*, tick it and click *Install* — the OPM downloads PascalSCADA **0.8.0** and its dependencies (BGRABitmap included) and rebuilds the IDE by itself ([see how, with a video](/2017/04/04/pascalscada-on-opm-repository/)). The manual installation from GitHub described below is for those who want the development code.
+
 **Warning**: PascalSCADA depends on other packages, which must be installed (or will be installed along with it):
 
 * **BGRABitmap** — used by the HCl drawn controls. Available in Lazarus' *Online Package Manager*.
 * **TAChart** — used by `TTagLinkedSeriesSource`. Ships with Lazarus.
-* **SQLDB** (`SQLDBLaz`) — used by `THMIDBConnection`. Ships with Lazarus. *ZeosLib is no longer required since version 0.7.7.*
+* **SQLDB** (`SQLDBLaz`) — used by `THMIDBConnection`. Ships with Lazarus. *ZeosLib is not required by version 0.8.0.*
 
 **DOUBLE WARNING:** PascalSCADA is not like other SCADA systems. It is a package, plugin or add-on (call it what you like) that lets Lazarus build HMI/SCADA applications. So an installer with "Next", "Next" and "Finish" buttons is not available.
 
@@ -16,8 +18,8 @@ The main goal of this page is to show how to install the current PascalSCADA on 
 
 1. **Lazarus** 2.0 or newer, with **Free Pascal 3.0 or newer** — PascalSCADA is developed and tested with FPC 3.2.2 and the latest stable Lazarus. On Windows, get Lazarus from the official page: [http://www.lazarus-ide.org/](http://www.lazarus-ide.org/). On Linux/FreeBSD, get it from your distribution's software repository or, for the newest version, with [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe).
 2. **The PascalSCADA code**, from one of two sources:
-    * **GitHub** (recommended — it is where development happens): `git clone https://github.com/fluisgirardi/pascalscada_v0.git`, or download the [master branch ZIP](https://github.com/fluisgirardi/pascalscada_v0/archive/refs/heads/master.zip) and unpack it in a folder of your choice.
-    * Lazarus' **Online Package Manager** (*Package → Online Package Manager*): search for *PascalSCADA*. It is the shortest path, but the package published there is version 0.7.7 (2021); GitHub has the latest fixes and drivers.
+    * Lazarus' **Online Package Manager** (*Package → Online Package Manager*), **recommended**: search for *PascalSCADA*. It is the shortest path and installs version 0.8.0 with its dependencies.
+    * **GitHub** (where development happens, for the latest code): `git clone https://github.com/fluisgirardi/pascalscada_v0.git`, or download the [master branch ZIP](https://github.com/fluisgirardi/pascalscada_v0/archive/refs/heads/master.zip) and unpack it in a folder of your choice.
 3. A program to unpack `.zip` files, if you don't use `git`.
 
 The SourceForge and SVN mentioned in older versions of this page are no longer used.

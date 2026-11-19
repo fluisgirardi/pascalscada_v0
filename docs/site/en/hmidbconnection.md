@@ -2,7 +2,7 @@
 
 ![](img/THMIDBConnection.png) `THMIDBConnection` is PascalSCADA's database access component: it connects to a DBMS and runs SQL commands **asynchronously**, without freezing the interface while the query runs. It lives in the `pascalscada_db` package (which does not depend on the LCL, so it also works in console applications) and is the base of components such as [`THMIEventLogger` and `THMIAlarmLogger`](/event-and-alarm-loggers/), besides serving your own screens — user management, recipes, history.
 
-Underneath, it uses Free Pascal's **SQLdb** (no longer ZeosLib, dropped as a dependency from version 0.7.7 on — see [How to install](/how-install-pascalscada/)). That means `THMIDBConnection` is ready for whatever database SQLdb has a connector for; it is not an ORM and does not hide SQL from you — you write the command and it takes care of the queue, the thread and delivering the result back.
+Underneath, it uses Free Pascal's **SQLdb** (no longer ZeosLib, not a dependency in version 0.8.0 — see [How to install](/how-install-pascalscada/)). That means `THMIDBConnection` is ready for whatever database SQLdb has a connector for; it is not an ORM and does not hide SQL from you — you write the command and it takes care of the queue, the thread and delivering the result back.
 
 ##### Supported databases
 
