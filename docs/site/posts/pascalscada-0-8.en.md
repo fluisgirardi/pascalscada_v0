@@ -46,6 +46,6 @@ Most of the "how to use" pages were rewritten or written for the first time, in 
 
 ##### Getting it
 
-The code is on [GitHub](https://github.com/fluisgirardi/pascalscada_v0) — see [How to install](/how-install-pascalscada/). The 0.8 package for Lazarus' *Online Package Manager* follows soon, so it can be installed straight from the IDE.
+The recommended way is Lazarus' *Online Package Manager*, which already has 0.8.0: *Package → Online Package Manager*, search for *PascalSCADA* and click *Install*. The OPM fetches the dependencies (BGRABitmap included) and rebuilds the IDE by itself. The development code is on [GitHub](https://github.com/fluisgirardi/pascalscada_v0). See [How to install](/how-install-pascalscada/).
 
 If something breaks, or you have a suggestion, open an issue on [GitHub](https://github.com/fluisgirardi/pascalscada_v0).
