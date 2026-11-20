@@ -3,7 +3,7 @@ unit HMITransparentButton;
 interface
 
 uses
-  Classes, Sysutils, Controls, LMessages, hmi_draw_basiccontrol, BGRABitmap;
+  Classes, Sysutils, Controls, LMessages, hmi_draw_basiccontrol;
 
 type
 

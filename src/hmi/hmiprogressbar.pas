@@ -67,7 +67,7 @@ type
     //: @exclude
     procedure Loaded; override;
     procedure UpdateShape; override;
-    procedure DrawControl; override;
+    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -112,7 +112,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager, Math, BGRABitmap, BGRABitmapTypes,
+uses hsstrings, ControlSecurityManager, Math,
   Forms;
 
 constructor THMIProgressBar.Create(AOwner: TComponent);
@@ -175,9 +175,8 @@ begin
   //inherited UpdateShape;
 end;
 
-procedure THMIProgressBar.DrawControl;
-var
-  aux: Double;
+procedure THMIProgressBar.PaintControl(ACanvas: TCanvas; AWidth,
+  AHeight: Integer);
 
 function ProgressNormalized:Double;
 begin
@@ -186,65 +185,43 @@ begin
   if Result>1 then Result:=1;
 end;
 
+  //a barra: um retangulo cheio, sem borda (x2,y2 exclusivos, como no TCanvas)
+  //the bar: a filled rectangle with no border (x2,y2 exclusive, as on TCanvas)
+  procedure Bar(x1, y1, x2, y2:Double);
+  begin
+    ACanvas.Brush.Style:=bsSolid;
+    ACanvas.Brush.Color:=ShapeColor(FBodyColor);
+    ACanvas.FillRect(Round(x1), Round(y1), Round(x2), Round(y2));
+  end;
+
 begin
-  inherited DrawControl;
-  FControlArea.CanvasBGRA.Brush.Color:= FBackgroundColor;
-  FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
-  FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
+  SetupCanvas(ACanvas, FBorderColor, FBorderWidth, FBackgroundColor);
+  ACanvas.Rectangle(0,0,AWidth,AHeight);
 
   case Orientation of
-    pbVertical: begin
-      FControlArea.CanvasBGRA.Pen.Width  :=0;
-      FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
-      aux:=Height*((FMax-Progress)/ifthen((FMax-FMin)=0,1,(FMax-FMin)));
-      FControlArea.RectangleAntialias(FBorderWidth,
-                                      Height-(Height*ProgressNormalized),
-                                      Width-(FBorderWidth*2),
-                                      Height-FBorderWidth,
-                                      ColorToBGRA(FBorderColor),
-                                      0,
-                                      ColorToBGRA(FBodyColor));
+    pbVertical:
+      Bar(FBorderWidth,
+          AHeight-(AHeight*ProgressNormalized),
+          AWidth-FBorderWidth,
+          AHeight-FBorderWidth);
 
-    end;
+    pbHorizontal:
+      Bar(FBorderWidth,
+          FBorderWidth,
+          AWidth*ProgressNormalized,
+          AHeight-FBorderWidth);
 
-    pbHorizontal: begin
-      FControlArea.CanvasBGRA.Pen.Width  :=0;
-      FControlArea.RectangleAntialias(FBorderWidth,
-                                      FBorderWidth,
-                                      Width*ProgressNormalized,
-                                      height-(FBorderWidth*2),
-                                      ColorToBGRA(FBorderColor),
-                                      0,
-                                      ColorToBGRA(FBodyColor));
+    pbRightToLeft:
+      Bar(AWidth-(AWidth*ProgressNormalized),
+          FBorderWidth,
+          AWidth-FBorderWidth,
+          AHeight-FBorderWidth);
 
-    end;
-
-    pbRightToLeft: begin
-      FControlArea.CanvasBGRA.Pen.Width  :=0;
-      FControlArea.CanvasBGRA.Brush.Color:= clDefault;
-      FControlArea.RectangleAntialias(Width-(Width*ProgressNormalized),
-                                      FBorderWidth,
-                                      Width-FBorderWidth,
-                                      height-(FBorderWidth*2),
-                                      ColorToBGRA(FBorderColor),
-                                      0,
-                                      ColorToBGRA(FBodyColor));
-
-    end;
-    pbTopDown: begin
-      FControlArea.CanvasBGRA.Pen.Width  :=0;
-      FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
-      aux:=Height*((FMax-Progress)/ifthen((FMax-FMin)=0,1,(FMax-FMin)));
-      FControlArea.RectangleAntialias(FBorderWidth,
-                                      FBorderWidth,
-                                      Width-(FBorderWidth*2),
-                                      Height*ProgressNormalized,
-                                      ColorToBGRA(FBorderColor),
-                                      0,
-                                      ColorToBGRA(FBodyColor));
-
-    end;
+    pbTopDown:
+      Bar(FBorderWidth,
+          FBorderWidth,
+          AWidth-FBorderWidth,
+          AHeight*ProgressNormalized);
   end;
 end;
 

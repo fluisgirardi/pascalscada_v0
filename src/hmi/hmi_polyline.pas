@@ -5,8 +5,8 @@ unit hmi_polyline;
 interface
 
 uses
-  Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol, BGRABitmap,
-  BGRABitmapTypes, hmibasiccolletion, LMessages;
+  Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol,
+  hmibasiccolletion, LMessages;
 
 type
 
@@ -57,7 +57,7 @@ type
 
     procedure DoLineColorChange; virtual;
 
-    procedure DrawControl; override;
+    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
 
     procedure BeginDrawPolyline; virtual;
     procedure BeginEmptyPolyline; virtual;
@@ -714,43 +714,39 @@ begin
   end;
 end;
 
-procedure THMIPolyline.DrawControl;
+procedure THMIPolyline.PaintControl(ACanvas: TCanvas; AWidth,
+  AHeight: Integer);
 var
-  p:array of TPointF;
+  p:array of TPoint;
   i: Integer;
-  afillcolor: TBGRAPixel;
-  abordercolor: TBGRAPixel;
   pc: TPointCollectionItem;
+  th: Integer;
 begin
-  inherited DrawControl;
-
+  p:=nil;
   SetLength(p, FPointCoordinates.Count);
   for i:=0 to FPointCoordinates.Count-1 do begin
     pc:=TPointCollectionItem(FPointCoordinates.Items[i]);
-    p[i].x:=pc.X + ifthen((FBorderWidth mod 2)=1, ifthen((pc.X mod 2)=0, 1), 0.5);
-    p[i].y:=pc.Y + ifthen((FBorderWidth mod 2)=0, 0.5);
+    p[i]:=Point(pc.X, pc.Y);
   end;
 
-  FControlArea.PenStyle:=FPenStyle;
-  if Visible or (csDesigning in ComponentState) then
-    FControlArea.DrawPolyLineAntialias(p, ColorToBGRA(FBorderColor),FBorderWidth);
+  if (Length(p)>0) and (Visible or (csDesigning in ComponentState)) then begin
+    SetupCanvas(ACanvas, FBorderColor, FBorderWidth, FBorderColor);
+    ACanvas.Pen.Style:=FPenStyle;
+    ACanvas.Pen.EndCap:=pecRound;
+    ACanvas.Pen.JoinStyle:=pjsRound;
+    ACanvas.Polyline(p);
+  end;
 
   if csDesigning in ComponentState then begin
     if (FPointInfo='') or (FDesignDrawing=false) then exit;
-    afillcolor:=ColorToBGRA(FBodyColor);
-    abordercolor:=ColorToBGRA(FBorderColor);
-
-    afillcolor.alpha:=160;
-    abordercolor.alpha:=160;
-
-    FControlArea.Rectangle(Width-FPointInfoWidth-5,
-                           -1,
-                           Width + 1,
-                           FControlArea.CanvasBGRA.TextHeight(FPointInfo)+5,
-                           abordercolor,
-                           afillcolor,
-                           dmDrawWithTransparency);
-    FControlArea.TextOut(Width-2,1, FPointInfo,ColorToBGRA(FBorderColor),taRightJustify);
+    //a BGRABitmap desenhava a caixa meio transparente; no TCanvas ela e' opaca
+    //BGRABitmap drew the box half transparent; on TCanvas it is opaque
+    th:=MeasureText(FPointInfo).cy;
+    SetupCanvas(ACanvas, FBorderColor, 1, FBodyColor);
+    ACanvas.Rectangle(AWidth-FPointInfoWidth-5, -1, AWidth + 1, th+5);
+    ACanvas.Brush.Style:=bsClear;
+    ACanvas.Font.Color:=ShapeColor(FBorderColor);
+    ACanvas.TextOut(AWidth-2-FPointInfoWidth, 1, FPointInfo);
   end;
 end;
 
@@ -955,7 +951,7 @@ begin
       else
         FPointInfo:=Format('x=%d, y=%d, Degrees=%d',[X,Y,Trunc(Degrees(x,lastpoint.X,Y,lastpoint.Y))]);
 
-      tw:=FControlArea.CanvasBGRA.TextWidth(FPointInfo);
+      tw:=MeasureText(FPointInfo).cx;
       if tw=FPointInfoWidth then
         InvalidateDraw
       else begin

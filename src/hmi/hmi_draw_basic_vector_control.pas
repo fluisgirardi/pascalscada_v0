@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, hmi_draw_basiccontrol, BGRASVG, BGRASVGShapes, BGRASVGType,
-  TextStrings, Graphics, BGRAUnits, BGRABitmapTypes, hmi_polyline,
+  TextStrings, Graphics, BGRAUnits, BGRABitmap, BGRABitmapTypes, hmi_polyline,
   hmi_flow_zones, hmibasiccolletion, HMIZones, hmi_animation_timers, hsutils,
   PLCTag;
 
@@ -37,8 +37,15 @@ type
     procedure SetBlinkTargetID(AValue: String);
   protected
     FSVGDrawing: TBGRASVG;
+    //o SVG ainda e' desenhado pela BGRABitmap, aqui; o resultado e' copiado
+    //para a FControlArea da base
+    //the SVG is still drawn by BGRABitmap, here; the result is copied into
+    //the base's FControlArea
+    FSVGImage: TBGRABitmap;
+    procedure CopySVGImageToControlArea;
     procedure CheckAutoSize;
     procedure DrawControl; override;
+    function  PaintsDirectly:Boolean; override;
     procedure ReloadDrawing; virtual;
     procedure Loaded; override;
     procedure CalculatePreferredSize(var PreferredWidth,
@@ -1501,13 +1508,45 @@ begin
     InvalidateShape;
 end;
 
+//o SVG e' desenhado pela BGRABitmap, nao pelo PaintControl
+//the SVG is drawn by BGRABitmap, not by PaintControl
+function THMICustomVectorControl.PaintsDirectly: Boolean;
+begin
+  Result:=false;
+end;
+
+procedure THMICustomVectorControl.CopySVGImageToControlArea;
+var
+  x, y: Integer;
+  src: PBGRAPixel;
+  dst: PControlPixel;
+begin
+  ClearControlArea(FSVGImage.Width, FSVGImage.Height);
+  for y:=0 to FSVGImage.Height-1 do begin
+    src:=FSVGImage.ScanLine[y];
+    dst:=ControlAreaRow(y);
+    for x:=0 to FSVGImage.Width-1 do begin
+      dst^.red  :=src^.red;
+      dst^.green:=src^.green;
+      dst^.blue :=src^.blue;
+      dst^.alpha:=src^.alpha;
+      inc(src);
+      inc(dst);
+    end;
+  end;
+  ControlAreaChanged;
+end;
+
 procedure THMICustomVectorControl.DrawControl;
 begin
-  inherited DrawControl;
+  //sem o inherited: a base desenharia o PaintControl, que aqui nao ha'
+  //no inherited: the base would draw PaintControl, which there is none of here
+  FSVGImage.SetSize(Width, Height);
+  FSVGImage.FillTransparent;
 
   if FBackground<>clNone then begin
-    FControlArea.Canvas2D.fillStyle(FBackground);
-    FControlArea.Canvas2D.fillRect(0, 0, FControlArea.Canvas2D.Width, FControlArea.Canvas2D.Height);
+    FSVGImage.Canvas2D.fillStyle(FBackground);
+    FSVGImage.Canvas2D.fillRect(0, 0, FSVGImage.Canvas2D.Width, FSVGImage.Canvas2D.Height);
   end;
 
   // reaplica a cor de piscar (se ativa) - garante que sobreviva a um
@@ -1517,19 +1556,19 @@ begin
 
   if FStretch then begin
     if FProportional then
-      FSVGDrawing.StretchDraw(FControlArea.Canvas2D,
+      FSVGDrawing.StretchDraw(FSVGImage.Canvas2D,
                               taLeftJustify,
                               tlTop,
                               0,
                               0,
-                              FControlArea.Canvas2D.Width-1,
-                              FControlArea.Canvas2D.Height-1)
+                              FSVGImage.Canvas2D.Width-1,
+                              FSVGImage.Canvas2D.Height-1)
     else
-      FSVGDrawing.StretchDraw(FControlArea.Canvas2D,
+      FSVGDrawing.StretchDraw(FSVGImage.Canvas2D,
                               0,
                               0,
-                              FControlArea.Canvas2D.Width-1,
-                              FControlArea.Canvas2D.Height-1)
+                              FSVGImage.Canvas2D.Width-1,
+                              FSVGImage.Canvas2D.Height-1)
   end else
     //Draw(0,0) nao aplica o mapeamento viewBox->viewport: um arquivo com
     //viewBox maior que a largura declarada (ex: width="64px" e
@@ -1541,7 +1580,9 @@ begin
     //viewBox="0 0 112.5 109.23", typical of CAD exports) comes out clipped.
     //StretchDraw with the computed dimensions honours the viewBox and draws
     //the whole thing at natural size.
-    FSVGDrawing.StretchDraw(FControlArea.Canvas2D, 0, 0, cuPixel);
+    FSVGDrawing.StretchDraw(FSVGImage.Canvas2D, 0, 0, cuPixel);
+
+  CopySVGImageToControlArea;
 end;
 
 procedure THMICustomVectorControl.ReloadDrawing;
@@ -1590,6 +1631,7 @@ begin
   FBlinkTargetID:='border';
   FBlinkOverridden:=False;
   FSVGDrawing:=TBGRASVG.Create;
+  FSVGImage:=TBGRABitmap.Create;
   FSVGContents:=TTextStrings.Create;
   ControlStyle := ControlStyle + [csAcceptsControls];
 end;
@@ -1597,6 +1639,7 @@ end;
 destructor THMICustomVectorControl.Destroy;
 begin
   FreeAndNil(FSVGDrawing);
+  FreeAndNil(FSVGImage);
   FreeAndNil(FSVGContents);
   inherited Destroy;
 end;

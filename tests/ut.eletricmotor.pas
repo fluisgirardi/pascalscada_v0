@@ -38,7 +38,7 @@ interface
 
 uses
   Classes, SysUtils, Graphics, Controls, fpcunit, testregistry,
-  BGRABitmap, BGRABitmapTypes, HMIBasicEletricMotor;
+  IntfGraphics, hmi_draw_basiccontrol, HMIBasicEletricMotor;
 
 type
 
@@ -52,7 +52,8 @@ type
   TMotorProbe = class(THMIBasicEletricMotor)
   public
     procedure Draw;
-    function  Area:TBGRABitmap;
+    function  Area:TLazIntfImage;
+    function  Pixel(x, y:Integer):TControlPixel;
     function  ShapeIsStale:Boolean;
     procedure ShapeIsFresh;
   end;
@@ -62,7 +63,7 @@ type
   TTestEletricMotor = class(TTestCase)
   private
     FMotor:TMotorProbe;
-    function  PixelAt(x, y:Integer):TBGRAPixel;
+    function  PixelAt(x, y:Integer):TControlPixel;
     function  IsBody(x, y:Integer):Boolean;
     function  IsEmpty(x, y:Integer):Boolean;
     function  IsBorder(x, y:Integer):Boolean;
@@ -113,9 +114,14 @@ begin
   DrawControl;
 end;
 
-function TMotorProbe.Area:TBGRABitmap;
+function TMotorProbe.Area:TLazIntfImage;
 begin
   Result:=FControlArea;
+end;
+
+function TMotorProbe.Pixel(x, y:Integer):TControlPixel;
+begin
+  Result:=ControlAreaRow(y)[x];
 end;
 
 function TMotorProbe.ShapeIsStale:Boolean;
@@ -145,14 +151,14 @@ begin
   FreeAndNil(FMotor);
 end;
 
-function TTestEletricMotor.PixelAt(x, y:Integer):TBGRAPixel;
+function TTestEletricMotor.PixelAt(x, y:Integer):TControlPixel;
 begin
-  Result:=FMotor.Area.GetPixel(x,y);
+  Result:=FMotor.Pixel(x,y);
 end;
 
 function TTestEletricMotor.IsBody(x, y:Integer):Boolean;
 var
-  p:TBGRAPixel;
+  p:TControlPixel;
 begin
   p:=PixelAt(x,y);
   Result:=(p.alpha=255) and (p.red=255) and (p.green=0) and (p.blue=0);
@@ -165,7 +171,7 @@ end;
 
 function TTestEletricMotor.IsBorder(x, y:Integer):Boolean;
 var
-  p:TBGRAPixel;
+  p:TControlPixel;
 begin
   p:=PixelAt(x,y);
   Result:=(p.alpha=255) and (p.red=0) and (p.green=0) and (p.blue=255);
@@ -174,12 +180,12 @@ end;
 function TTestEletricMotor.HasBorderColouredPixels:Boolean;
 var
   x, y:Integer;
-  p:TBGRAPixel;
+  p:TControlPixel;
 begin
   Result:=false;
   for y:=0 to FMotor.Area.Height-1 do
     for x:=0 to FMotor.Area.Width-1 do begin
-      p:=FMotor.Area.GetPixel(x,y);
+      p:=FMotor.Pixel(x,y);
       if (p.alpha=255) and (p.red=0) and (p.green=0) and (p.blue=255) then
         exit(true);
     end;
@@ -289,29 +295,31 @@ end;
 
 procedure TTestEletricMotor.MirroringIsAHorizontalFlip;
 var
-  normal:TBGRABitmap;
-  x, y:Integer;
-  a, b:TBGRAPixel;
+  normal:array of TControlPixel;
+  x, y, w, h:Integer;
+  a, b:TControlPixel;
 begin
   //espelhar e' so' isso: nenhum pixel muda de cor, so' de lado
   //mirroring is just that: no pixel changes colour, only side
   FMotor.Draw;
-  normal:=TBGRABitmap.Create;
-  try
-    normal.Assign(FMotor.Area);
-    FMotor.Mirrored:=true;
-    FMotor.Draw;
+  w:=FMotor.Area.Width;
+  h:=FMotor.Area.Height;
+  normal:=nil;
+  SetLength(normal, w*h);
+  for y:=0 to h-1 do
+    for x:=0 to w-1 do
+      normal[y*w+x]:=FMotor.Pixel(x,y);
 
-    for y:=0 to normal.Height-1 do
-      for x:=0 to normal.Width-1 do begin
-        a:=normal.GetPixel(x,y);
-        b:=FMotor.Area.GetPixel(normal.Width-1-x,y);
-        if (a.alpha<>b.alpha) or (a.red<>b.red) or (a.green<>b.green) or (a.blue<>b.blue) then
-          Fail(Format('o pixel (%d,%d) nao bate com o seu espelho',[x,y]));
-      end;
-  finally
-    normal.Free;
-  end;
+  FMotor.Mirrored:=true;
+  FMotor.Draw;
+
+  for y:=0 to h-1 do
+    for x:=0 to w-1 do begin
+      a:=normal[y*w+x];
+      b:=FMotor.Pixel(w-1-x,y);
+      if (a.alpha<>b.alpha) or (a.red<>b.red) or (a.green<>b.green) or (a.blue<>b.blue) then
+        Fail(Format('o pixel (%d,%d) nao bate com o seu espelho',[x,y]));
+    end;
 end;
 
 procedure TTestEletricMotor.AVerticalMotorHasThePumpAtTheBottom;

@@ -3,8 +3,8 @@ unit HMI_Draw_Valves;
 interface
 
 uses
-  Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  hmi_draw_basiccontrol, BGRABitmap, BGRABitmapTypes;
+  Classes, SysUtils, Types, LResources, Forms, Controls, Graphics, Dialogs,
+  hmi_draw_basiccontrol;
 
 type
 
@@ -21,7 +21,8 @@ type
     procedure SetValveBodyPercent(AValue: Double);
     procedure SetValveType(AValue: TValveType);
   protected
-    procedure DrawControl; override;
+    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    function  DrawingTransform:TDrawingTransform; override;
 
     property Mirrored:Boolean read FMirrored write SetMirrored default false;
     property ValveBodyPercent:Double read FValveBodyPercent write SetValveBodyPercent;
@@ -77,70 +78,102 @@ begin
   InvalidateShape;
 end;
 
-procedure THMICustomBasicValve.DrawControl;
+function THMICustomBasicValve.DrawingTransform: TDrawingTransform;
+begin
+  Result:=dtNone;
+  if FMirrored and (ValveType<>vtPneumaticDrawer) then begin
+    if Height<=Width then
+      Result:=dtFlipVertical
+    else
+      Result:=dtFlipHorizontal;
+  end;
+end;
+
+procedure THMICustomBasicValve.PaintControl(ACanvas: TCanvas; AWidth,
+  AHeight: Integer);
 var
   p:array of TPointF;
   alturaideal: real;
   larguraideal: real;
   larguradoquadrado: real;
-begin
-  inherited DrawControl;
 
-  FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
-  FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
+  //o 'M' do motorizado, centrado em (cx, top) ou, de lado, em (left, cy)
+  //the 'M' of the motorised one, centred on (cx, top) or, sideways, on
+  //(left, cy)
+  procedure DrawM(aSize, aOrientation:Integer; X, Y:Double);
+  var
+    ts: TSize;
+  begin
+    if aSize<1 then exit;
+    ACanvas.Font.Height     :=aSize;
+    ACanvas.Font.Orientation:=aOrientation;
+    ACanvas.Font.Color      :=ShapeColor(FBorderColor);
+    ACanvas.Brush.Style     :=bsClear;
+    ts:=ACanvas.TextExtent('M');
+    if aOrientation=0 then
+      ACanvas.TextOut(Round(X-ts.cx/2), Round(Y), 'M')
+    else
+      //girado 90 graus, o texto cresce para cima a partir do ponto
+      //rotated 90 degrees, the text grows upwards from the point
+      ACanvas.TextOut(Round(X), Round(Y+ts.cx/2), 'M');
+    ACanvas.Font.Orientation:=0;
+    ACanvas.Brush.Style     :=bsSolid;
+  end;
+
+begin
+  SetupCanvas(ACanvas, FBorderColor, FBorderWidth, FBodyColor);
 
   SetLength(p, 4);
-  IF Width>=Height THEN BEGIN
+  IF AWidth>=AHeight THEN BEGIN
     if ValveType=vtPneumaticDrawer then begin
       p[0].x:=0 + (FBorderWidth mod 2);
       p[0].y:=0 + (FBorderWidth mod 2);
 
-      p[1].x:=Width - (FBorderWidth mod 2);
+      p[1].x:=AWidth - (FBorderWidth mod 2);
       p[1].y:=0 +     (FBorderWidth mod 2);
 
-      p[2].x:=Width -  (FBorderWidth mod 2);
-      p[2].y:=Height - (FBorderWidth mod 2);
+      p[2].x:=AWidth -  (FBorderWidth mod 2);
+      p[2].y:=AHeight - (FBorderWidth mod 2);
 
       p[3].x:=0 + (FBorderWidth mod 2);
-      p[3].y:=Height - (FBorderWidth mod 2);
+      p[3].y:=AHeight - (FBorderWidth mod 2);
 
-      FControlArea.CanvasBGRA.PolygonF(p);
+      ACanvas.Polygon(RoundPoints(p));
     end else begin
       p[0].x:=FBorderWidth div 2 + FBorderWidth mod 2;
-      p[0].y:=(1-FValveBodyPercent)*Height;
+      p[0].y:=(1-FValveBodyPercent)*AHeight;
 
-      p[1].x:=Width-(FBorderWidth div 2) - (FBorderWidth mod 2);
-      p[1].y:=Height-(FBorderWidth/2);
+      p[1].x:=AWidth-(FBorderWidth div 2) - (FBorderWidth mod 2);
+      p[1].y:=AHeight-(FBorderWidth/2);
 
-      p[2].x:=Width-(FBorderWidth div 2) - (FBorderWidth mod 2);
-      p[2].y:=(1-FValveBodyPercent)*Height;
+      p[2].x:=AWidth-(FBorderWidth div 2) - (FBorderWidth mod 2);
+      p[2].y:=(1-FValveBodyPercent)*AHeight;
 
       p[3].x:=FBorderWidth div 2 + FBorderWidth mod 2;
-      p[3].y:=Height-(FBorderWidth/2);
+      p[3].y:=AHeight-(FBorderWidth/2);
 
-      FControlArea.CanvasBGRA.PolygonF(p);
+      ACanvas.Polygon(RoundPoints(p));
 
       //risco
       case FValveType of
         vtPneumaticProportional,
         vtPneumaticOnOff,
         vtMotorisedProportional:
-          FControlArea.CanvasBGRA.PolylineF([PointF( ifthen(((Width+FBorderWidth) mod 2)=1,Width,Width+1)/2,
+          ACanvas.Polyline(RoundPoints([PointF( ifthen(((AWidth+FBorderWidth) mod 2)=1,AWidth,AWidth+1)/2,
                                                      (FBorderWidth)),
-                                             PointF( ifthen(((Width+FBorderWidth) mod 2)=1,Width,Width+1)/2,
-                                                     (1-(FValveBodyPercent/2))*Height-(FBorderWidth/2))]);
+                                             PointF( ifthen(((AWidth+FBorderWidth) mod 2)=1,AWidth,AWidth+1)/2,
+                                                     (1-(FValveBodyPercent/2))*AHeight-(FBorderWidth/2))]));
       end;
 
       case FValveType of
         vtPneumaticProportional, vtMotorisedProportional: begin
-          larguraideal:=Width/2-Fborderwidth;
-          alturaideal:=(Width/4)*(Fvalvebodypercent*Height)/Width+((1-Fvalvebodypercent)*Height)-Fborderwidth;
+          larguraideal:=AWidth/2-Fborderwidth;
+          alturaideal:=(AWidth/4)*(Fvalvebodypercent*AHeight)/AWidth+((1-Fvalvebodypercent)*AHeight)-Fborderwidth;
           larguradoquadrado:=min(larguraideal, alturaideal);
-          p[0].x:=(Width-larguradoquadrado)/2;
+          p[0].x:=(AWidth-larguradoquadrado)/2;
           p[0].y:=FBorderWidth div 2 + FBorderWidth mod 2;
 
-          p[1].x:=Width-((Width-larguradoquadrado)/2);
+          p[1].x:=AWidth-((AWidth-larguradoquadrado)/2);
           p[1].y:=p[0].y;
 
           p[2].x:=p[1].x;
@@ -148,25 +181,24 @@ begin
 
           p[3].x:=p[0].x;
           p[3].y:=p[2].y;
-          FControlArea.CanvasBGRA.PolygonF(p);
+          ACanvas.Polygon(RoundPoints(p));
 
           if FValveType= vtMotorisedProportional then begin
-            FControlArea.FontHeight := trunc(larguradoquadrado * 0.9 - 2*Fborderwidth);
-            FControlArea.FontOrientation :=0;
-            FControlArea.TextOut(Width/2,Trunc((larguradoquadrado-FControlArea.FontHeight)/2),'M',colortobgra(FBordercolor), taCenter);
+            DrawM(trunc(larguradoquadrado * 0.9 - 2*Fborderwidth), 0,
+                  AWidth/2, Trunc((larguradoquadrado-trunc(larguradoquadrado * 0.9 - 2*Fborderwidth))/2));
 
           end;
         end;
         vtPneumaticOnOff: begin
-          FControlArea.Pie(Width/2,
-                           ((1-FValveBodyPercent)*Height)+(FBorderWidth/2),
-                           Width/4,
-                           Height*(1-FValveBodyPercent),
-                           0,
-                           180*0.0174532925,
-                           ColorToBGRA(FBorderColor),
-                           FBorderWidth,
-                           ColorToBGRA(FBodyColor));
+          //meia elipse para cima: centro, raios e angulos em 1/16 de grau,
+          //no sentido anti-horario a partir das 3 horas
+          //half ellipse upwards: centre, radii and angles in 1/16 degree,
+          //counter-clockwise from 3 o'clock
+          ACanvas.RadialPie(Round(AWidth/2 - AWidth/4),
+                            Round(((1-FValveBodyPercent)*AHeight)+(FBorderWidth/2) - AHeight*(1-FValveBodyPercent)),
+                            Round(AWidth/2 + AWidth/4),
+                            Round(((1-FValveBodyPercent)*AHeight)+(FBorderWidth/2) + AHeight*(1-FValveBodyPercent)),
+                            0, 180*16);
         end;
       end;
     end;
@@ -175,85 +207,74 @@ begin
       p[0].x:=0 + (FBorderWidth mod 2);
       p[0].y:=0 + (FBorderWidth mod 2);
 
-      p[1].x:=Width - (FBorderWidth mod 2);
+      p[1].x:=AWidth - (FBorderWidth mod 2);
       p[1].y:=0 +     (FBorderWidth mod 2);
 
-      p[2].x:=Width -  (FBorderWidth mod 2);
-      p[2].y:=Height - (FBorderWidth mod 2);
+      p[2].x:=AWidth -  (FBorderWidth mod 2);
+      p[2].y:=AHeight - (FBorderWidth mod 2);
 
       p[3].x:=0 + (FBorderWidth mod 2);
-      p[3].y:=Height - (FBorderWidth mod 2);
+      p[3].y:=AHeight - (FBorderWidth mod 2);
 
-      FControlArea.CanvasBGRA.PolygonF(p);
+      ACanvas.Polygon(RoundPoints(p));
     end else begin
-      p[0].x:=(1-FValveBodyPercent)*Width;
+      p[0].x:=(1-FValveBodyPercent)*AWidth;
       p[0].y:=FBorderWidth div 2 + FBorderWidth mod 2;
 
-      p[1].x:=Width-(FBorderWidth/2);
-      p[1].y:=Height-(FBorderWidth div 2) - (FBorderWidth mod 2);
+      p[1].x:=AWidth-(FBorderWidth/2);
+      p[1].y:=AHeight-(FBorderWidth div 2) - (FBorderWidth mod 2);
 
-      p[2].x:=(1-FValveBodyPercent)*Width;
-      p[2].y:=Height-(FBorderWidth div 2) - (FBorderWidth mod 2);
+      p[2].x:=(1-FValveBodyPercent)*AWidth;
+      p[2].y:=AHeight-(FBorderWidth div 2) - (FBorderWidth mod 2);
 
-      p[3].x:=Width-(FBorderWidth/2);
+      p[3].x:=AWidth-(FBorderWidth/2);
       p[3].y:=FBorderWidth div 2 + FBorderWidth mod 2;
 
-      FControlArea.CanvasBGRA.PolygonF(p);
+      ACanvas.Polygon(RoundPoints(p));
 
       //risco
       case FValveType of
         vtPneumaticProportional,
         vtPneumaticOnOff,
         vtMotorisedProportional:
-          FControlArea.CanvasBGRA.PolylineF([PointF(FBorderWidth, ifthen(((Height+FBorderWidth) mod 2)=1,Height,Height+1)/2),
-                                             PointF((1-(FValveBodyPercent/2))*Width-(BorderWidth/2), ifthen(((Height+FBorderWidth) mod 2)=1,Height,Height+1)/2)]);
+          ACanvas.Polyline(RoundPoints([PointF(FBorderWidth, ifthen(((AHeight+FBorderWidth) mod 2)=1,AHeight,AHeight+1)/2),
+                                             PointF((1-(FValveBodyPercent/2))*AWidth-(BorderWidth/2), ifthen(((AHeight+FBorderWidth) mod 2)=1,AHeight,AHeight+1)/2)]));
       end;
 
       case FValveType of
         vtPneumaticProportional,vtMotorisedProportional: begin
-          larguraideal:=Height/2-Fborderwidth;
-          alturaideal:=(Height/4)*(Fvalvebodypercent*Width)/Height+((1-Fvalvebodypercent)*Width)-Fborderwidth;
+          larguraideal:=AHeight/2-Fborderwidth;
+          alturaideal:=(AHeight/4)*(Fvalvebodypercent*AWidth)/AHeight+((1-Fvalvebodypercent)*AWidth)-Fborderwidth;
           larguradoquadrado:=min(larguraideal, alturaideal);
           p[0].x:=FBorderWidth div 2 + FBorderWidth mod 2;
-          p[0].y:=(Height-larguradoquadrado)/2;
+          p[0].y:=(AHeight-larguradoquadrado)/2;
 
           p[1].x:=larguradoquadrado+(FBorderWidth div 2 + FBorderWidth mod 2);
           p[1].y:= p[0].y;
 
           p[2].x:=p[1].x;
-          p[2].y:=Height-((Height-larguradoquadrado)/2);
+          p[2].y:=AHeight-((AHeight-larguradoquadrado)/2);
 
           p[3].x:=p[0].x;
           p[3].y:=p[2].y;
-          FControlArea.CanvasBGRA.PolygonF(p);
+          ACanvas.Polygon(RoundPoints(p));
 
           if FValveType= vtMotorisedProportional then begin
-            FControlArea.FontHeight := trunc(larguradoquadrado * 0.9 - Fborderwidth);
-            FControlArea.FontOrientation :=900;
-            FControlArea.TextOut(Trunc((larguradoquadrado-FControlArea.FontHeight)/2),Height/2 ,'M',colortobgra(FBordercolor), taCenter);
+            DrawM(trunc(larguradoquadrado * 0.9 - Fborderwidth), 900,
+                  Trunc((larguradoquadrado-trunc(larguradoquadrado * 0.9 - Fborderwidth))/2), AHeight/2);
 
           end;
         end;
         vtPneumaticOnOff: begin
-          FControlArea.Pie(((1-FValveBodyPercent)*Width)+(FBorderWidth/2),
-                           Height/2,
-                           Width*(1-FValveBodyPercent),
-                           Height/4,
-                           90*0.0174532925,
-                           270*0.0174532925,
-                           ColorToBGRA(FBorderColor),
-                           FBorderWidth,
-                           ColorToBGRA(FBodyColor));
+          //meia elipse para a esquerda / half ellipse to the left
+          ACanvas.RadialPie(Round(((1-FValveBodyPercent)*AWidth)+(FBorderWidth/2) - AWidth*(1-FValveBodyPercent)),
+                            Round(AHeight/2 - AHeight/4),
+                            Round(((1-FValveBodyPercent)*AWidth)+(FBorderWidth/2) + AWidth*(1-FValveBodyPercent)),
+                            Round(AHeight/2 + AHeight/4),
+                            90*16, 180*16);
         end;
       end;
     end;
-  end;
-
-  if FMirrored and (ValveType<>vtPneumaticDrawer) then begin
-    if Height<=Width then
-      FControlArea.VerticalFlip
-    else
-      FControlArea.HorizontalFlip;
   end;
 end;
 

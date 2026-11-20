@@ -5,8 +5,7 @@ unit hmi_draw_elevador;
 interface
 
 uses
-  Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol, BGRABitmap,
-  BGRABitmapTypes, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag, HMIZones;
+  Controls, sysutils, Types, Graphics, Classes, hmi_draw_basiccontrol, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag, HMIZones;
 
 type
 
@@ -22,7 +21,7 @@ type
     procedure SetBodyWidth(AValue: Byte);
     procedure SetFooterColor(AValue: TColor);
     procedure SetHeadColor(AValue: TColor);
-    procedure DrawControl; override;
+    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
   protected
@@ -389,14 +388,12 @@ begin
   InvalidateDraw;
 end;
 
-procedure THMICustomElevadorBasico.DrawControl;
+procedure THMICustomElevadorBasico.PaintControl(ACanvas: TCanvas; AWidth,
+  AHeight: Integer);
 var
   x:array of TPointF;
 begin
-  inherited DrawControl;
-
-
-  FControlArea.CanvasBGRA.AntialiasingMode:=amOff;
+  x:=nil;
 
   //###############################################################################
   //coordenadas de que desenham a cabeca do elevador
@@ -439,44 +436,42 @@ begin
   //preenchimento da cabeça do elevador, cor e diametro da linha.
   //###############################################################################
 
-  FControlArea.CanvasBGRA.Brush.Color:= FHeadColor;
-  FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
+  SetupCanvas(ACanvas, FBorderColor, FBorderWidth, FHeadColor);
 
   //###############################################################################
   //desenha a cabeca do elevador.
   //###############################################################################
-  FControlArea.CanvasBGRA.PolygonF(x);
+  ACanvas.Polygon(RoundPoints(x));
 
   //###############################################################################
   //coordenadas que desenham o pé do elevador.
   //###############################################################################
   x[0].X:=0;
-  x[0].Y:=Height-BodyWidth-(BorderWidth/2);
+  x[0].Y:=AHeight-BodyWidth-(BorderWidth/2);
 
   x[1].X:=3*BodyWidth-1;
-  x[1].Y:=Height-BodyWidth-(BorderWidth/2);
+  x[1].Y:=AHeight-BodyWidth-(BorderWidth/2);
 
   x[2].X:=2*BodyWidth-1;
-  x[2].Y:=Height-(BorderWidth/2);
+  x[2].Y:=AHeight-(BorderWidth/2);
 
   x[3].X:=BodyWidth;
-  x[3].Y:=Height-(BorderWidth/2);
+  x[3].Y:=AHeight-(BorderWidth/2);
 
   //###############################################################################
   //preenchimento do pé do elevador.
   //###############################################################################
-  FControlArea.CanvasBGRA.Brush.Color:=FFooterColor;
+  ACanvas.Brush.Color:=ShapeColor(FFooterColor);
 
   //###############################################################################
   //desenha o pé do elevador.
   //###############################################################################
-  FControlArea.CanvasBGRA.PolygonF(x);
+  ACanvas.Polygon(RoundPoints(x));
 
   //###############################################################################
   //preenchimento do corpo do elevador.
   //###############################################################################
-  FControlArea.CanvasBGRA.Brush.Color:=FBodyColor;
+  ACanvas.Brush.Color:=ShapeColor(FBodyColor);
 
   x[0].X:=FBodyWidth;
   x[0].Y:=(BorderWidth/2);
@@ -485,22 +480,22 @@ begin
   x[1].Y:=(BorderWidth/2);
 
   x[2].X:=2*BodyWidth-1;
-  x[2].Y:=Height-(BorderWidth/2);
+  x[2].Y:=AHeight-(BorderWidth/2);
 
   x[3].X:=BodyWidth;
-  x[3].Y:=Height-(BorderWidth/2);
+  x[3].Y:=AHeight-(BorderWidth/2);
 
-  FControlArea.CanvasBGRA.PolygonF(x);
+  ACanvas.Polygon(RoundPoints(x));
 
   //###############################################################################
   //Risquinhos, acabamento.
   //###############################################################################
-  FControlArea.CanvasBGRA.PolylineF([PointF(FBodyWidth,
+  ACanvas.Polyline(RoundPoints([PointF(FBodyWidth,
                                             FBodyWidth+(BorderWidth/2)),
                                      PointF(2*FBodyWidth-1,
-                                            FBodyWidth+(BorderWidth/2))]);
-  FControlArea.CanvasBGRA.PolylineF([PointF(FBodyWidth,   Height-BodyWidth-(BorderWidth/2)),
-                                     PointF(2*FBodyWidth, Height-BodyWidth-(BorderWidth/2))]);
+                                            FBodyWidth+(BorderWidth/2))]));
+  ACanvas.Polyline(RoundPoints([PointF(FBodyWidth,   AHeight-BodyWidth-(BorderWidth/2)),
+                                     PointF(2*FBodyWidth, AHeight-BodyWidth-(BorderWidth/2))]));
 end;
 
 constructor THMICustomElevadorBasico.Create(AOwner: TComponent);

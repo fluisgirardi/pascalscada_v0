@@ -5,8 +5,7 @@ unit hmi_draw_basic_horizontal_control;
 interface
 
 uses
-  Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol, BGRABitmap,
-  BGRABitmapTypes;
+  Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol;
 
 type
 

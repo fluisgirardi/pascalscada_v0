@@ -5,8 +5,7 @@ unit hmi_draw_rosca;
 interface
 
 uses
-  Controls, sysutils, Graphics, Classes, hmi_draw_basic_horizontal_control,
-  BGRABitmap, BGRABitmapTypes;
+  Controls, sysutils, Graphics, Classes, hmi_draw_basic_horizontal_control;
 
 type
 
@@ -14,7 +13,7 @@ type
 
   THMIRoscaBasica = class(THMIBasicHorizontalControl)
   protected
-    procedure DrawControl; override;
+    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
     procedure UpdateShape; override;
 
   published
@@ -38,36 +37,21 @@ implementation
 
 { TRoscaBasica }
 
-procedure THMIRoscaBasica.DrawControl;
+procedure THMIRoscaBasica.PaintControl(ACanvas: TCanvas; AWidth,
+  AHeight: Integer);
 var
   line_x:integer;
   x:Array Of TPoint;
   h: Integer;
-  eixo_h: Integer;
-  eixo_top: Integer;
-  emptyArea: TBGRABitmap;
 begin
-  emptyArea := TBGRABitmap.Create(Width,Height);
-  try
-    FControlArea.Assign(emptyArea);
-  finally
-    FreeAndNil(emptyArea);
-  end;
+  SetupCanvas(ACanvas, FBorderColor, FBorderWidth, FBodyColor);
 
-  //###############################################################################
-  //preenchimento do redlers, cor e diametro da linha.
-  //###############################################################################
-  FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
-  FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
-
-  //desenha o quadrado da rosca.
-  FControlArea.CanvasBGRA.Rectangle(0, 0, Width, FBodyHeight);
+  ACanvas.Rectangle(0, 0, AWidth, FBodyHeight);
 
   line_x:=0;
-  while line_x<(Width+FBodyHeight) do begin
+  x:=nil;
+  while line_x<(AWidth+FBodyHeight) do begin
     h:=Length(x);
-    //adiciona os pontos a poliline da rosca..
     SetLength(x,h+1);
     x[h].X:=line_x;
     if (line_x mod (2*FBodyHeight))=0 then begin
@@ -75,12 +59,10 @@ begin
     end else begin
       x[h].Y:=FBodyHeight;
     end;
-    //
     inc(line_x, FBodyHeight);
   end;
-  //desenha a "rosca"
-  FControlArea.CanvasBGRA.Pen.Width  :=FBorderWidth+1;
-  FControlArea.CanvasBGRA.Polyline(x);
+  ACanvas.Pen.Width:=FBorderWidth+1;
+  ACanvas.Polyline(x);
 end;
 
 procedure THMIRoscaBasica.UpdateShape;

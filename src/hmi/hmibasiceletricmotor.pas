@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  hmi_draw_basiccontrol, BGRABitmap, BGRABitmapTypes;
+  hmi_draw_basiccontrol;
 
 type
 
@@ -17,7 +17,8 @@ type
     procedure SetDrawPump(AValue: Boolean);
     procedure SetMirrored(AValue: Boolean);
   protected
-    procedure DrawControl; override;
+    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    function  DrawingTransform:TDrawingTransform; override;
     property Mirrored: Boolean Read FMirrored Write SetMirrored Default false;
     property DrawPump: Boolean read FDrawPump write SetDrawPump default true;
   public
@@ -61,101 +62,65 @@ begin
   InvalidateShape;
 end;
 
-procedure THMICustomBasicEletricMotor.DrawControl;
-var
-  Rotate: Boolean;
-  w, h: Integer;
-  aux: TBGRABitmap;
-  aux2: TBGRACustomBitmap;
+//desenhado sempre deitado (AWidth>=AHeight); em pe' a base gira o desenho
+//always drawn lying down (AWidth>=AHeight); standing, the base rotates the
+//drawing
+function THMICustomBasicEletricMotor.DrawingTransform: TDrawingTransform;
 begin
-  inherited DrawControl;
+  if Width<Height then begin
+    if FMirrored then
+      Result:=dtRotateCW
+    else
+      Result:=dtRotateCCW;
+  end else if FMirrored then
+    Result:=dtFlipHorizontal
+  else
+    Result:=dtNone;
+end;
 
-  if Width>=Height then begin
-    w:=Width;
-    h:=Height;
-    Rotate:=false;
-  end else begin
-    w:=Height;
-    h:=Width;
-    Rotate:=true;
+procedure THMICustomBasicEletricMotor.PaintControl(ACanvas: TCanvas; AWidth,
+  AHeight: Integer);
+var
+  w, h: Integer;
+begin
+  w:=AWidth;
+  h:=AHeight;
+
+  SetupCanvas(ACanvas, FBorderColor, FBorderWidth, FBodyColor);
+
+  if FDrawPump then begin
+    ACanvas.Rectangle(Trunc(0.07*w),0+FBorderWidth,Trunc((0.07*w)+(0.09)*w), Trunc(0.10*h));
+
+    ACanvas.Rectangle(0+FBorderWidth,
+                      trunc(20/52*h),
+                      Trunc(0.07*w),
+                      Trunc(32/52*h));
   end;
 
-  aux:=TBGRABitmap.Create(w,h);
-  try
-    //o pincel e a caneta sao do bitmap auxiliar, que e' onde se desenha.
-    //Ajustados no FControlArea, como eram, o bocal e a base da bomba e o
-    //risco do motor saiam sempre brancos com um traco preto, fosse qual
-    //fosse a cor do corpo, a da borda e a largura dela.
-    //the brush and the pen belong to the auxiliary bitmap, which is where the
-    //drawing happens. Set on FControlArea, as they used to be, the pump's
-    //nozzle and base and the motor's dividing line always came out white with
-    //a black stroke, whatever the body colour, the border colour and its
-    //width.
-    aux.CanvasBGRA.Brush.Color:= FBodyColor;
-    aux.CanvasBGRA.Pen.Color  := FBorderColor;
-    aux.CanvasBGRA.Pen.Width  := FBorderWidth;
-
-    if FDrawPump then begin
-      aux.CanvasBGRA.Rectangle(Trunc(0.07*w),0+FBorderWidth,Trunc((0.07*w)+(0.09)*w), Trunc(0.10*h),true);
-
-      aux.CanvasBGRA.Rectangle(0+FBorderWidth,
-                                        trunc(20/52*h),
-                                        Trunc(0.07*w),
-                                        Trunc(32/52*h), true);
-    end;
-    aux.RoundRectAntialias(Trunc(0.19*w)-1,
-                           Trunc(0.06*h),
-                           w - FBorderWidth,
-                           Trunc(0.94*h),
-                           Trunc(0.2*w),
-                           Trunc(0.2*w),
-                           ColorToBGRA(FBorderColor),
-                           FBorderWidth,
-                           ColorToBGRA(FBodyColor));
-    if FDrawPump then
-      aux.RoundRectAntialias(Trunc(0.04*w),
-                             Trunc(0.06*h),
-                             Trunc(0.19*w),
-                             Trunc(0.94*h),
-                             Trunc(0.075*w),
-                             Trunc(0.075*w),
-                             ColorToBGRA(FBorderColor),
-                             FBorderWidth,
-                             ColorToBGRA(FBodyColor));
-    aux.RoundRectAntialias(Trunc(0.39*w),
-                                    Trunc((15/52)*h),
-                                    Trunc(0.73*w),
-                                    Trunc((38/52)*h),
-                                    Trunc(0.09*w),
-                                    Trunc(0.09*w),
-                                    ColorToBGRA(FBorderColor),
-                                    FBorderWidth,
-                                    ColorToBGRA(FBodyColor));
-    aux.CanvasBGRA.Polyline([point (trunc(0.81*w)-FBorderWidth,trunc (48/52*h)-FBorderWidth div 2),
-                                      point(trunc (0.81*w)-FBorderWidth,trunc (3/52*h)+FBorderWidth div 2)]);
-
-    if Rotate then begin
-
-      if Mirrored then
-        aux2:=aux.RotateCW
-      else
-        aux2:=aux.RotateCCW;
-
-      try
-        FControlArea.Assign(aux2);
-      finally
-        FreeAndNil(aux2);
-      end;
-    end else begin
-      FControlArea.Assign(aux);
-      if FMirrored Then
-        FControlArea.HorizontalFlip;
-    end;
-  finally
-    FreeAndNil(aux);
-  end;
-
-
+  //no TCanvas o canto e' dado pelo diametro da elipse; na BGRABitmap era o raio
+  //on TCanvas the corner is given by the ellipse's diameter; on BGRABitmap it
+  //was the radius
+  ACanvas.RoundRect(Trunc(0.19*w)-1,
+                    Trunc(0.06*h),
+                    w - FBorderWidth,
+                    Trunc(0.94*h),
+                    2*Trunc(0.2*w),
+                    2*Trunc(0.2*w));
+  if FDrawPump then
+    ACanvas.RoundRect(Trunc(0.04*w),
+                      Trunc(0.06*h),
+                      Trunc(0.19*w),
+                      Trunc(0.94*h),
+                      2*Trunc(0.075*w),
+                      2*Trunc(0.075*w));
+  ACanvas.RoundRect(Trunc(0.39*w),
+                    Trunc((15/52)*h),
+                    Trunc(0.73*w),
+                    Trunc((38/52)*h),
+                    2*Trunc(0.09*w),
+                    2*Trunc(0.09*w));
+  ACanvas.Polyline([point(trunc(0.81*w)-FBorderWidth,trunc(48/52*h)-FBorderWidth div 2),
+                    point(trunc(0.81*w)-FBorderWidth,trunc(3/52*h)+FBorderWidth div 2)]);
 end;
 
 constructor THMICustomBasicEletricMotor.Create(AOwner: TComponent);

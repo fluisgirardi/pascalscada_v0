@@ -41,7 +41,7 @@ interface
 uses
   Classes, SysUtils, Controls, Forms, ExtCtrls, Graphics, LMessages, LCLType,
   fpcunit, testregistry,
-  BGRABitmap, BGRABitmapTypes, hmi_draw_basiccontrol;
+  hmi_draw_basiccontrol;
 
 type
 
@@ -55,7 +55,7 @@ type
   private
     FFillAll:Boolean;
   protected
-    procedure DrawControl; override;
+    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
     procedure MouseDown(Button:TMouseButton; Shift:TShiftState; X, Y:Integer); override;
     procedure MouseUp(Button:TMouseButton; Shift:TShiftState; X, Y:Integer); override;
     procedure MouseMove(Shift:TShiftState; X, Y:Integer); override;
@@ -110,16 +110,17 @@ implementation
 
 { TShapeProbe }
 
-procedure TShapeProbe.DrawControl;
+procedure TShapeProbe.PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer);
 var
   w:Integer;
 begin
-  inherited DrawControl;
   if FFillAll then
-    w:=Width
+    w:=AWidth
   else
-    w:=Width div 2;
-  FControlArea.FillRect(0, 0, w, Height, ColorToBGRA(clRed), dmSet);
+    w:=AWidth div 2;
+  ACanvas.Brush.Style:=bsSolid;
+  ACanvas.Brush.Color:=ShapeColor(clRed);
+  ACanvas.FillRect(0, 0, w, AHeight);
 end;
 
 procedure TShapeProbe.MouseDown(Button:TMouseButton; Shift:TShiftState; X, Y:Integer);
