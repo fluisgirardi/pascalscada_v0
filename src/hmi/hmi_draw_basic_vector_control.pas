@@ -45,7 +45,6 @@ type
     procedure CopySVGImageToControlArea;
     procedure CheckAutoSize;
     procedure DrawControl; override;
-    function  PaintsDirectly:Boolean; override;
     procedure ReloadDrawing; virtual;
     procedure Loaded; override;
     procedure CalculatePreferredSize(var PreferredWidth,
@@ -1508,13 +1507,6 @@ begin
     InvalidateShape;
 end;
 
-//o SVG e' desenhado pela BGRABitmap, nao pelo PaintControl
-//the SVG is drawn by BGRABitmap, not by PaintControl
-function THMICustomVectorControl.PaintsDirectly: Boolean;
-begin
-  Result:=false;
-end;
-
 procedure THMICustomVectorControl.CopySVGImageToControlArea;
 var
   x, y: Integer;
@@ -1633,7 +1625,8 @@ begin
   FSVGDrawing:=TBGRASVG.Create;
   FSVGImage:=TBGRABitmap.Create;
   FSVGContents:=TTextStrings.Create;
-  ControlStyle := ControlStyle + [csAcceptsControls];
+  //sem janela (TGraphicControl) o controle nao pode ter filhos
+  //with no window (TGraphicControl) the control cannot have children
 end;
 
 destructor THMICustomVectorControl.Destroy;

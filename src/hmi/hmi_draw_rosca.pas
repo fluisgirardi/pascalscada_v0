@@ -5,7 +5,7 @@ unit hmi_draw_rosca;
 interface
 
 uses
-  Controls, sysutils, Graphics, Classes, hmi_draw_basic_horizontal_control;
+  Controls, sysutils, Graphics, Classes, hmi_draw_basic_horizontal_control, FPCanvas;
 
 type
 
@@ -13,7 +13,7 @@ type
 
   THMIRoscaBasica = class(THMIBasicHorizontalControl)
   protected
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); override;
     procedure UpdateShape; override;
 
   published
@@ -37,7 +37,7 @@ implementation
 
 { TRoscaBasica }
 
-procedure THMIRoscaBasica.PaintControl(ACanvas: TCanvas; AWidth,
+procedure THMIRoscaBasica.PaintControl(ACanvas: TFPCustomCanvas; AWidth,
   AHeight: Integer);
 var
   line_x:integer;

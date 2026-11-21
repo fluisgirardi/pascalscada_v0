@@ -16,7 +16,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, ComCtrls, HMITypes, PLCTag, ProtocolTypes, Tag,
-  hmi_draw_basiccontrol, Graphics;
+  hmi_draw_basiccontrol, Graphics, FPCanvas;
 
 type
 
@@ -67,7 +67,7 @@ type
     //: @exclude
     procedure Loaded; override;
     procedure UpdateShape; override;
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -175,7 +175,7 @@ begin
   //inherited UpdateShape;
 end;
 
-procedure THMIProgressBar.PaintControl(ACanvas: TCanvas; AWidth,
+procedure THMIProgressBar.PaintControl(ACanvas: TFPCustomCanvas; AWidth,
   AHeight: Integer);
 
 function ProgressNormalized:Double;
@@ -190,7 +190,7 @@ end;
   procedure Bar(x1, y1, x2, y2:Double);
   begin
     ACanvas.Brush.Style:=bsSolid;
-    ACanvas.Brush.Color:=ShapeColor(FBodyColor);
+    ACanvas.Brush.FPColor:=FPColorOf(FBodyColor);
     ACanvas.FillRect(Round(x1), Round(y1), Round(x2), Round(y2));
   end;
 

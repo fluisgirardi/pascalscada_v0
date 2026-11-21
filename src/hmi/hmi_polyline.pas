@@ -6,7 +6,7 @@ interface
 
 uses
   Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol,
-  hmibasiccolletion, LMessages;
+  hmibasiccolletion, LMessages, FPCanvas;
 
 type
 
@@ -57,7 +57,7 @@ type
 
     procedure DoLineColorChange; virtual;
 
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); override;
 
     procedure BeginDrawPolyline; virtual;
     procedure BeginEmptyPolyline; virtual;
@@ -176,6 +176,11 @@ type
 implementation
 
 uses math;
+
+const
+  //altura das maiusculas do texto de coordenadas (design time)
+  //height of the capitals of the coordinates text (design time)
+  PointInfoTextSize = 9;
 
 { THMIFlowPolyline }
 
@@ -714,7 +719,7 @@ begin
   end;
 end;
 
-procedure THMIPolyline.PaintControl(ACanvas: TCanvas; AWidth,
+procedure THMIPolyline.PaintControl(ACanvas: TFPCustomCanvas; AWidth,
   AHeight: Integer);
 var
   p:array of TPoint;
@@ -741,12 +746,10 @@ begin
     if (FPointInfo='') or (FDesignDrawing=false) then exit;
     //a BGRABitmap desenhava a caixa meio transparente; no TCanvas ela e' opaca
     //BGRABitmap drew the box half transparent; on TCanvas it is opaque
-    th:=MeasureText(FPointInfo).cy;
+    th:=StrokeTextExtent(FPointInfo, PointInfoTextSize).cy;
     SetupCanvas(ACanvas, FBorderColor, 1, FBodyColor);
     ACanvas.Rectangle(AWidth-FPointInfoWidth-5, -1, AWidth + 1, th+5);
-    ACanvas.Brush.Style:=bsClear;
-    ACanvas.Font.Color:=ShapeColor(FBorderColor);
-    ACanvas.TextOut(AWidth-2-FPointInfoWidth, 1, FPointInfo);
+    StrokeText(ACanvas, AWidth-2-FPointInfoWidth, 2, PointInfoTextSize, FPointInfo);
   end;
 end;
 
@@ -951,7 +954,7 @@ begin
       else
         FPointInfo:=Format('x=%d, y=%d, Degrees=%d',[X,Y,Trunc(Degrees(x,lastpoint.X,Y,lastpoint.Y))]);
 
-      tw:=MeasureText(FPointInfo).cx;
+      tw:=StrokeTextExtent(FPointInfo, PointInfoTextSize).cx;
       if tw=FPointInfoWidth then
         InvalidateDraw
       else begin

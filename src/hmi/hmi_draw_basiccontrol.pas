@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, sysutils, Types, Controls, Graphics, IntfGraphics, GraphType, FPImage,
-  LCLIntf, LMessages, ControlSecurityManager, HMITypes, PLCTag;
+  FPCanvas, LazCanvas, LCLIntf, LMessages, ControlSecurityManager, HMITypes,
+  PLCTag;
 
 {$IF defined(CM_DESIGNERHITTEST)}
 
@@ -41,34 +42,23 @@ type
   {$ENDIF}
   TDrawingTransform = (dtNone, dtFlipHorizontal, dtFlipVertical, dtRotateCW, dtRotateCCW);
 
-  {$DEFINE ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE}
-
   { THMIBasicControl }
 
-  THMIBasicControl = class(TCustomControl, IHMIInterface)
+  THMIBasicControl = class(TGraphicControl, IHMIInterface)
   private
     FRegInSecMan:Boolean;
-    //as duas camadas do desenho: a colorida e a mascara (preto = controle)
-    //the two layers of the drawing: the coloured one and the mask (black =
-    //control)
-    FColorLayer,
-    FMaskLayer:TBitmap;
-    //a mascara so' e' redesenhada quando a forma muda; a cor muda sozinha
-    //the mask is redrawn only when the shape changes; colour changes alone
-    FMaskValid,
-    FColorsOnly:Boolean;
-    FMaskAlpha:array of Byte;
-    FMaskWidth, FMaskHeight:Integer;
     //o bitmap que o Paint desenha, feito da FControlArea
     //the bitmap Paint draws, made from FControlArea
     FPaintBitmap:TBitmap;
     FPaintBitmapValid:Boolean;
-    FDrawingMask:Boolean;
-    procedure PrepareLayer(var ALayer:TBitmap; AWidth, AHeight:Integer);
-    procedure ReadMask(AWidth, AHeight:Integer);
-    procedure ComposeControlArea(AWidth, AHeight:Integer);
-    procedure BuildShapeOnly;
-    procedure RebuildShape;
+    //a mascara de 1 bit tirada do alfa da FControlArea (bit 1 = fundo)
+    //the 1-bit mask taken from the alpha of FControlArea (bit 1 = background)
+    FPaintMask:array of Byte;
+    //onde se desenha quando ha' DrawingTransform, antes de girar/espelhar
+    //where the drawing goes when there is a DrawingTransform, before
+    //rotating/mirroring
+    FWorkImage:TLazIntfImage;
+    procedure UpdatePaintBitmap;
   protected
     FSecurityCode:UTF8String;
     FIsEnabled,
@@ -108,10 +98,10 @@ type
     FBorderWidth:Integer;
     {$IFDEF PORTUGUES}
     //: O desenho pronto do controle, RGBA de 32 bits (veja TControlPixel): o
-    //: que o Paint mostra, o que o teste de acerto e o SetShape consultam.
+    //: que o Paint mostra, o que o teste de acerto consulta.
     {$ELSE}
     //: The finished drawing of the control, 32-bit RGBA (see TControlPixel):
-    //: what Paint shows, what the hit test and SetShape look at.
+    //: what Paint shows, what the hit test looks at.
     {$ENDIF}
     FControlArea:TLazIntfImage;
     FUpdatingCount:Cardinal;
@@ -158,75 +148,85 @@ type
     procedure InvalidateDraw; virtual;
     procedure InvalidateShape; virtual;
     {$IFDEF PORTUGUES}
-    //: Monta a FControlArea: chama o PaintControl uma vez com as cores e outra
-    //: (so' se a forma mudou) em preto sobre branco, que vira a mascara, e
-    //: aplica o DrawingTransform. Quem desenha de outro jeito (o controle
-    //: vetorial) sobrescreve este metodo e preenche a FControlArea por conta
-    //: propria, com ClearControlArea e ControlAreaChanged.
+    //: Monta a FControlArea: limpa a imagem (transparente), chama o
+    //: PaintControl com um TLazCanvas sobre ela e aplica o DrawingTransform.
+    //: Tudo em memoria (fcl-image): o que o PaintControl pinta fica opaco, o
+    //: resto transparente, e e' essa mesma imagem que o Paint mostra e que o
+    //: teste de clique consulta. Quem desenha de outro jeito (o
+    //: controle vetorial) sobrescreve este metodo e preenche a FControlArea
+    //: por conta propria, com ClearControlArea e ControlAreaChanged.
     {$ELSE}
-    //: Builds FControlArea: calls PaintControl once with the colours and once
-    //: more (only if the shape changed) in black on white, which becomes the
-    //: mask, and applies DrawingTransform. Whoever draws some other way (the
-    //: vector control) overrides this method and fills FControlArea on its
-    //: own, with ClearControlArea and ControlAreaChanged.
+    //: Builds FControlArea: clears the image (transparent), calls
+    //: PaintControl with a TLazCanvas over it and applies DrawingTransform.
+    //: All in memory (fcl-image): whatever PaintControl paints becomes
+    //: opaque, the rest transparent, and this same image is what Paint shows
+    //: and what the hit test looks at. Whoever draws some other
+    //: way (the vector control) overrides this method and fills FControlArea
+    //: on its own, with ClearControlArea and ControlAreaChanged.
     {$ENDIF}
     procedure DrawControl; virtual;
     {$IFDEF PORTUGUES}
     //: Desenha o controle no ACanvas (AWidth x AHeight, antes do
-    //: DrawingTransform). E' chamado duas vezes: use ShapeColor (ou
-    //: SetupCanvas) em toda cor, para que na passada da mascara tudo saia
-    //: preto. O fundo ja' vem pintado; o que ficar sem pintar e' transparente.
+    //: DrawingTransform). As cores vao pelo FPColor (veja SetupCanvas e
+    //: FPColorOf). Alem das primitivas do TFPCustomCanvas, use RoundRect,
+    //: RadialPie e StrokeText desta classe, que o fcl-image nao tem.
     {$ELSE}
     //: Draws the control on ACanvas (AWidth x AHeight, before
-    //: DrawingTransform). It is called twice: use ShapeColor (or SetupCanvas)
-    //: for every colour, so that on the mask pass everything comes out black.
-    //: The background is already painted; whatever is left unpainted is
-    //: transparent.
+    //: DrawingTransform). Colours go through FPColor (see SetupCanvas and
+    //: FPColorOf). Besides the TFPCustomCanvas primitives, use RoundRect,
+    //: RadialPie and StrokeText of this class, which fcl-image lacks.
     {$ENDIF}
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); virtual;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); virtual;
     //: @seealso(PaintControl)
     procedure GetDrawingSize(out AWidth, AHeight:Integer); virtual;
     //: @seealso(TDrawingTransform)
     function  DrawingTransform:TDrawingTransform; virtual;
+    //: Uma TColor (inclusive as do sistema) como TFPColor opaca.
+    //: A TColor (system ones included) as an opaque TFPColor.
+    class function FPColorOf(AColor:TColor):TFPColor;
     {$IFDEF PORTUGUES}
-    //: @true quando o Paint pode chamar o PaintControl direto no Canvas do
-    //: controle: quem recorta o desenho na tela e' o SetShape, entao so' a
-    //: mascara precisa ser lida de volta, e so' quando a forma muda. Nesse
-    //: modo a FControlArea que o Paint deixa tem so' o alfa (as cores ficam
-    //: zeradas); o DrawControl, chamado direto, continua montando tudo.
-    //: Padrao: sem DrawingTransform. Quem sobrescreve o DrawControl (o
-    //: controle vetorial) responde @false.
+    //: Caneta e pincel de uma vez. APenWidth<=0: sem borda.
     {$ELSE}
-    //: @true when Paint may call PaintControl straight on the control's
-    //: Canvas: what clips the drawing on screen is SetShape, so only the mask
-    //: has to be read back, and only when the shape changes. In this mode the
-    //: FControlArea Paint leaves holds only the alpha (colours stay zero);
-    //: DrawControl, called directly, still builds everything. Default: no
-    //: DrawingTransform. Whoever overrides DrawControl (the vector control)
-    //: answers @false.
+    //: Pen and brush at once. APenWidth<=0: no border.
     {$ENDIF}
-    function  PaintsDirectly:Boolean; virtual;
+    procedure SetupCanvas(ACanvas:TFPCustomCanvas; APenColor:TColor; APenWidth:Integer; ABrushColor:TColor);
     {$IFDEF PORTUGUES}
-    //: A cor a usar no PaintControl: a propria, ou preto na passada da mascara.
+    //: Retangulo de cantos arredondados, como o TCanvas.RoundRect (RX e RY sao
+    //: os diametros da elipse do canto), feito como poligono.
     {$ELSE}
-    //: The colour to use in PaintControl: the colour itself, or black on the
-    //: mask pass.
+    //: Rounded rectangle, as TCanvas.RoundRect (RX and RY are the diameters of
+    //: the corner's ellipse), made as a polygon.
     {$ENDIF}
-    function  ShapeColor(AColor:TColor):TColor;
+    procedure RoundRect(ACanvas:TFPCustomCanvas; X1, Y1, X2, Y2, RX, RY:Integer);
     {$IFDEF PORTUGUES}
-    //: Caneta e pincel de uma vez, ja' pelo ShapeColor. APenWidth<=0: sem borda.
+    //: Fatia de elipse, como o TCanvas.RadialPie (angulos em 1/16 de grau, no
+    //: sentido anti-horario a partir das 3 horas), feita como poligono.
     {$ELSE}
-    //: Pen and brush at once, already through ShapeColor. APenWidth<=0: no
-    //: border.
+    //: Ellipse slice, as TCanvas.RadialPie (angles in 1/16 degree,
+    //: counter-clockwise from 3 o'clock), made as a polygon.
     {$ENDIF}
-    procedure SetupCanvas(ACanvas:TCanvas; APenColor:TColor; APenWidth:Integer; ABrushColor:TColor);
-    //: @true durante a passada da mascara / during the mask pass.
-    property  DrawingMask:Boolean read FDrawingMask;
-    //: Tamanho de um texto na fonte em que o PaintControl desenha.
-    //: Size of a text in the font PaintControl draws with.
-    function  MeasureText(const AText:String):TSize;
-    //: Pontos com coordenadas reais arredondados para o TCanvas.
-    //: Points with real coordinates rounded for TCanvas.
+    procedure RadialPie(ACanvas:TFPCustomCanvas; X1, Y1, X2, Y2, StartAngle16Deg, Angle16DegLength:Integer);
+    {$IFDEF PORTUGUES}
+    //: Texto desenhado com polylines (uma fonte de tracos simples, sem
+    //: depender de fonte do sistema), com a caneta atual. (X,Y) e' o canto
+    //: superior esquerdo; ASize, a altura das maiusculas em pixels;
+    //: AOrientation, 0 ou 900 (de baixo para cima, como o Font.Orientation).
+    //: Cobre digitos, '-', '=', ',', '.', ':', espaco e as letras D, M, e, g,
+    //: r, s, x e y; o resto sai como um retangulo.
+    {$ELSE}
+    //: Text drawn with polylines (a simple stroke font, with no system font
+    //: involved), with the current pen. (X,Y) is the top left corner; ASize,
+    //: the height of the capitals in pixels; AOrientation, 0 or 900 (bottom to
+    //: top, as Font.Orientation). Covers digits, '-', '=', ',', '.', ':',
+    //: space and the letters D, M, e, g, r, s, x and y; anything else comes
+    //: out as a rectangle.
+    {$ENDIF}
+    procedure StrokeText(ACanvas:TFPCustomCanvas; X, Y, ASize:Integer; const AText:String; AOrientation:Integer = 0);
+    //: Largura e altura (com as descendentes) de um StrokeText deitado.
+    //: Width and height (descenders included) of a StrokeText lying down.
+    class function StrokeTextExtent(const AText:String; ASize:Integer):TSize;
+    //: Pontos com coordenadas reais arredondados.
+    //: Points with real coordinates rounded.
     class function RoundPoints(const APoints:array of TPointF):TPointArray;
     function  ControlAreaEmpty:Boolean;
     function  ControlAreaRow(Y:Integer):PControlPixel;
@@ -268,7 +268,6 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure Invalidate; override;
   end;
 
 implementation
@@ -287,7 +286,6 @@ procedure THMIBasicControl.InvalidateShape;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
   FUpdateShape:=true;
-  FMaskValid:=false;
   //a area antiga fica ate' o Paint refazer: esvazia-la fazia o Invalidate do
   //gtk2 reconstruir a forma na hora, a cada chamada - um SetBounds chama
   //varias - em vez de uma vez so', no Paint
@@ -297,160 +295,25 @@ begin
   Invalidate;
 end;
 
-procedure THMIBasicControl.PrepareLayer(var ALayer: TBitmap; AWidth,
-  AHeight: Integer);
-begin
-  //a camada so' cresce, com folga, e quem desenha e le usa so' AWidth x
-  //AHeight dela: mudar o tamanho de um TBitmap (SetSize) no gtk2 custa caro
-  //- uns 18 ms em 1200x800, mais 12 ms no primeiro desenho - e um
-  //redimensionamento faria isso a cada pixel. Sobrando mais que o dobro da
-  //area, ela e' refeita menor, para nao ler de volta pixels a toa.
-  //the layer only grows, with some slack, and whoever draws and reads uses
-  //only AWidth x AHeight of it: resizing a TBitmap (SetSize) on gtk2 is
-  //expensive - about 18 ms at 1200x800, plus 12 ms on the first drawing -
-  //and a resize would pay it on every pixel. With more than twice the area
-  //to spare, it is rebuilt smaller, so as not to read pixels back for
-  //nothing.
-  if (ALayer=nil) or
-     (ALayer.Width<AWidth) or (ALayer.Height<AHeight) or
-     (Int64(ALayer.Width)*ALayer.Height > 2*Int64(Max(AWidth,1))*Max(AHeight,1)+4096) then begin
-    FreeAndNil(ALayer);
-    ALayer:=TBitmap.Create;
-    ALayer.PixelFormat:=pf24bit;
-    ALayer.SetSize(AWidth+Max(16, AWidth div 8), AHeight+Max(16, AHeight div 8));
-  end;
-  ALayer.Canvas.Pen.Style:=psSolid;
-  ALayer.Canvas.Pen.Width:=1;
-  ALayer.Canvas.Pen.Color:=clWhite;
-  ALayer.Canvas.Brush.Style:=bsSolid;
-  ALayer.Canvas.Brush.Color:=clWhite;
-  ALayer.Canvas.FillRect(0, 0, AWidth, AHeight);
-  //a mesma fonte do Canvas do controle, onde o Paint desenha direto
-  //the same font as the control's Canvas, where Paint draws directly
-  ALayer.Canvas.Font.Assign(Font);
-end;
-
-type
-  //acesso direto aos bytes de uma camada, quando o formato permite
-  //direct access to the bytes of a layer, when the format allows it
-  TLayerAccess = record
-    Img: TLazIntfImage;
-    Fast: Boolean;
-    Step, OfsR, OfsG, OfsB: Integer;
-  end;
-
-procedure OpenLayer(ABitmap: TBitmap; out ALayer: TLayerAccess);
+procedure ClearImage(AImage: TLazIntfImage; AWidth, AHeight: Integer);
 var
-  d: TRawImageDescription;
+  desc: TRawImageDescription;
 begin
-  ALayer.Img:=ABitmap.CreateIntfImage;
-  d:=ALayer.Img.DataDescription;
-  //o caso comum (gtk2, win32, qt): 24 ou 32 bits, 8 por canal, cada canal
-  //num byte inteiro. O resto vai pelo Colors[], mais lento, mas certo.
-  //the usual case (gtk2, win32, qt): 24 or 32 bits, 8 per channel, each
-  //channel on a whole byte. Anything else goes through Colors[], slower but
-  //right.
-  ALayer.Fast:=(d.Format=ricfRGBA) and (d.ByteOrder=riboLSBFirst) and
-               (d.BitsPerPixel in [24,32]) and
-               (d.RedPrec=8) and (d.GreenPrec=8) and (d.BluePrec=8) and
-               (d.RedShift mod 8=0) and (d.GreenShift mod 8=0) and (d.BlueShift mod 8=0) and
-               (d.LineOrder=riloTopToBottom);
-  if ALayer.Fast then begin
-    ALayer.Step:=d.BitsPerPixel div 8;
-    ALayer.OfsR:=d.RedShift   div 8;
-    ALayer.OfsG:=d.GreenShift div 8;
-    ALayer.OfsB:=d.BlueShift  div 8;
+  if (AImage.Width<>AWidth) or (AImage.Height<>AHeight) then begin
+    desc.Init_BPP32_B8G8R8A8_BIO_TTB(AWidth, AHeight);
+    AImage.DataDescription:=desc;
   end;
-end;
-
-procedure LayerPixel(const ALayer: TLayerAccess; X, Y: Integer; out R, G, B: Byte); inline;
-var
-  p: PByte;
-  c: TFPColor;
-begin
-  if ALayer.Fast then begin
-    p:=PByte(ALayer.Img.GetDataLineStart(Y))+X*ALayer.Step;
-    R:=p[ALayer.OfsR];
-    G:=p[ALayer.OfsG];
-    B:=p[ALayer.OfsB];
-  end else begin
-    c:=ALayer.Img.Colors[X,Y];
-    R:=c.red   shr 8;
-    G:=c.green shr 8;
-    B:=c.blue  shr 8;
-  end;
-end;
-
-//le a mascara: o quanto cada pixel tem de preto vira o alfa (um desenho
-//suavizado da' bordas suaves). As cores vem do TLazIntfImage, que converte
-//qualquer formato que o widgetset tenha usado no bitmap.
-//reads the mask: how black each pixel is becomes the alpha (an antialiased
-//drawing gives soft edges). The colours come from TLazIntfImage, which
-//converts whatever format the widgetset used for the bitmap.
-procedure THMIBasicControl.ReadMask(AWidth, AHeight: Integer);
-var
-  la: TLayerAccess;
-  x, y, i: Integer;
-  r, g, b: Byte;
-begin
-  SetLength(FMaskAlpha, AWidth*AHeight);
-  OpenLayer(FMaskLayer, la);
-  try
-    i:=0;
-    for y:=0 to AHeight-1 do
-      for x:=0 to AWidth-1 do begin
-        LayerPixel(la, x, y, r, g, b);
-        FMaskAlpha[i]:=255-(r+g+b) div 3;
-        inc(i);
-      end;
-  finally
-    la.Img.Free;
-  end;
-  FMaskWidth:=AWidth;
-  FMaskHeight:=AHeight;
-end;
-
-procedure THMIBasicControl.ComposeControlArea(AWidth, AHeight: Integer);
-var
-  la: TLayerAccess;
-  x, y, i, dx, dy: Integer;
-  t: TDrawingTransform;
-  px: PControlPixel;
-begin
-  t:=DrawingTransform;
-  if t in [dtRotateCW, dtRotateCCW] then
-    ClearControlArea(AHeight, AWidth)
-  else
-    ClearControlArea(AWidth, AHeight);
-
-  OpenLayer(FColorLayer, la);
-  try
-    i:=0;
-    for y:=0 to AHeight-1 do
-      for x:=0 to AWidth-1 do begin
-        case t of
-          dtFlipHorizontal: begin dx:=AWidth-1-x;  dy:=y;            end;
-          dtFlipVertical:   begin dx:=x;           dy:=AHeight-1-y;  end;
-          dtRotateCW:       begin dx:=AHeight-1-y; dy:=x;            end;
-          dtRotateCCW:      begin dx:=y;           dy:=AWidth-1-x;   end;
-          else              begin dx:=x;           dy:=y;            end;
-        end;
-        if FMaskAlpha[i]>0 then begin
-          px:=ControlAreaRow(dy);
-          inc(px, dx);
-          LayerPixel(la, x, y, px^.red, px^.green, px^.blue);
-          px^.alpha:=FMaskAlpha[i];
-        end;
-        inc(i);
-      end;
-  finally
-    la.Img.Free;
-  end;
+  if (AWidth>0) and (AHeight>0) then
+    FillChar(AImage.PixelData^, AWidth*AHeight*SizeOf(TControlPixel), 0);
 end;
 
 procedure THMIBasicControl.DrawControl;
 var
-  w, h: Integer;
+  w, h, x, y, dx, dy: Integer;
+  t: TDrawingTransform;
+  target: TLazIntfImage;
+  cv: TLazCanvas;
+  src, dst: PControlPixel;
 begin
   GetDrawingSize(w, h);
   if (w<=0) or (h<=0) then begin
@@ -459,81 +322,49 @@ begin
     exit;
   end;
 
-  //a mascara primeiro. So' o Paint, quando mudou apenas a cor
-  //(InvalidateDraw), reaproveita a que ja' tem; quem chama o DrawControl
-  //direto sempre tem a forma refeita.
-  //the mask first. Only Paint, when just the colour changed
-  //(InvalidateDraw), reuses the one it has; whoever calls DrawControl
-  //directly always gets the shape rebuilt.
-  if (not FColorsOnly) or (not FMaskValid) or (FMaskWidth<>w) or (FMaskHeight<>h) then begin
-    PrepareLayer(FMaskLayer, w, h);
-    FDrawingMask:=true;
-    try
-      PaintControl(FMaskLayer.Canvas, w, h);
-    finally
-      FDrawingMask:=false;
-    end;
-    ReadMask(w, h);
-    FMaskValid:=true;
+  t:=DrawingTransform;
+  if t=dtNone then begin
+    ClearControlArea(w, h);
+    target:=FControlArea;
+  end else begin
+    if FWorkImage=nil then
+      FWorkImage:=TLazIntfImage.Create(0,0);
+    ClearImage(FWorkImage, w, h);
+    target:=FWorkImage;
   end;
 
-  PrepareLayer(FColorLayer, w, h);
-  PaintControl(FColorLayer.Canvas, w, h);
-
-  ComposeControlArea(w, h);
-  ControlAreaChanged;
-end;
-
-procedure THMIBasicControl.BuildShapeOnly;
-var
-  w, h, x, y, i: Integer;
-  px: PControlPixel;
-begin
-  w:=Width;
-  h:=Height;
-  if (w<=0) or (h<=0) then begin
-    ClearControlArea(Max(w,0), Max(h,0));
-    ControlAreaChanged;
-    exit;
-  end;
-
-  PrepareLayer(FMaskLayer, w, h);
-  FDrawingMask:=true;
+  cv:=TLazCanvas.Create(target);
   try
-    PaintControl(FMaskLayer.Canvas, w, h);
+    PaintControl(cv, w, h);
   finally
-    FDrawingMask:=false;
+    cv.Free;
   end;
-  ReadMask(w, h);
-  FMaskValid:=true;
 
-  ClearControlArea(w, h);
-  i:=0;
-  for y:=0 to h-1 do begin
-    px:=ControlAreaRow(y);
-    for x:=0 to w-1 do begin
-      px^.alpha:=FMaskAlpha[i];
-      inc(px);
-      inc(i);
+  if t<>dtNone then begin
+    if t in [dtRotateCW, dtRotateCCW] then
+      ClearControlArea(h, w)
+    else
+      ClearControlArea(w, h);
+    for y:=0 to h-1 do begin
+      src:=PControlPixel(FWorkImage.GetDataLineStart(y));
+      for x:=0 to w-1 do begin
+        case t of
+          dtFlipHorizontal: begin dx:=w-1-x; dy:=y;     end;
+          dtFlipVertical:   begin dx:=x;     dy:=h-1-y; end;
+          dtRotateCW:       begin dx:=h-1-y; dy:=x;     end;
+          else              begin dx:=y;     dy:=w-1-x; end; //dtRotateCCW
+        end;
+        dst:=ControlAreaRow(dy);
+        inc(dst, dx);
+        dst^:=src^;
+        inc(src);
+      end;
     end;
   end;
   ControlAreaChanged;
 end;
 
-procedure THMIBasicControl.RebuildShape;
-begin
-  if PaintsDirectly then
-    BuildShapeOnly
-  else
-    DrawControl;
-end;
-
-function THMIBasicControl.PaintsDirectly: Boolean;
-begin
-  Result:=DrawingTransform=dtNone;
-end;
-
-procedure THMIBasicControl.PaintControl(ACanvas: TCanvas; AWidth,
+procedure THMIBasicControl.PaintControl(ACanvas: TFPCustomCanvas; AWidth,
   AHeight: Integer);
 begin
   //nada: a base e' transparente / nothing: the base is transparent
@@ -555,16 +386,14 @@ begin
   Result:=dtNone;
 end;
 
-function THMIBasicControl.ShapeColor(AColor: TColor): TColor;
+class function THMIBasicControl.FPColorOf(AColor: TColor): TFPColor;
 begin
-  if FDrawingMask then
-    Result:=clBlack
-  else
-    Result:=AColor;
+  Result:=TColorToFPColor(ColorToRGB(AColor));
+  Result.Alpha:=alphaOpaque;
 end;
 
-procedure THMIBasicControl.SetupCanvas(ACanvas: TCanvas; APenColor: TColor;
-  APenWidth: Integer; ABrushColor: TColor);
+procedure THMIBasicControl.SetupCanvas(ACanvas: TFPCustomCanvas;
+  APenColor: TColor; APenWidth: Integer; ABrushColor: TColor);
 begin
   if APenWidth<=0 then
     ACanvas.Pen.Style:=psClear
@@ -572,16 +401,184 @@ begin
     ACanvas.Pen.Style:=psSolid;
     ACanvas.Pen.Width:=APenWidth;
   end;
-  ACanvas.Pen.Color:=ShapeColor(APenColor);
+  ACanvas.Pen.FPColor:=FPColorOf(APenColor);
   ACanvas.Brush.Style:=bsSolid;
-  ACanvas.Brush.Color:=ShapeColor(ABrushColor);
+  ACanvas.Brush.FPColor:=FPColorOf(ABrushColor);
 end;
 
-function THMIBasicControl.MeasureText(const AText: String): TSize;
+procedure THMIBasicControl.RoundRect(ACanvas: TFPCustomCanvas; X1, Y1, X2,
+  Y2, RX, RY: Integer);
+var
+  pts: array of TPoint;
+  a, b, l, r, tp, bt, cx, cy: Double;
+  n, i, k, c: Integer;
+  ang: Double;
+const
+  //centro de cada canto e o angulo onde o arco comeca
+  //centre of each corner and the angle where the arc starts
+  StartAng: array[0..3] of Double = (0, 90, 180, 270);
 begin
-  if FColorLayer=nil then
-    PrepareLayer(FColorLayer, 1, 1);
-  Result:=FColorLayer.Canvas.TextExtent(AText);
+  if (X2<=X1) or (Y2<=Y1) then exit;
+  //como no TCanvas, X2 e Y2 ficam fora / as on TCanvas, X2 and Y2 stay out
+  l:=X1; tp:=Y1; r:=X2-1; bt:=Y2-1;
+  a:=Min(Abs(RX)/2, (r-l)/2);
+  b:=Min(Abs(RY)/2, (bt-tp)/2);
+  if (a<1) or (b<1) then begin
+    ACanvas.Rectangle(X1, Y1, X2, Y2);
+    exit;
+  end;
+  n:=Max(2, Min(16, Round(Max(a,b)/2)));
+  pts:=nil;
+  SetLength(pts, 4*(n+1));
+  k:=0;
+  for c:=0 to 3 do begin
+    case c of
+      0: begin cx:=r-a; cy:=tp+b; end;  //superior direito / top right
+      1: begin cx:=l+a; cy:=tp+b; end;  //superior esquerdo / top left
+      2: begin cx:=l+a; cy:=bt-b; end;  //inferior esquerdo / bottom left
+      else begin cx:=r-a; cy:=bt-b; end; //inferior direito / bottom right
+    end;
+    for i:=0 to n do begin
+      ang:=(StartAng[c]+90*i/n)*Pi/180;
+      pts[k]:=Point(Round(cx+a*Cos(ang)), Round(cy-b*Sin(ang)));
+      inc(k);
+    end;
+  end;
+  ACanvas.Polygon(pts);
+end;
+
+procedure THMIBasicControl.RadialPie(ACanvas: TFPCustomCanvas; X1, Y1, X2,
+  Y2, StartAngle16Deg, Angle16DegLength: Integer);
+var
+  pts: array of TPoint;
+  cx, cy, a, b, ang, a0, len: Double;
+  n, i: Integer;
+begin
+  cx:=(X1+X2)/2;
+  cy:=(Y1+Y2)/2;
+  a:=Abs(X2-X1)/2;
+  b:=Abs(Y2-Y1)/2;
+  a0 :=StartAngle16Deg/16;
+  len:=Angle16DegLength/16;
+  n:=Max(4, Min(64, Round(Abs(len)/360*Pi*(a+b)/3)));
+  pts:=nil;
+  SetLength(pts, n+2);
+  pts[0]:=Point(Round(cx), Round(cy));
+  for i:=0 to n do begin
+    ang:=(a0+len*i/n)*Pi/180;
+    pts[i+1]:=Point(Round(cx+a*Cos(ang)), Round(cy-b*Sin(ang)));
+  end;
+  ACanvas.Polygon(pts);
+end;
+
+//a fonte de tracos: cada caractere sao polylines numa grade de 5 colunas
+//(0..4) por 9 linhas (0 = topo das maiusculas, 6 = linha de base, ate' 8
+//para as descendentes); cada ponto sao dois digitos "xy" e as polylines
+//sao separadas por espaco
+//the stroke font: each character is polylines on a grid of 5 columns
+//(0..4) by 9 rows (0 = top of the capitals, 6 = baseline, down to 8 for
+//descenders); each point is two digits "xy" and the polylines are
+//separated by a space
+function StrokeGlyph(ch: Char): String;
+begin
+  case ch of
+    '0': Result:='0040460600 0640';
+    '1': Result:='1120 2026 1636';
+    '2': Result:='004043030646';
+    '3': Result:='00404606 1343';
+    '4': Result:='000343 4046';
+    '5': Result:='400003434606';
+    '6': Result:='400006464303';
+    '7': Result:='004016';
+    '8': Result:='0040460600 0343';
+    '9': Result:='430300404606';
+    '-': Result:='0343';
+    '=': Result:='0242 0444';
+    ',': Result:='252617';
+    '.': Result:='2526';
+    ':': Result:='2122 2526';
+    ' ': Result:='';
+    'D': Result:='00304145360600';
+    'M': Result:='0600234046';
+    'e': Result:='044443321203051646';
+    'g': Result:='421203051646 42473808';
+    'r': Result:='0206 042242';
+    's': Result:='420204444606';
+    'x': Result:='0246 4206';
+    'y': Result:='0225 4218';
+  else
+    Result:='0040460600';
+  end;
+end;
+
+class function THMIBasicControl.StrokeTextExtent(const AText: String;
+  ASize: Integer): TSize;
+var
+  u: Double;
+begin
+  u:=Max(ASize,1)/6;
+  if AText='' then
+    Result.cx:=0
+  else
+    Result.cx:=Round((Length(AText)*6-2)*u);
+  Result.cy:=Round(8*u)+1;
+end;
+
+procedure THMIBasicControl.StrokeText(ACanvas: TFPCustomCanvas; X, Y,
+  ASize: Integer; const AText: String; AOrientation: Integer);
+var
+  u: Double;
+  ci, i, n: Integer;
+  g: String;
+  pts: array of TPoint;
+  gx, gy: Double;
+  oldStyle: TFPPenStyle;
+  oldWidth: Integer;
+
+  function Place(px, py: Double): TPoint;
+  begin
+    //px ao longo da linha de base, py para baixo
+    //px along the baseline, py downwards
+    if AOrientation=900 then
+      Result:=Point(X+Round(py), Y-Round(px))
+    else
+      Result:=Point(X+Round(px), Y+Round(py));
+  end;
+
+begin
+  if AText='' then exit;
+  u:=Max(ASize,1)/6;
+  oldStyle:=ACanvas.Pen.Style;
+  oldWidth:=ACanvas.Pen.Width;
+  ACanvas.Pen.Style:=psSolid;
+  ACanvas.Pen.Width:=Max(1, Round(ASize/8));
+  pts:=nil;
+  try
+    for ci:=1 to Length(AText) do begin
+      g:=StrokeGlyph(AText[ci])+' ';
+      n:=0;
+      i:=1;
+      while i<=Length(g) do begin
+        if g[i]=' ' then begin
+          if n>=2 then
+            ACanvas.Polyline(Copy(pts, 0, n));
+          n:=0;
+          inc(i);
+        end else begin
+          gx:=(ci-1)*6+(Ord(g[i])-Ord('0'));
+          gy:=Ord(g[i+1])-Ord('0');
+          if n>=Length(pts) then
+            SetLength(pts, n+8);
+          pts[n]:=Place(gx*u, gy*u);
+          inc(n);
+          inc(i, 2);
+        end;
+      end;
+    end;
+  finally
+    ACanvas.Pen.Style:=oldStyle;
+    ACanvas.Pen.Width:=oldWidth;
+  end;
 end;
 
 class function THMIBasicControl.RoundPoints(const APoints: array of TPointF
@@ -1100,312 +1097,117 @@ begin
 end;
 
 procedure THMIBasicControl.UpdateShape;
-var
-  p:PControlPixel;
-  x, y:Integer;
-  arect:TRect;
-
-  {$IF defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE) OR defined(ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE)}
-  started:boolean;
-  x0, x1:Integer;
-  {$IFDEF ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE}
-  fbmp: TBitmap;
-  pb:PByte;
-
-  procedure Draw1BitBMPLine(abmp:TBitmap; FromX, ToX, Y:Integer);
-  var
-    sl: PByte;
-    aBit: Word;
-    aX: Integer;
-  begin
-    sl:=abmp.ScanLine[y];
-    inc(sl,FromX div 8);
-    {$IFNDEF LCLGtk2}
-    aBit:=128;
-    aBit:=aBit shr (FromX mod 8);
-    {$ELSE}
-    abit:=1;
-    aBit:=aBit shl (FromX mod 8);
-    {$ENDIF}
-
-    for aX:=FromX to ToX-1 do begin
-      sl^:=sl^+aBit;
-
-      {$IFNDEF LCLGtk2}
-      aBit:=aBit shr 1;
-      {$ELSE}
-      aBit:=aBit shl 1;
-      {$ENDIF}
-
-      {$IFNDEF LCLGtk2}
-      if aBit=0 then begin
-        aBit:=128;
-        inc(sl);
-      end;
-      {$ELSE}
-      if aBit=256 then begin
-        aBit:=1;
-        inc(sl);
-      end;
-      {$ENDIF}
-    end;
-
-  end;
-  {$ENDIF}
-  {$ENDIF}
-
-  {$IFDEF RGN_DETECT_RECTANGLES}
-  xa, x1:Integer;
-  y1:Integer;
-  invalidline:boolean;
-  {$ENDIF}
-
-  {$IF (not defined(RGN_PIXEL_BY_PIXEL)) AND (not defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE)) AND (not defined(RGN_DETECT_RECTANGLES)) AND (not defined(ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE))}
-  pb:PByte;
-  bit:PtrInt;
-  fbmp: TBitmap;
-  {$ELSE}
-  {$IFNDEF ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE}
-  frgn: TRegion;
-  {$ENDIF}
-  {$ENDIF}
 begin
-  {$IF defined(LCLqt) or defined(LCLQt5)}
-  Color:=clBackground;
-  exit;
-  {$IFEND}
-  if Parent=nil then exit;
-
-  {$IFDEF RGN_PIXEL_BY_PIXEL}
-  frgn:=TRegion.Create;
-  for y:=0 to FControlArea.Height-1 do begin
-    p:=ControlAreaRow(y);
-    for x:=0 to FControlArea.Width-1 do begin
-      if (p^.alpha>0) then
-        frgn.AddRectangle(x,y,x+1,y+1);
-
-      inc(p);
-    end;
-  end;
-  SetShape(frgn);
-  FreeAndNil(frgn);
-  {$ENDIF}
-
-  {$IFDEF RGN_CONTINUOUS_ROW_AS_RECTANGLE}
-  frgn:=TRegion.Create;
-  for y:=0 to FControlArea.Height-1 do begin
-    p:=ControlAreaRow(y);
-    started:=false;
-    for x:=0 to FControlArea.Width-1 do begin
-      if (p^.alpha=0) then begin
-        if started then begin
-          if x0=x1 then
-            frgn.AddRectangle(x0,y,x0+1,y+1)
-          else
-            frgn.AddRectangle(x0,y,x1,y+1);
-        end;
-        started:=false;
-      end else begin
-        if started then begin
-          x1:=x+1;
-        end else begin
-          x0:=x;
-          x1:=x+1;
-          started:=true;
-        end;
-      end;
-      inc(p);
-    end;
-
-    //the
-    if started then begin
-      if x0=x1 then
-        frgn.AddRectangle(x0,y,x0+1,y+1)
-      else
-        frgn.AddRectangle(x0,y,x1,y+1);
-    end;
-  end;
-  SetShape(frgn);
-  FreeAndNil(frgn);
-  {$ENDIF}
-
-  {$IFDEF RGN_DETECT_RECTANGLES}
-  frgn:=TRegion.Create;
-  try
-    for y:=0 to FControlArea.Height-1 do begin
-      for x:=0 to FControlArea.Width-1 do begin
-        if ControlArea(ControlAreaRow(y)[x]) and (PtInRegion(frgn.Handle, x, y)=false) then begin
-          for x1:=x to FControlArea.Width-2 do begin
-            if ControlArea(ControlAreaRow(y)[x1+1])=false then break;
-            if PtInRegion(frgn.Handle, x1+1, y) then break;
-          end;
-
-          invalidline:=false;
-          for y1:=y to FControlArea.Height-2 do begin
-            for xa:=x to x1 do begin
-              if ControlArea(ControlAreaRow(y1+1)[xa])=false then begin
-                invalidline:=true;
-                break;
-              end;
-              if PtInRegion(frgn.Handle, xa, y1+1) then begin
-                invalidline:=true;
-                break;
-              end;
-            end;
-            if invalidline then break;
-          end;
-          frgn.AddRectangle(x,y,x1+1,y1+1);
-        end;
-      end;
-    end;
-    SetShape(frgn);
-  finally
-    FreeAndNil(frgn);
-  end;
-  {$ENDIF}
-
-
-  {$IFDEF ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE}
-  fbmp:=TBitmap.Create;
-  fbmp.Monochrome :=true;
-  fbmp.PixelFormat:=pf1bit;
-  fbmp.Width:=FControlArea.Width;
-  fbmp.Height:=FControlArea.Height;
-  fbmp.Canvas.Pen.Color:=clBlack;
-
-  for y:=0 to FControlArea.Height-1 do begin
-    p:=ControlAreaRow(y);
-    started:=false;
-    for x:=0 to FControlArea.Width-1 do begin
-      if ControlArea(p^) then begin
-        if started then begin
-          x1:=x+1;
-        end else begin
-          x0:=x;
-          x1:=x+1;
-          started:=true;
-        end;
-      end else begin
-        if started then begin
-          if x0=x1 then
-            Draw1BitBMPLine(fbmp, x0, x0+1,y)
-          else
-            Draw1BitBMPLine(fbmp, x0, x1,  y);
-        end;
-        started:=false;
-      end;
-      inc(p);
-    end;
-
-    //the
-    if started then begin
-      if x0=x1 then
-        Draw1BitBMPLine(fbmp, x0, x0+1,y)
-      else
-        Draw1BitBMPLine(fbmp, x0, x1,  y);
-    end;
-  end;
-  SetShape(fbmp);
-  FreeAndNil(fbmp);
-  {$ENDIF}
-
-  {$IF (not defined(RGN_PIXEL_BY_PIXEL)) AND (not defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE)) AND (not defined(RGN_DETECT_RECTANGLES)) AND (not defined(ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE))}
-  //////////////////////////////////////////////////////////////////////////////
-  fbmp:=TBitmap.Create;
-  fbmp.Monochrome :=true;
-  fbmp.PixelFormat:=pf1bit;
-  fbmp.Width:=FControlArea.Width;
-  fbmp.Height:=FControlArea.Height;
-
-
-  //build shape
-  for y:=0 to FControlArea.Height-1 do begin
-    pb:=PByte(fbmp.ScanLine[y]);
-    {$IFNDEF LCLGtk2}
-    bit:=128;
-    {$ELSE}
-    bit:=1;
-    {$ENDIF}
-    for x:=0 to FControlArea.Width-1 do begin
-      if ControlArea(ControlAreaRow(y)[x]) then
-        pb^:=pb^+bit;
-
-      {$IFNDEF LCLGtk2}
-      bit:=bit shr 1;
-      {$ELSE}
-      bit:=bit shl 1;
-      {$ENDIF}
-
-      {$IFNDEF LCLGtk2}
-      if bit=0 then begin
-        bit:=128;
-        inc(pb);
-      end;
-      {$ELSE}
-      if bit=256 then begin
-        bit:=1;
-        inc(pb);
-      end;
-      {$ENDIF}
-    end;
-  end;
-  SetShape(fbmp);
-  FreeAndNil(fbmp);
-  {$ENDIF}
+  //sem janela nao ha' forma nativa: quem recorta e' a mascara do Paint e quem
+  //deixa o clique passar e' o CM_HITTEST. Fica como gancho para quem precisa
+  //saber que a forma mudou.
+  //with no window there is no native shape: the Paint mask clips and
+  //CM_HITTEST lets the click through. Kept as a hook for whoever needs to
+  //know the shape changed.
 end;
 
 procedure THMIBasicControl.Paint;
 begin
-  if assigned(FControlArea) and PaintsDirectly then begin
-    //so' a forma precisa da mascara lida de volta; a cor vai direto na tela
-    //only the shape needs the mask read back; the colour goes straight to the
-    //screen
-    if ControlAreaEmpty or FUpdateShape or (not FMaskValid) or
-       (FMaskWidth<>Width) or (FMaskHeight<>Height) then begin
-      BuildShapeOnly;
-      {$IF defined(LCLqt) or defined(LCLQt5)}
-      Color:=clBackground;
-      {$ELSE}
-      UpdateShape;
-      {$IFEND}
-      FUpdateShape:=false;
-    end;
-    FShouldRedraw:=false;
-    if Visible and not ControlAreaEmpty then begin
-      Canvas.Font.Assign(Font);
-      PaintControl(Canvas, Width, Height);
-    end;
-  end else if assigned(FControlArea) then begin
+  if assigned(FControlArea) then begin
     if ControlAreaEmpty Or FUpdateShape then begin
       DrawControl;
-      {$IF defined(LCLqt) or defined(LCLQt5)}
-      Color:=clBackground;
-      {$ELSE}
       UpdateShape;
-      {$IFEND}
       FShouldRedraw:=false;
       FUpdateShape:=false;
     end;
 
+    //so' a cor mudou: o desenho em memoria e' barato
+    //only the colour changed: drawing in memory is cheap
     if FShouldRedraw then begin
-      FColorsOnly:=true;
-      try
-        DrawControl;
-      finally
-        FColorsOnly:=false;
-      end;
+      DrawControl;
       FShouldRedraw:=false;
     end;
 
     if Visible and not ControlAreaEmpty then begin
-      if not FPaintBitmapValid then begin
-        FPaintBitmap.LoadFromIntfImage(FControlArea);
-        FPaintBitmapValid:=true;
-      end;
+      if not FPaintBitmapValid then
+        UpdatePaintBitmap;
       Canvas.Draw(0, 0, FPaintBitmap);
     end;
   end;
   inherited Paint;
+end;
+
+type
+  TBitmapAccess = class(TBitmap);
+
+procedure THMIBasicControl.UpdatePaintBitmap;
+var
+  raw: TRawImage;
+  bmp, msk: HBITMAP;
+  w, h, x, y, mbpl: Integer;
+  p: PControlPixel;
+  m: PByte;
+  b: Byte;
+  maskChanged: Boolean;
+begin
+  //sem copia: o TRawImage aponta para a propria memoria da FControlArea,
+  //vista como 32 bits sem alfa (BGRX - sobe sem mistura pixel a pixel), e o
+  //alfa vira uma mascara de 1 bit, que recorta o desenho sobre o pai
+  //no copy: the TRawImage points at the very memory of FControlArea, seen as
+  //32 bits with no alpha (BGRX - uploaded with no per-pixel blending), and
+  //the alpha becomes a 1-bit mask, which clips the drawing over the parent
+  w:=FControlArea.Width;
+  h:=FControlArea.Height;
+  raw.Init;
+  raw.Description.Init_BPP32_B8G8R8_M1_BIO_TTB(w, h);
+  //linhas da mascara alinhadas em byte: o gtk2 a cria com
+  //gdk_bitmap_create_from_data, que le assim e ignora o MaskLineEnd
+  //mask rows aligned to a byte: gtk2 creates it with
+  //gdk_bitmap_create_from_data, which reads it so and ignores MaskLineEnd
+  raw.Description.MaskLineEnd:=rileByteBoundary;
+  mbpl:=raw.Description.MaskBytesPerLine;
+  //a mascara nova e' comparada com a anterior enquanto e' montada: quando
+  //so' a cor muda ela sai igual e o pixmap dela e' reaproveitado - so' o
+  //bitmap de cor sobe. Compara em vez de confiar em quem pediu o redesenho
+  //porque nem todo InvalidateDraw mantem a forma (o texto da polyline muda
+  //os pixels opacos).
+  //the new mask is compared with the previous one while it is built: when
+  //only the colour changes it comes out the same and its pixmap is reused -
+  //only the colour bitmap is uploaded. It compares instead of trusting
+  //whoever asked for the redraw because not every InvalidateDraw keeps the
+  //shape (the polyline text changes the opaque pixels).
+  maskChanged:=(Length(FPaintMask)<>mbpl*h) or not FPaintBitmap.MaskHandleAllocated;
+  if Length(FPaintMask)<>mbpl*h then
+    SetLength(FPaintMask, mbpl*h);
+  for y:=0 to h-1 do begin
+    p:=ControlAreaRow(y);
+    m:=@FPaintMask[y*mbpl];
+    x:=0;
+    while x<w do begin
+      //bit 1 = mascarado (fundo); bit 0 e' o pixel mais a esquerda
+      //bit 1 = masked (background); bit 0 is the leftmost pixel
+      b:=0;
+      repeat
+        if not ControlArea(p^) then
+          b:=b or (1 shl (x and 7));
+        inc(p);
+        inc(x);
+      until (x>=w) or ((x and 7)=0);
+      if m^<>b then begin
+        m^:=b;
+        maskChanged:=true;
+      end;
+      inc(m);
+    end;
+  end;
+  raw.Data:=FControlArea.PixelData;
+  raw.DataSize:=PtrUInt(w)*PtrUInt(h)*SizeOf(TControlPixel);
+  raw.Mask:=@FPaintMask[0];
+  raw.MaskSize:=Length(FPaintMask);
+  if maskChanged then begin
+    if RawImage_CreateBitmaps(raw, bmp, msk, false) then
+      TBitmapAccess(FPaintBitmap).SetHandles(bmp, msk);
+  end else
+    //mesma mascara: o SetHandles mantem o handle dela
+    //same mask: SetHandles keeps its handle
+    if RawImage_CreateBitmaps(raw, bmp, msk, true) then
+      TBitmapAccess(FPaintBitmap).SetHandles(bmp, FPaintBitmap.MaskHandle);
+  FPaintBitmapValid:=true;
 end;
 
 procedure THMIBasicControl.Resize;
@@ -1418,24 +1220,6 @@ begin
     FOldWidth:=Width;
     FOldHeight:=Height;
   end;
-end;
-
-procedure THMIBasicControl.Invalidate;
-begin
-  //GTK2 bug: if control is empty and setshape was applied,
-  //Invalidate will not call Paint, because all control area
-  //is "transparent", so Paint don't have anything to do...
-  {$IF defined(LCLGtk2)} //maybe more need this trick...
-  //sem janela nao ha' Paint para destravar / with no window there is no Paint to unblock
-  if HandleAllocated and ([csDestroying]*ComponentState=[]) and Assigned(FControlArea) and ControlAreaEmpty then begin
-    RebuildShape;
-    UpdateShape;
-    //a forma acabou de ser refeita: o Paint que vem nao precisa refaze-la
-    //the shape was just rebuilt: the coming Paint need not rebuild it
-    FUpdateShape:=false;
-  end;
-  {$IFEND}
-  inherited Invalidate;
 end;
 
 procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);
@@ -1476,12 +1260,10 @@ procedure THMIBasicControl.SetParent(NewParent: TWinControl);
 begin
   inherited SetParent(NewParent);
   if (NewParent<>nil) and (ComponentState*[csReading, csLoading]=[]) then begin
-    //so' a forma: quem pinta direto nao precisa da imagem colorida montada
-    //only the shape: whoever paints directly does not need the coloured image
-    RebuildShape;
+    //o desenho fica para o Paint; aqui so' a area, para o teste de clique
+    //the drawing is left to Paint; here only the area, for the hit test
+    DrawControl;
     UpdateShape;
-    //acabou de ser refeita: o primeiro Paint nao precisa refaze-la de novo
-    //just rebuilt: the first Paint need not rebuild it again
     FUpdateShape:=false;
     Invalidate;
   end;
@@ -1521,9 +1303,7 @@ begin
   ClearControlArea(0,0);
   FPaintBitmap:=TBitmap.Create;
   FPaintBitmapValid:=false;
-  FMaskValid:=false;
-  FColorsOnly:=false;
-  FDrawingMask:=false;
+  FWorkImage:=nil;
   FIsEnabled:=true;
   //sem codigo de seguranca ninguem barra o controle. Comecando em falso, o
   //primeiro Enabled:=true de um controle criado por codigo - ou o repasse de
@@ -1552,8 +1332,7 @@ begin
 
   FreeAndNil(FControlArea);
   FreeAndNil(FPaintBitmap);
-  FreeAndNil(FColorLayer);
-  FreeAndNil(FMaskLayer);
+  FreeAndNil(FWorkImage);
   inherited Destroy;
 end;
 

@@ -41,7 +41,7 @@ interface
 uses
   Classes, SysUtils, Controls, Forms, ExtCtrls, Graphics, LMessages, LCLType,
   fpcunit, testregistry,
-  hmi_draw_basiccontrol;
+  FPCanvas, hmi_draw_basiccontrol;
 
 type
 
@@ -55,7 +55,7 @@ type
   private
     FFillAll:Boolean;
   protected
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); override;
     procedure MouseDown(Button:TMouseButton; Shift:TShiftState; X, Y:Integer); override;
     procedure MouseUp(Button:TMouseButton; Shift:TShiftState; X, Y:Integer); override;
     procedure MouseMove(Shift:TShiftState; X, Y:Integer); override;
@@ -110,7 +110,7 @@ implementation
 
 { TShapeProbe }
 
-procedure TShapeProbe.PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer);
+procedure TShapeProbe.PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer);
 var
   w:Integer;
 begin
@@ -119,7 +119,7 @@ begin
   else
     w:=AWidth div 2;
   ACanvas.Brush.Style:=bsSolid;
-  ACanvas.Brush.Color:=ShapeColor(clRed);
+  ACanvas.Brush.FPColor:=FPColorOf(clRed);
   ACanvas.FillRect(0, 0, w, AHeight);
 end;
 

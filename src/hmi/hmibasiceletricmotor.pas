@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  hmi_draw_basiccontrol;
+  hmi_draw_basiccontrol, FPCanvas;
 
 type
 
@@ -17,7 +17,7 @@ type
     procedure SetDrawPump(AValue: Boolean);
     procedure SetMirrored(AValue: Boolean);
   protected
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); override;
     function  DrawingTransform:TDrawingTransform; override;
     property Mirrored: Boolean Read FMirrored Write SetMirrored Default false;
     property DrawPump: Boolean read FDrawPump write SetDrawPump default true;
@@ -78,7 +78,7 @@ begin
     Result:=dtNone;
 end;
 
-procedure THMICustomBasicEletricMotor.PaintControl(ACanvas: TCanvas; AWidth,
+procedure THMICustomBasicEletricMotor.PaintControl(ACanvas: TFPCustomCanvas; AWidth,
   AHeight: Integer);
 var
   w, h: Integer;
@@ -100,20 +100,20 @@ begin
   //no TCanvas o canto e' dado pelo diametro da elipse; na BGRABitmap era o raio
   //on TCanvas the corner is given by the ellipse's diameter; on BGRABitmap it
   //was the radius
-  ACanvas.RoundRect(Trunc(0.19*w)-1,
+  RoundRect(ACanvas, Trunc(0.19*w)-1,
                     Trunc(0.06*h),
                     w - FBorderWidth,
                     Trunc(0.94*h),
                     2*Trunc(0.2*w),
                     2*Trunc(0.2*w));
   if FDrawPump then
-    ACanvas.RoundRect(Trunc(0.04*w),
+    RoundRect(ACanvas, Trunc(0.04*w),
                       Trunc(0.06*h),
                       Trunc(0.19*w),
                       Trunc(0.94*h),
                       2*Trunc(0.075*w),
                       2*Trunc(0.075*w));
-  ACanvas.RoundRect(Trunc(0.39*w),
+  RoundRect(ACanvas, Trunc(0.39*w),
                     Trunc((15/52)*h),
                     Trunc(0.73*w),
                     Trunc((38/52)*h),

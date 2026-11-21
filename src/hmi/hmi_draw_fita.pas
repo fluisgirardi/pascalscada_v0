@@ -5,7 +5,7 @@ unit hmi_draw_fita;
 interface
 
 uses
-  Controls, sysutils, Graphics, Classes, hmi_draw_basic_horizontal_control;
+  Controls, sysutils, Graphics, Classes, hmi_draw_basic_horizontal_control, FPCanvas;
 
 type
 
@@ -13,7 +13,7 @@ type
 
   THMIFitaBasica = class(THMIBasicHorizontalControl)
   protected
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); override;
   published
     property BodyHeight;
     property BodyColor;
@@ -28,7 +28,7 @@ type
 
 implementation
 
-procedure THMIFitaBasica.PaintControl(ACanvas: TCanvas; AWidth,
+procedure THMIFitaBasica.PaintControl(ACanvas: TFPCustomCanvas; AWidth,
   AHeight: Integer);
 begin
   SetupCanvas(ACanvas, FBorderColor, FBorderWidth, FBodyColor);

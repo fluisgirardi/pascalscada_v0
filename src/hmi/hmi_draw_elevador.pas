@@ -5,7 +5,7 @@ unit hmi_draw_elevador;
 interface
 
 uses
-  Controls, sysutils, Types, Graphics, Classes, hmi_draw_basiccontrol, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag, HMIZones;
+  Controls, sysutils, Types, Graphics, Classes, hmi_draw_basiccontrol, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag, HMIZones, FPCanvas;
 
 type
 
@@ -21,7 +21,7 @@ type
     procedure SetBodyWidth(AValue: Byte);
     procedure SetFooterColor(AValue: TColor);
     procedure SetHeadColor(AValue: TColor);
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
   protected
@@ -388,7 +388,7 @@ begin
   InvalidateDraw;
 end;
 
-procedure THMICustomElevadorBasico.PaintControl(ACanvas: TCanvas; AWidth,
+procedure THMICustomElevadorBasico.PaintControl(ACanvas: TFPCustomCanvas; AWidth,
   AHeight: Integer);
 var
   x:array of TPointF;
@@ -461,7 +461,7 @@ begin
   //###############################################################################
   //preenchimento do pé do elevador.
   //###############################################################################
-  ACanvas.Brush.Color:=ShapeColor(FFooterColor);
+  ACanvas.Brush.FPColor:=FPColorOf(FFooterColor);
 
   //###############################################################################
   //desenha o pé do elevador.
@@ -471,7 +471,7 @@ begin
   //###############################################################################
   //preenchimento do corpo do elevador.
   //###############################################################################
-  ACanvas.Brush.Color:=ShapeColor(FBodyColor);
+  ACanvas.Brush.FPColor:=FPColorOf(FBodyColor);
 
   x[0].X:=FBodyWidth;
   x[0].Y:=(BorderWidth/2);

@@ -6,7 +6,7 @@ interface
 
 uses
   Controls, sysutils, Graphics, Classes, hmi_draw_basic_horizontal_control,
-  hmi_polyline;
+  hmi_polyline, FPCanvas;
 
 type
 
@@ -16,7 +16,7 @@ type
   protected
     procedure UpdateShape; override;
     procedure SetBodyHeight(AValue: Byte); override;
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); override;
   end;
 
   THMIRedlerBasico = class(THMICustomBasicRedler)
@@ -48,7 +48,7 @@ begin
   inherited SetBodyHeight(AValue);
 end;
 
-procedure THMICustomBasicRedler.PaintControl(ACanvas: TCanvas; AWidth,
+procedure THMICustomBasicRedler.PaintControl(ACanvas: TFPCustomCanvas; AWidth,
   AHeight: Integer);
 var
   eixo_h, eixo_top, pa_h, pa_x:Integer;

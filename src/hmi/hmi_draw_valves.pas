@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, SysUtils, Types, LResources, Forms, Controls, Graphics, Dialogs,
-  hmi_draw_basiccontrol;
+  hmi_draw_basiccontrol, FPCanvas;
 
 type
 
@@ -21,7 +21,7 @@ type
     procedure SetValveBodyPercent(AValue: Double);
     procedure SetValveType(AValue: TValveType);
   protected
-    procedure PaintControl(ACanvas:TCanvas; AWidth, AHeight:Integer); override;
+    procedure PaintControl(ACanvas:TFPCustomCanvas; AWidth, AHeight:Integer); override;
     function  DrawingTransform:TDrawingTransform; override;
 
     property Mirrored:Boolean read FMirrored write SetMirrored default false;
@@ -89,7 +89,7 @@ begin
   end;
 end;
 
-procedure THMICustomBasicValve.PaintControl(ACanvas: TCanvas; AWidth,
+procedure THMICustomBasicValve.PaintControl(ACanvas: TFPCustomCanvas; AWidth,
   AHeight: Integer);
 var
   p:array of TPointF;
@@ -97,27 +97,23 @@ var
   larguraideal: real;
   larguradoquadrado: real;
 
-  //o 'M' do motorizado, centrado em (cx, top) ou, de lado, em (left, cy)
-  //the 'M' of the motorised one, centred on (cx, top) or, sideways, on
-  //(left, cy)
-  procedure DrawM(aSize, aOrientation:Integer; X, Y:Double);
+  //o 'M' do motorizado, desenhado com tracos e centrado no quadrado do
+  //atuador (centro CX,CY e lado L); de lado, de baixo para cima
+  //the 'M' of the motorised one, drawn with strokes and centred on the
+  //actuator's square (centre CX,CY and side L); sideways, bottom to top
+  procedure DrawM(CX, CY, L:Double; aOrientation:Integer);
   var
+    sz: Integer;
     ts: TSize;
   begin
-    if aSize<1 then exit;
-    ACanvas.Font.Height     :=aSize;
-    ACanvas.Font.Orientation:=aOrientation;
-    ACanvas.Font.Color      :=ShapeColor(FBorderColor);
-    ACanvas.Brush.Style     :=bsClear;
-    ts:=ACanvas.TextExtent('M');
+    sz:=Trunc(L*0.6 - 2*FBorderWidth);
+    if sz<3 then exit;
+    ts:=StrokeTextExtent('M', sz);
+    ACanvas.Pen.FPColor:=FPColorOf(FBorderColor);
     if aOrientation=0 then
-      ACanvas.TextOut(Round(X-ts.cx/2), Round(Y), 'M')
+      StrokeText(ACanvas, Round(CX-ts.cx/2), Round(CY-sz/2), sz, 'M')
     else
-      //girado 90 graus, o texto cresce para cima a partir do ponto
-      //rotated 90 degrees, the text grows upwards from the point
-      ACanvas.TextOut(Round(X), Round(Y+ts.cx/2), 'M');
-    ACanvas.Font.Orientation:=0;
-    ACanvas.Brush.Style     :=bsSolid;
+      StrokeText(ACanvas, Round(CX-sz/2), Round(CY+ts.cx/2), sz, 'M', 900);
   end;
 
 begin
@@ -184,8 +180,7 @@ begin
           ACanvas.Polygon(RoundPoints(p));
 
           if FValveType= vtMotorisedProportional then begin
-            DrawM(trunc(larguradoquadrado * 0.9 - 2*Fborderwidth), 0,
-                  AWidth/2, Trunc((larguradoquadrado-trunc(larguradoquadrado * 0.9 - 2*Fborderwidth))/2));
+            DrawM(AWidth/2, p[0].y+larguradoquadrado/2, larguradoquadrado, 0);
 
           end;
         end;
@@ -194,7 +189,7 @@ begin
           //no sentido anti-horario a partir das 3 horas
           //half ellipse upwards: centre, radii and angles in 1/16 degree,
           //counter-clockwise from 3 o'clock
-          ACanvas.RadialPie(Round(AWidth/2 - AWidth/4),
+          RadialPie(ACanvas, Round(AWidth/2 - AWidth/4),
                             Round(((1-FValveBodyPercent)*AHeight)+(FBorderWidth/2) - AHeight*(1-FValveBodyPercent)),
                             Round(AWidth/2 + AWidth/4),
                             Round(((1-FValveBodyPercent)*AHeight)+(FBorderWidth/2) + AHeight*(1-FValveBodyPercent)),
@@ -260,14 +255,13 @@ begin
           ACanvas.Polygon(RoundPoints(p));
 
           if FValveType= vtMotorisedProportional then begin
-            DrawM(trunc(larguradoquadrado * 0.9 - Fborderwidth), 900,
-                  Trunc((larguradoquadrado-trunc(larguradoquadrado * 0.9 - Fborderwidth))/2), AHeight/2);
+            DrawM(p[0].x+larguradoquadrado/2, AHeight/2, larguradoquadrado, 900);
 
           end;
         end;
         vtPneumaticOnOff: begin
           //meia elipse para a esquerda / half ellipse to the left
-          ACanvas.RadialPie(Round(((1-FValveBodyPercent)*AWidth)+(FBorderWidth/2) - AWidth*(1-FValveBodyPercent)),
+          RadialPie(ACanvas, Round(((1-FValveBodyPercent)*AWidth)+(FBorderWidth/2) - AWidth*(1-FValveBodyPercent)),
                             Round(AHeight/2 - AHeight/4),
                             Round(((1-FValveBodyPercent)*AWidth)+(FBorderWidth/2) + AWidth*(1-FValveBodyPercent)),
                             Round(AHeight/2 + AHeight/4),
