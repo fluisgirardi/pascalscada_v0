@@ -46,6 +46,8 @@ type
     WriteDelayMs:Integer;
     WriteCount:Integer;
     LastWritten:TArrayOfDouble;
+    //a driver whose port is missing: every scan pass ends with the 50 ms pause
+    NoPort:Boolean;
   protected
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
@@ -90,6 +92,7 @@ type
     procedure AValueChangeIsPostedWithTheValue;
     procedure TheEventsFiredArePosted;
     procedure AnExceptionInAHandlerIsPostedAndTheOtherTagsStillUpdate;
+    procedure ATagDestroyedWhileTheDriverWaitsIsNotTouchedAfterwards;
   end;
 
 implementation
@@ -142,7 +145,7 @@ end;
 
 function TLogTestDriver.NeedsExternalPort:Boolean;
 begin
-  Result := false;
+  Result := NoPort;
 end;
 
 function TLogTestDriver.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
@@ -399,6 +402,34 @@ begin
   //the value goes on changing: B keeps following it
   FDriver.Value := 11;
   AssertTrue('the other tag is still updated', WaitValue(B, 11));
+end;
+
+//GetMultipleValues kept the interface of the last tag it looked at until its epilogue, after
+//it had left the lock and paused 50 ms (no port): a tag destroyed meanwhile got its _Release
+//on freed memory - an access violation swallowed by the update loop, which also leaked the
+//values of the pass. The freed tag's memory is filled with garbage at once (the next block of
+//its size usually is the same one), so a late _Release faults instead of reading stale bytes.
+procedure TTestScanLog.ATagDestroyedWhileTheDriverWaitsIsNotTouchedAfterwards;
+var
+  i, size:Integer;
+  T:TPLCTagNumber;
+  junk:Pointer;
+begin
+  NewLog([lcScan, lcThread], llError);
+  NewDriver.NoPort := true;
+  for i:=1 to 20 do begin
+    T := NewTag('Victim'+IntToStr(i));
+    size := T.InstanceSize;
+    Pump(5+(i mod 4)*10);         //a pass sees the tag, then the driver pauses
+    T.Free;
+    junk := GetMem(size);
+    FillChar(junk^, size, $A5);
+    Pump(70);                     //the pass ends (and its epilogue runs) on the garbage
+    FreeMem(junk);
+  end;
+  AssertTrue('flush', FLog.Flush);
+  AssertEquals('nothing raised in the update thread'+FLog.Dump, 0,
+               CountOf(lcScan, 'tag update raised')+CountOf(lcThread, 'TScanUpdate stopped'));
 end;
 
 initialization

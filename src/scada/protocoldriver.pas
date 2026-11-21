@@ -1732,8 +1732,9 @@ begin
     PPortWasInError := PortError;
 
     for t:=0 to TagCount-1 do begin
-      if Supports(Tag[t], IScanableTagInterface) then begin
-        tagiface:=Tag[t] as IScanableTagInterface;
+      //Supports with the out parameter, not "as": the cast goes through a hidden temporary
+      //that holds the tag too and is only released in the epilogue, after the lock (see below)
+      if Supports(Tag[t], IScanableTagInterface, tagiface) then begin
         if tagiface.IsValidTag then begin
 
           if PReadSomethingAlways then
@@ -1817,6 +1818,12 @@ begin
     end;
 
   finally
+    //The last tag's interface must go before the lock does: once FReadCS is free, RemoveTag
+    //may let the tag be destroyed (the 50 ms below gave it all the time it needed), and the
+    //_Release of the function's epilogue then ran on a freed object - an access violation
+    //that also skipped the finalization of ScanReadRec (24 bytes leaked) and was swallowed
+    //by the update loop (ut.scanlog ATagDestroyedWhileTheDriverWaitsIsNotTouchedAfterwards).
+    tagiface:=nil;
     FReadCS.Leave;
     FPause.SetEvent;
     if (ErrorStatus in [ioNullCommPort, ioCommPortClosed]) or (IntTagCount<=0) then
