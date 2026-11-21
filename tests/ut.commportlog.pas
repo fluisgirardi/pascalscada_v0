@@ -220,6 +220,9 @@ var
 begin
   S := TSerialPortDriver.Create(nil);
   try
+    //the name is kept only for a port that exists (Linux has /dev/ttyS9, Windows has no
+    //such COM port) unless any name is accepted
+    S.AcceptAnyPortName := true;
     S.COMPort := 'ttyS9';
     S.BaudRate := br9600;
     S.DataBits := db7;

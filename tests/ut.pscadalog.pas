@@ -219,10 +219,19 @@ begin
 end;
 
 function TTestPSCADALog.ReadLines(const AFileName:String):TStringList;
+var
+  fs:TFileStream;
 begin
   Result := TStringList.Create;
-  if FileExists(AFileName) then
-    Result.LoadFromFile(AFileName);
+  if not FileExists(AFileName) then exit;
+  //the logger keeps the file open for writing: LoadFromFile asks fmShareDenyWrite,
+  //which Windows refuses while somebody writes (a log viewer must share it)
+  fs := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
+  try
+    Result.LoadFromStream(fs);
+  finally
+    fs.Free;
+  end;
 end;
 
 function TTestPSCADALog.CountLines(const AFileName:String):Integer;

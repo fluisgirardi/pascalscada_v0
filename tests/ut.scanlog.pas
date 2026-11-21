@@ -257,10 +257,12 @@ begin
   AssertTrue('flush', FLog.Flush);
   AssertTrue('scan thread finished'+FLog.Dump, FLog.IndexOf(lcThread, 'TScanThread finished')>=0);
   AssertTrue('update thread finished'+FLog.Dump, FLog.IndexOf(lcThread, 'TScanUpdate finished')>=0);
-  //the threads start in AfterConstruction, before the driver has a name (on a
-  //form too: the properties are read later), so the start shows the class
+  //the threads are created in AfterConstruction, before the driver has a name, and
+  //post when they begin to run: whether the name was set by then depends on the
+  //scheduler (usually not on Linux, usually yes on Windows), so either is right
   i := FLog.IndexOf(lcThread, 'TScanThread started');
-  AssertEquals('the driver, still unnamed, is the source', 'Form1.<TLogTestDriver>', FLog[i].Source);
+  AssertTrue('the driver is the source, unnamed or named: '+FLog[i].Source,
+             (FLog[i].Source='Form1.<TLogTestDriver>') or (FLog[i].Source='Form1.Drv1'));
   AssertTrue('posted by the thread itself', FLog[i].ThreadNo>0);
   i := FLog.IndexOf(lcThread, 'TScanThread finished');
   AssertEquals('named by the end', 'Form1.Drv1', FLog[i].Source);

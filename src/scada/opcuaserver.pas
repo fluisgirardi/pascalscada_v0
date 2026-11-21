@@ -40,6 +40,10 @@ uses
   open62541, Tag, PLCTag;
 
 type
+  //the size_t the binding sees (from System on Windows, declared by open62541 elsewhere):
+  //resolved here, where the Unix unit of the implementation does not hide it
+  TOPCUASizeT = size_t;
+
   {$IFDEF PORTUGUES}
   {:
   Tipo da variavel OPC UA de um item.
@@ -796,7 +800,7 @@ index+1 of the name in FUserNames; 0 = anonymous), which the writes read.
 }
 {$ENDIF}
 function ServerLogin(const userName:PUA_String; const password:PUA_ByteString;
-  usernamePasswordLoginSize:open62541.size_t; const usernamePasswordLogin:PUA_UsernamePasswordLogin;
+  usernamePasswordLoginSize:TOPCUASizeT; const usernamePasswordLogin:PUA_UsernamePasswordLogin;
   sessionContext:PPointer; loginContext:Pointer):UA_StatusCode; cdecl;
 var
   t:TOPCUAServerThread;

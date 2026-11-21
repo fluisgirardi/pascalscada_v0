@@ -420,8 +420,28 @@ type
 var
   Hub:TpSCADALogHub = nil;
   GlobalSeq:Int64 = 0;
+  {$IFNDEF CPU64}
+  //32 bit CPUs (i386, ARM) have no InterLocked*64: the 64 bit counters go through a lock
+  Atomic64Lock:TRTLCriticalSection;
+  {$ENDIF}
 
 { helpers }
+
+//adds Delta to V atomically, returns the value V had before (InterLockedExchangeAdd64)
+function AtomicAdd64(var V:Int64; Delta:Int64):Int64;
+begin
+  {$IFDEF CPU64}
+  Result := InterLockedExchangeAdd64(V, Delta);
+  {$ELSE}
+  EnterCriticalSection(Atomic64Lock);
+  try
+    Result := V;
+    V := V+Delta;
+  finally
+    LeaveCriticalSection(Atomic64Lock);
+  end;
+  {$ENDIF}
+end;
 
 function PSLogWants(Category:TpSCADALogCategory; Level:TpSCADALogLevel):Boolean;
 begin
@@ -605,7 +625,7 @@ var
   E:TpSCADALogEntry;
 begin
   if (Hub=nil) or not PSLogWants(Category, Level) then exit;
-  E.Seq := QWord(InterLockedIncrement64(GlobalSeq));
+  E.Seq := QWord(AtomicAdd64(GlobalSeq, 1)+1);
   E.Timestamp := Now;
   E.ThreadID := GetCurrentThreadId;
   E.ThreadNo := 0; //numbered by the hub
@@ -1481,7 +1501,7 @@ begin
       TThread.Queue(nil, @DeliverToUI);
   end;
 
-  InterLockedExchangeAdd64(Int64(FProcessed), Count);
+  AtomicAdd64(Int64(FProcessed), Count);
 end;
 
 function TpSCADALogger.GetWriter(const AFileName:String):TpSCADALogFileWriter;
@@ -1569,7 +1589,7 @@ begin
   start := GetTickCount64;
   Result := false;
   repeat
-    if QWord(InterLockedExchangeAdd64(Int64(FProcessed), 0))>=target then begin
+    if QWord(AtomicAdd64(Int64(FProcessed), 0))>=target then begin
       Result := true;
       break;
     end;
@@ -1645,11 +1665,17 @@ var
   c:TpSCADALogCategory;
 
 initialization
+  {$IFNDEF CPU64}
+  InitCriticalSection(Atomic64Lock);
+  {$ENDIF}
   for c:=Low(c) to High(c) do PSLogLevelMask[c] := PSLogNoLevel;
   Hub := TpSCADALogHub.Create;
 
 finalization
   for c:=Low(c) to High(c) do PSLogLevelMask[c] := PSLogNoLevel;
   FreeAndNil(Hub);
+  {$IFNDEF CPU64}
+  DoneCriticalSection(Atomic64Lock);
+  {$ENDIF}
 
 end.

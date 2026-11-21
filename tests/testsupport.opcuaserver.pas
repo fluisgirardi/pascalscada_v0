@@ -97,7 +97,10 @@ function OPCUATestNextPort:Word;
 begin
   if GNextPort=0 then begin
     Randomize;
-    GNextPort := 40000+Random(20000);
+    //below the ephemeral ports (Linux 32768-60999, Windows 49152-65535): a server on a
+    //port some client socket is using locally may get the bind (open62541 sets
+    //SO_REUSEPORT) and refuse the connections
+    GNextPort := 20000+Random(10000);
   end;
   Inc(GNextPort);
   Result := GNextPort;

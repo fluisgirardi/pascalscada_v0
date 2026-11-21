@@ -311,9 +311,10 @@ end;
 procedure TOPCUACase.SetUp;
 begin
   inherited SetUp;
+  //first: an Ignore raised by SetUp skips TearDown, so nothing may be created before it
+  LibOk(Self);
   FOwned := TList.Create;
   FLog := TStringList.Create;
-  LibOk(Self);
 end;
 
 procedure TOPCUACase.TearDown;

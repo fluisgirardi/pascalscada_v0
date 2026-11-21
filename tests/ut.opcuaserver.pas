@@ -157,6 +157,12 @@ const
   TIMEOUT = 3000;
 
 {$IFDEF UNIX}
+{$IF NOT DECLARED(IPV6_V6ONLY)}
+//the Sockets unit declares it on Linux only (26 there); the BSDs and macOS use 27
+const
+  IPV6_V6ONLY = {$IFDEF LINUX}26{$ELSE}27{$ENDIF};
+{$IFEND}
+
 //An ordinary IPv6 listener on the port (open62541 listens on IPv4 and IPv6).
 function ListenIPv6(Port:Word):LongInt;
 var
