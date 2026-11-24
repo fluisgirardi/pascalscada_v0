@@ -236,6 +236,7 @@ type
     FOnCheckUser:TOPCUAServerCheckUserEvent;
     FOnCanWrite:TOPCUAServerCanWriteEvent;
     FWriteTimeoutMs:Cardinal;
+    FApplicationUri, FApplicationName:String;
     FLibraryName:String;
     FLogLevel:TOPCUAServerLogLevel;
     FNamespaceUri:String;
@@ -262,6 +263,8 @@ type
     procedure SetAllowAnonymous(AValue:Boolean);
     procedure SetCertificateDir(const AValue:String);
     procedure SetTrustListDir(const AValue:String);
+    procedure SetApplicationUri(const AValue:String);
+    procedure SetApplicationName(const AValue:String);
     function  GetLastError:String;
     function  GetRunning:Boolean;
     procedure SetActive(AValue:Boolean);
@@ -308,6 +311,10 @@ type
     property LastError:String read GetLastError;
     //: Index of NamespaceUri on the running server (the ns= of the variables); 0 when stopped.
     property NamespaceIndex:Word read FNamespaceIndex;
+    //: ApplicationUri the server reports: ApplicationUri, or urn:<computer>:PascalSCADA:<ServerName> when empty.
+    function  EffectiveApplicationUri:String;
+    //: ApplicationName the server reports: ApplicationName, or ServerName when empty.
+    function  EffectiveApplicationName:String;
   published
     property Active:Boolean read FActive write SetActive default false;
     //: TCP port of the opc.tcp:// endpoint.
@@ -316,6 +323,14 @@ type
     property ServerName:String read FServerName write SetServerName;
     //: Namespace of the variables (its index is what goes in ns=).
     property NamespaceUri:String read FNamespaceUri write SetNamespaceUri;
+    {:
+    Identity of the server for the clients (its ApplicationDescription): empty is
+    urn:<computer>:PascalSCADA:<ServerName>. It goes in the certificate generated
+    in CertificateDir too (a kept one with another URI is generated again).
+    }
+    property ApplicationUri:String read FApplicationUri write SetApplicationUri;
+    //: Name of the server shown by the clients; empty is ServerName.
+    property ApplicationName:String read FApplicationName write SetApplicationName;
     //: Path/name of libopen62541; empty tries the default name and the executable's folder.
     property LibraryName:String read FLibraryName write SetLibraryName;
     property LogLevel:TOPCUAServerLogLevel read FLogLevel write FLogLevel default oslWarning;
@@ -412,6 +427,8 @@ type
     FUsers:TStringList;
     FUseCheckUser:Boolean;
     FWriteTimeoutMs:Cardinal;
+    FApplicationUri, FApplicationName:AnsiString;
+    FAppIdentitySet:Boolean;   //ApplicationUri/ApplicationName given (they need the JSON update)
     //names of the users logged in: a session context is the index+1 of its name (0 anonymous)
     FUserNames:TStringList;
     FCheckUser, FCheckPassword:String;
@@ -500,6 +517,41 @@ begin
   Result.length := Length(S);
   if S<>'' then Result.data := @S[1] else Result.data := nil;
 end;
+
+//A JSON string (quotes, backslashes and control characters escaped; UTF-8 as is).
+function JsonString(const S:AnsiString):AnsiString;
+var
+  i:Integer;
+begin
+  Result := '"';
+  for i:=1 to Length(S) do
+    case S[i] of
+      '"', '\': Result := Result+'\'+S[i];
+      #0..#31:   Result := Result+'\u'+IntToHex(Ord(S[i]), 4);
+    else
+      Result := Result+S[i];
+    end;
+  Result := Result+'"';
+end;
+
+//Whether a certificate (DER) is for this ApplicationUri (its subject alternative name).
+function CertificateHasUri(const Cert:RawByteString; const Uri:AnsiString):Boolean;
+{$IF DECLARED(UA_CertificateUtils_verifyApplicationUri)}
+var
+  bs:UA_ByteString;
+  us:UA_String;
+  u:AnsiString;
+begin
+  bs := AsByteString(Cert);
+  u := Uri; //_UA_STRING takes a var
+  us := _UA_STRING(u);
+  Result := UA_CertificateUtils_verifyApplicationUri(@bs, @us)=UA_STATUSCODE_GOOD;
+end;
+{$ELSE}
+begin
+  Result := true;
+end;
+{$IFEND}
 
 type
   TPLCTagAccess = class(TPLCTag);
@@ -1014,6 +1066,9 @@ begin
   FUsers.Assign(AOwner.FUsers);
   FUseCheckUser := Assigned(AOwner.FOnCheckUser);
   FWriteTimeoutMs := AOwner.FWriteTimeoutMs;
+  FApplicationUri := AOwner.EffectiveApplicationUri;
+  FApplicationName := AOwner.EffectiveApplicationName;
+  FAppIdentitySet := (AOwner.FApplicationUri<>'') or (AOwner.FApplicationName<>'');
   FUserNames := TStringList.Create;
   FillChar(FLogger, SizeOf(FLogger), 0);
   FLogger.log := @ServerLog;
@@ -1256,8 +1311,16 @@ var
   json:RawByteString;
   dummy:UA_UsernamePasswordLogin;
   dummyName:AnsiString;
+  kept:Boolean;
 begin
   dummyName := '#pascalscada';
+  //the identity of the server goes through the JSON update: a library without it
+  //keeps the open62541 default, and the generated certificate must say the same
+  if not Assigned(UA_ServerConfig_updateFromFile) then begin
+    if FAppIdentitySet then
+      raise Exception.Create('this libopen62541 was built without JSON: ApplicationUri and ApplicationName are not available');
+    FApplicationUri := 'urn:open62541.server.application';
+  end;
   if FSecurity=ossNone then begin
     st := UA_ServerConfig_setMinimal(Conf, FPort, nil);
     if st<>UA_STATUSCODE_GOOD then
@@ -1268,12 +1331,24 @@ begin
     dir := IncludeTrailingPathDelimiter(FCertificateDir);
     certFile := dir+'server_cert.der';
     keyFile := dir+'server_key.der';
-    if not (ReadFileBytes(certFile, cert) and ReadFileBytes(keyFile, key)) then begin
+    kept := ReadFileBytes(certFile, cert) and ReadFileBytes(keyFile, key);
+    //the clients refuse a certificate whose URI is not the ApplicationUri of the server
+    if kept and not CertificateHasUri(cert, FApplicationUri) then
+      if Pos('PascalSCADA', cert)>0 then begin
+        //one generated here, for another ApplicationUri (or ServerName)
+        kept := false;
+        if PSLogWants(lcSecurity, llWarning) then
+          PSLog(FOwner, lcSecurity, llWarning, 'OPC UA server certificate generated again for '+FApplicationUri+
+                ': the clients have to trust it again');
+      end else if PSLogWants(lcSecurity, llWarning) then
+        PSLog(FOwner, lcSecurity, llWarning, 'OPC UA server certificate '+certFile+' is not for '+FApplicationUri+
+              ': the clients will refuse it (set ApplicationUri to the URI of the certificate)');
+    if not kept then begin
       subject[0] := 'C=BR';
       subject[1] := 'O=PascalSCADA';
       subject[2] := 'CN='+FServerName+'@'+HostName;
-      //the application URI the server reports (the open62541 default)
-      san[0] := 'URI:urn:open62541.server.application';
+      //the URI must be the ApplicationUri the server reports
+      san[0] := 'URI:'+FApplicationUri;
       san[1] := 'DNS:'+HostName;
       san[2] := 'DNS:localhost';
       for i:=0 to 2 do subj[i] := _UA_STRING(subject[i]);
@@ -1325,8 +1400,13 @@ begin
   end;
   //what UA_ServerConfig fields this binding does not reach, through JSON
   json := '';
-  if FSecurity=ossSecureOnly then
-    json := '"securityPolicyNoneDiscoveryOnly": true';
+  if Assigned(UA_ServerConfig_updateFromFile) then
+    json := '"applicationDescription": {"applicationUri": '+JsonString(FApplicationUri)+
+            ', "applicationName": {"text": '+JsonString(FApplicationName)+'}}';
+  if FSecurity=ossSecureOnly then begin
+    if json<>'' then json := json+', ';
+    json := json+'"securityPolicyNoneDiscoveryOnly": true';
+  end;
   if FWriteTimeoutMs>0 then begin
     if json<>'' then json := json+', ';
     //an integer: open62541 reads a decimal point with the C locale of the process
@@ -1736,6 +1816,34 @@ begin
   if FTrustListDir=AValue then exit;
   DoInactiveCheck;
   FTrustListDir := AValue;
+end;
+
+procedure TOPCUAServer.SetApplicationUri(const AValue:String);
+begin
+  if FApplicationUri=AValue then exit;
+  DoInactiveCheck;
+  FApplicationUri := AValue;
+end;
+
+procedure TOPCUAServer.SetApplicationName(const AValue:String);
+begin
+  if FApplicationName=AValue then exit;
+  DoInactiveCheck;
+  FApplicationName := AValue;
+end;
+
+function TOPCUAServer.EffectiveApplicationUri:String;
+begin
+  Result := FApplicationUri;
+  if Result='' then
+    Result := 'urn:'+HostName+':PascalSCADA:'+FServerName;
+end;
+
+function TOPCUAServer.EffectiveApplicationName:String;
+begin
+  Result := FApplicationName;
+  if Result='' then
+    Result := FServerName;
 end;
 
 procedure TOPCUAServer.SetItems(AValue:TOPCUAServerItems);

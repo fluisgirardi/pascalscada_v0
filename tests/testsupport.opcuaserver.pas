@@ -14,7 +14,7 @@ unit testsupport.opcuaserver;
 interface
 
 uses
-  Classes, SysUtils, open62541;
+  Classes, SysUtils, fpcunit, open62541;
 
 type
   TOPCUATestServerOptions = record
@@ -55,6 +55,10 @@ const
 
 //: Loads libopen62541 once for the tests. False (and the reason) when it is not installed.
 function OPCUATestLibraryAvailable(out Reason:String):Boolean;
+{: Skips a test without the library: Ignore, or Fail when OPEN62541_REQUIRED is set (the CI
+   jobs that download it: a broken download must not pass as a few ignored tests). Call it
+   before allocating anything in SetUp (a failing SetUp skips TearDown). }
+procedure OPCUATestNeedLibrary(Test:TTestCase);
 function OPCUATestDefaultOptions:TOPCUATestServerOptions;
 //: A free TCP port for a new server.
 function OPCUATestNextPort:Word;
@@ -85,6 +89,17 @@ begin
   end;
   Reason := GLibReason;
   Result := GLibOk;
+end;
+
+procedure OPCUATestNeedLibrary(Test:TTestCase);
+var
+  why:String;
+begin
+  if OPCUATestLibraryAvailable(why) then exit;
+  if GetEnvironmentVariable('OPEN62541_REQUIRED')<>'' then
+    Test.Fail(why+' (OPEN62541_REQUIRED is set)')
+  else
+    Test.Ignore(why);
 end;
 
 function OPCUATestDefaultOptions:TOPCUATestServerOptions;

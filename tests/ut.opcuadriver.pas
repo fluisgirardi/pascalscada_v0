@@ -106,7 +106,7 @@ var
 begin
   Result := OPCUATestLibraryAvailable(why);
   if not Result then
-    Test.Ignore(why);
+    OPCUATestNeedLibrary(Test);
 end;
 
 { TTestOPCUAValues }

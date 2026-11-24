@@ -30,6 +30,8 @@ Assim como no driver cliente, o protocolo é tratado pela **open62541 1.5** atra
 | `Port` | `4840` | Porta TCP do endpoint `opc.tcp://<computador>:<Port>`. |
 | `ServerName` | `PascalSCADA` | Nome da pasta, dentro de *Objects*, que contém os tags publicados. |
 | `NamespaceUri` | `urn:pascalscada:tags` | Namespace das variáveis; `NamespaceIndex` (em execução) é o seu índice, o `ns=` dos NodeIds. |
+| `ApplicationUri` | vazio | Identidade do servidor para os clientes; vazio é `urn:<computador>:PascalSCADA:<ServerName>`. Dê a cada servidor da rede a sua. |
+| `ApplicationName` | vazio | Nome do servidor que os clientes mostram; vazio é o `ServerName`. |
 | `LibraryName` | vazio | Caminho ou nome da libopen62541; vazio procura os nomes padrão e a pasta do executável. |
 | `LogLevel` | `oslWarning` | Mensagens da open62541 que vão para o log. |
 | `Items` | – | Os tags publicados (próxima seção). |
@@ -81,7 +83,7 @@ Nada fica bloqueado enquanto o dispositivo responde: o servidor continua atenden
 | Propriedade | Padrão | Descrição |
 |---|---|---|
 | `Security` | `ossNone` | `ossNone`: só sem segurança; `ossNoneAndSecure`: sem e com segurança (Sign, SignAndEncrypt); `ossSecureOnly`: dados só por Sign/SignAndEncrypt. |
-| `CertificateDir` | pasta de configuração da aplicação + `opcua-server-pki` | Certificado do servidor (`server_cert.der`, `server_key.der`). Criado autoassinado na primeira partida segura e mantido: os clientes confiam nele uma vez só. Substitua pelos seus, se quiser. |
+| `CertificateDir` | pasta de configuração da aplicação + `opcua-server-pki` | Certificado do servidor (`server_cert.der`, `server_key.der`). Criado autoassinado na primeira partida segura, para o `ApplicationUri`, e mantido: os clientes confiam nele uma vez só (mudar o `ApplicationUri` gera outro). Substitua pelos seus, se quiser: a URI dele deve ser então o `ApplicationUri`. |
 | `TrustListDir` | vazio | Certificados de clientes aceitos (`.der`, `.pem`, `.crt`, `.cer`); vazio aceita qualquer cliente. |
 | `AllowAnonymous` | `True` | Se um cliente pode conectar sem usuário. |
 | `Users` | vazio | Usuários que podem logar, um por linha: `login=senha`. |

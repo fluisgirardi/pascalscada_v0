@@ -11,6 +11,10 @@ tests/bin/
 tests/units/
 tests/units_hmi/
 tests/units_live/
+tests/compat/bin/
+tests/compat/units/
+# libopen62541 the linux32 CI job downloads into the tree
+/.open62541/
 
 # lixo que o varredor de exemplos deixa pelo caminho
 # leftovers from the example sweep

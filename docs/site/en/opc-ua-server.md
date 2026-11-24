@@ -30,6 +30,8 @@ That is all: run the program and connect a client to `opc.tcp://<computer>:4840`
 | `Port` | `4840` | TCP port of the endpoint `opc.tcp://<computer>:<Port>`. |
 | `ServerName` | `PascalSCADA` | Name of the folder, under *Objects*, that holds the published tags. |
 | `NamespaceUri` | `urn:pascalscada:tags` | Namespace of the variables; `NamespaceIndex` (run time) is its index, the `ns=` of the NodeIds. |
+| `ApplicationUri` | empty | Identity of the server for the clients; empty is `urn:<computer>:PascalSCADA:<ServerName>`. Give each server of a network its own. |
+| `ApplicationName` | empty | Name of the server the clients show; empty is `ServerName`. |
 | `LibraryName` | empty | Path or name of libopen62541; empty searches the default names and the folder of the executable. |
 | `LogLevel` | `oslWarning` | Messages of open62541 that go to the log. |
 | `Items` | – | The published tags (next section). |
@@ -81,7 +83,7 @@ Nothing blocks while the device answers: the server keeps serving the other clie
 | Property | Default | Description |
 |---|---|---|
 | `Security` | `ossNone` | `ossNone`: only without security; `ossNoneAndSecure`: without and with security (Sign, SignAndEncrypt); `ossSecureOnly`: data only over Sign/SignAndEncrypt. |
-| `CertificateDir` | config folder of the app + `opcua-server-pki` | Certificate of the server (`server_cert.der`, `server_key.der`). Created self-signed on the first secure start and kept: the clients trust it once. Replace them by your own if you wish. |
+| `CertificateDir` | config folder of the app + `opcua-server-pki` | Certificate of the server (`server_cert.der`, `server_key.der`). Created self-signed on the first secure start, for the `ApplicationUri`, and kept: the clients trust it once (changing `ApplicationUri` generates it again). Replace them by your own if you wish: its URI must then be the `ApplicationUri`. |
 | `TrustListDir` | empty | Client certificates accepted (`.der`, `.pem`, `.crt`, `.cer`); empty accepts any client. |
 | `AllowAnonymous` | `True` | Whether a client may connect without a user. |
 | `Users` | empty | Users that may log in, one per line: `login=password`. |
