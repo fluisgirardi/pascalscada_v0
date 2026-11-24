@@ -14,11 +14,18 @@ concurrency:
 env:
   # libopen62541 for the OPC UA client and server tests: the Release builds the
   # workflow BuildOpen62541v1.5.yml of fpopen62541 publishes (a GitHub release:
-  # fixed URLs, no token, unlike artifacts). Where it is downloaded the tests are
-  # required to run (OPEN62541_REQUIRED): a broken download fails them instead of
-  # leaving them ignored. armhf and FreeBSD have no build: their OPC UA tests are ignored.
+  # fixed URLs, no token, unlike artifacts). tests/ci_open62541.sh downloads it;
+  # once downloaded the tests are required to run (OPEN62541_REQUIRED), and when
+  # it is not available they are ignored with a warning.
+  # Without the release (the workflow has not been run with publish yet) the script
+  # takes the same libraries from the artifacts of the run OPEN62541_RUN, with the
+  # token of this workflow (artifacts can not be downloaded anonymously; they expire
+  # 90 days after the run). That run has no aarch64.
+  # armhf and FreeBSD have no build: their OPC UA tests are ignored.
   OPEN62541_VERSION: v1.5.10
   OPEN62541_URL: https://github.com/fluisgirardi/fpopen62541/releases/download/open62541-v1.5.10
+  OPEN62541_REPO: fluisgirardi/fpopen62541
+  OPEN62541_RUN: "43997077507"
 
 jobs:
 
@@ -64,27 +71,15 @@ jobs:
           sudo apt-get install -y -qq libgtk2.0-dev xvfb
 
       - name: libopen62541 (OPC UA tests)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
           case "${{ matrix.name }}" in
             linux64) f="libopen62541-$OPEN62541_VERSION-linux-x86_64.tar.gz" ;;
             win64)   f="libopen62541-$OPEN62541_VERSION-windows-x64.zip" ;;
             win32)   f="libopen62541-$OPEN62541_VERSION-windows-Win32.zip" ;;
           esac
-          d="$RUNNER_TEMP/open62541"
-          mkdir -p "$d"
-          curl -fsSL --retry 3 -o "$d/$f" "$OPEN62541_URL/$f"
-          case "$f" in
-            *.zip)
-              if command -v unzip >/dev/null; then unzip -q -o "$d/$f" -d "$d"; else 7z x -y -o"$d" "$d/$f" >/dev/null; fi
-              lib="$(cygpath -w "$d/libopen62541.dll")" ;;
-            *)
-              tar -C "$d" -xzf "$d/$f"
-              lib="$d/libopen62541.so" ;;
-          esac
-          ls -l "$d"
-          echo "OPEN62541_LIB=$lib" >> "$GITHUB_ENV"
-          echo "OPEN62541_REQUIRED=1" >> "$GITHUB_ENV"
+          bash tests/ci_open62541.sh "$f" "$RUNNER_TEMP/open62541"
 
       - name: Install Lazarus / FPC
         uses: ollydev/setup-lazarus@v4
@@ -155,7 +150,7 @@ jobs:
       - name: OPC UA server seen by another stack (python-asyncua)
         # the suite talks to TOPCUAServer with open62541 itself; this checks the
         # same from an independent implementation (tests/compat)
-        if: matrix.name == 'linux64'
+        if: matrix.name == 'linux64' && env.OPEN62541_LIB != ''
         run: |
           lazbuild --build-all --widgetset=nogui tests/compat/opcua_compat_server.lpi
           python3 -m venv "$RUNNER_TEMP/uavenv"
@@ -268,11 +263,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: libopen62541 i386 (OPC UA tests)
-        run: |
-          set -euo pipefail
-          mkdir -p .open62541
-          curl -fsSL --retry 3 "$OPEN62541_URL/libopen62541-$OPEN62541_VERSION-linux-i386.tar.gz" | tar -C .open62541 -xz
-          ls -l .open62541
+        # into the tree, which the container mounts as /src
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash tests/ci_open62541.sh "libopen62541-$OPEN62541_VERSION-linux-i386.tar.gz" .open62541
 
       - name: Build and test inside an i386 container
         run: |
@@ -300,8 +294,10 @@ jobs:
                 sleep 15
               done
               command -v lazbuild
-              # the library the host downloaded (OPC UA tests)
-              export OPEN62541_LIB=/src/.open62541/libopen62541.so OPEN62541_REQUIRED=1
+              # the library the host downloaded, when it could (OPC UA tests)
+              if [ -f /src/.open62541/libopen62541.so ]; then
+                export OPEN62541_LIB=/src/.open62541/libopen62541.so OPEN62541_REQUIRED=1
+              fi
 
               lazbuild --add-package-link pascalscada_common.lpk
               lazbuild --add-package-link src/external/fpopen62541/fpopen62541.lpk
@@ -344,14 +340,9 @@ jobs:
           sudo apt-get install -y -qq lazarus lcl-nogui
 
       - name: libopen62541 aarch64 (OPC UA tests)
-        run: |
-          set -euo pipefail
-          d="$RUNNER_TEMP/open62541"
-          mkdir -p "$d"
-          curl -fsSL --retry 3 "$OPEN62541_URL/libopen62541-$OPEN62541_VERSION-linux-aarch64.tar.gz" | tar -C "$d" -xz
-          ls -l "$d"
-          echo "OPEN62541_LIB=$d/libopen62541.so" >> "$GITHUB_ENV"
-          echo "OPEN62541_REQUIRED=1" >> "$GITHUB_ENV"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash tests/ci_open62541.sh "libopen62541-$OPEN62541_VERSION-linux-aarch64.tar.gz" "$RUNNER_TEMP/open62541"
 
       - name: Build the core and the suite
         run: |
