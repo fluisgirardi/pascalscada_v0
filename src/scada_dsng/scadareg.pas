@@ -34,7 +34,7 @@ uses
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
   XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, opcuatagassistant, CommPort,
-  SysUtils, pscadalog, ObjInspStrConsts, opcuaserver, opcuaserveredt,
+  SysUtils, pscadalog, ObjInspStrConsts, opcuaserver, opcuaserveredt, MQTTDriver,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -98,6 +98,7 @@ begin
                                            TH5UTagTCPDriver,
                                            TS7CommPlusDriver,
                                            TLGXDriver,
+                                           TMQTTDriver,
                                            TOPCUADriver]);
   RegisterComponents(strUtilsPallete,     [TScalesQueue,
                                            TLinearScaleProcessor,
