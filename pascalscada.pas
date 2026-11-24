@@ -36,7 +36,7 @@ uses
   XinJEDriver, XinJETCP, DeltaDriver, DeltaTCP, InovanceDriver, InovanceTCP, 
   H5UTagDriver, H5UTagTCP, S7PlusAlarms, S7PlusAlarmTracker, S7PlusBasket, 
   S7PlusBlockHash, S7PlusReturnValue, OPCUAValues, OPCUAClient, OPCUADriver, opcuaserver, 
-  LazarusPackageIntf;
+  MQTTProtocol, MQTTClient, MQTTDriver, LazarusPackageIntf;
 
 implementation
 
