@@ -5,6 +5,12 @@ name: Open62541 v1.5 libraries for windows and linux 32/64 bits
 # (OpenSSL), matching the UA_ENABLE_ENCRYPTION define of open62541.pas.
 # On linux x86_64 it also runs tools/check_layout (C vs Pascal record layout)
 # and loads every 64 bit library with LoadOpen62541 (tools/load_test.pas).
+#
+# With "publish" (the default) the Release libraries also go to the GitHub
+# release open62541-<version> of this repository, at fixed URLs that the CI of
+# other projects downloads without a token (artifacts need one):
+#   .../releases/download/open62541-<version>/libopen62541-<version>-linux-<x86_64|i386|aarch64>.tar.gz
+#   .../releases/download/open62541-<version>/libopen62541-<version>-windows-<x64|Win32>.zip
 
 on:
   workflow_dispatch:
@@ -13,6 +19,10 @@ on:
         description: open62541 tag
         default: v1.5.10
         required: true
+      publish:
+        description: publish the Release libraries in the release open62541-<version>
+        type: boolean
+        default: true
 
 env:
   OPEN62541_VERSION: ${{ inputs.version || 'v1.5.10' }}
@@ -26,12 +36,12 @@ env:
 
 jobs:
   build_linux:
-    # oldest supported runner: the libraries also run on older distributions (glibc 2.35, OpenSSL 3)
-    runs-on: ubuntu-22.04
+    # oldest supported runners: the libraries also run on older distributions (glibc 2.35, OpenSSL 3)
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86_64, i386]
+        arch: [x86_64, i386, aarch64]
         config: [Release, Debug]
     steps:
     - name: checkout fpopen62541
@@ -82,7 +92,7 @@ jobs:
       run: fpopen62541/tools/check_layout open62541 build fpc check_layout
 
     - name: load the library from Pascal
-      if: matrix.arch == 'x86_64'
+      if: matrix.arch != 'i386'
       run: |
         mkdir -p load_test
         fpc -O- -FEload_test -FUload_test -Fufpopen62541 -Fifpopen62541 fpopen62541/tools/load_test.pas
@@ -146,3 +156,47 @@ jobs:
           build/bin/${{ matrix.config }}/
           build/src_generated/open62541/config.h
           build/src_generated/open62541/types_generated.h
+
+  publish:
+    needs: [build_linux, build_windows]
+    if: ${{ inputs.publish }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: open62541 * Release
+        path: artifacts
+
+    - name: package
+      run: |
+        set -euo pipefail
+        v="$OPEN62541_VERSION"
+        mkdir -p release
+        # an artifact keeps the paths below build/: bin/... (the symbolic links of the
+        # .so came as copies, which is what a download wants anyway)
+        for a in x86_64 i386 aarch64; do
+          d="artifacts/open62541 $v linux $a Release/bin"
+          ls -l "$d"
+          tar -C "$d" -czf "release/libopen62541-$v-linux-$a.tar.gz" .
+        done
+        for a in x64 Win32; do
+          d="artifacts/open62541 $v windows $a Release/bin/Release"
+          ls -l "$d"
+          (cd "$d" && zip -q "$GITHUB_WORKSPACE/release/libopen62541-$v-windows-$a.zip" libopen62541.dll)
+        done
+        ls -l release
+
+    - name: publish
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        tag="open62541-$OPEN62541_VERSION"
+        if ! gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          gh release create "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "libopen62541 $OPEN62541_VERSION" \
+            --notes "open62541 $OPEN62541_VERSION built the way fpopen62541 expects it (shared, OpenSSL, all data types, type descriptions; OpenSSL linked statically on Windows), Release. Made by the workflow BuildOpen62541v1.5.yml."
+        fi
+        gh release upload "$tag" release/* --clobber -R "$GITHUB_REPOSITORY"

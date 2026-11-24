@@ -838,6 +838,8 @@ var
                                  outPrivateKey, outCertificate: PUA_ByteString): UA_StatusCode; cdecl;
   UA_CertificateUtils_getExpirationDate: function(certificate: PUA_ByteString; expiryDateTime: PUA_DateTime): UA_StatusCode; cdecl;
   UA_CertificateUtils_getSubjectName: function(certificate: PUA_ByteString; subjectName: PUA_String): UA_StatusCode; cdecl;
+  (* GOOD when the certificate has applicationUri in its subject alternative name *)
+  UA_CertificateUtils_verifyApplicationUri: function(const certificate: PUA_ByteString; const applicationUri: PUA_String): UA_StatusCode; cdecl;
   {$ENDIF}
   UA_CertificateGroup_AcceptAll: procedure(certGroup: PUA_CertificateGroup); cdecl;
 
@@ -847,6 +849,15 @@ var
   UA_Client_readValueAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outValue: PUA_Variant): UA_StatusCode; cdecl;
   UA_Client_writeValueAttribute: function(client: PUA_Client; nodeId: UA_NodeId; const newValue: PUA_Variant): UA_StatusCode; cdecl;
   UA_Client_readArrayDimensionsAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outArrayDimensionsSize: Psize_t; outArrayDimensions: PPUA_UInt32): UA_StatusCode; cdecl;
+  UA_Client_readNodeClassAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outNodeClass: PUA_NodeClass): UA_StatusCode; cdecl;
+  UA_Client_readBrowseNameAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outBrowseName: PUA_QualifiedName): UA_StatusCode; cdecl;
+  UA_Client_readDisplayNameAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outDisplayName: PUA_LocalizedText): UA_StatusCode; cdecl;
+  UA_Client_readDescriptionAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outDescription: PUA_LocalizedText): UA_StatusCode; cdecl;
+  UA_Client_readDataTypeAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outDataType: PUA_NodeId): UA_StatusCode; cdecl;
+  UA_Client_readValueRankAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outValueRank: PUA_Int32): UA_StatusCode; cdecl;
+  UA_Client_readAccessLevelAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outAccessLevel: PUA_Byte): UA_StatusCode; cdecl;
+  UA_Client_readUserAccessLevelAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outUserAccessLevel: PUA_Byte): UA_StatusCode; cdecl;
+  UA_Client_readMinimumSamplingIntervalAttribute: function(client: PUA_Client; nodeId: UA_NodeId; outMinSamplingInterval: PUA_Double): UA_StatusCode; cdecl;
   UA_Client_writeArrayDimensionsAttribute: function(client: PUA_Client; nodeId: UA_NodeId; newArrayDimensionsSize: size_t; const newArrayDimensions: PUA_UInt32): UA_StatusCode; cdecl;
   {$IFDEF UA_ENABLE_METHODCALLS}
   UA_Client_call: function(client: PUA_Client; objectId, methodId: UA_NodeId; inputSize: size_t; const input: PUA_Variant; outputSize: Psize_t; output: PPUA_Variant): UA_StatusCode; cdecl;
@@ -939,7 +950,7 @@ var
   UA_Server_deleteNode: function(server: PUA_Server; nodeId: UA_NodeId; deleteReferences: UA_Boolean): UA_StatusCode; cdecl;
   (* OPTIONAL (nil when the library was built without JSON): updates the fields
    * of the configuration present in a JSON text, e.g.
-   * {"securityPolicyNoneDiscoveryOnly": true, "asyncOperationTimeout": 30000.0}
+   * {"securityPolicyNoneDiscoveryOnly": true, "asyncOperationTimeout": 30000}
    * - a way to reach fields of UA_ServerConfig this binding does not declare. *)
   UA_ServerConfig_updateFromFile: function(config: PUA_ServerConfig; const json_config: UA_ByteString): UA_StatusCode; cdecl;
   {$ENDIF}
@@ -1077,7 +1088,40 @@ function UA_Server_addMethodNode(server: PUA_Server; const requestedNewNodeId, p
 implementation
 
 uses
-  SysUtils, DynLibs{$IFDEF MSWINDOWS}, Windows{$ENDIF};
+  SysUtils{$IFDEF FPC}, DynLibs{$ENDIF}{$IFDEF MSWINDOWS}, Windows{$ENDIF};
+
+{$IFNDEF FPC}
+(* Delphi (Windows): the DynLibs functions used here, on top of the Windows API *)
+type
+  TLibHandle = HMODULE;
+
+const
+  NilHandle = 0;
+
+function GetProcedureAddress(Lib: TLibHandle; const ProcName: AnsiString): Pointer;
+begin
+  Result := GetProcAddress(Lib, PAnsiChar(ProcName));
+end;
+
+function UnloadLibrary(Lib: TLibHandle): Boolean;
+begin
+  Result := FreeLibrary(Lib);
+end;
+
+function GetLoadErrorStr: string;
+begin
+  Result := SysErrorMessage(GetLastError);
+end;
+{$ENDIF}
+
+function LoadDynLibrary(const Name: string): TLibHandle;
+begin
+  {$IFDEF FPC}
+  Result := DynLibs.LoadLibrary(Name);
+  {$ELSE}
+  Result := Windows.LoadLibrary(PChar(Name));
+  {$ENDIF}
+end;
 
 
 var
@@ -1167,11 +1211,21 @@ begin
   Add('UA_CreateCertificate', @@UA_CreateCertificate);
   Add('UA_CertificateUtils_getExpirationDate', @@UA_CertificateUtils_getExpirationDate);
   Add('UA_CertificateUtils_getSubjectName', @@UA_CertificateUtils_getSubjectName);
+  Add('UA_CertificateUtils_verifyApplicationUri', @@UA_CertificateUtils_verifyApplicationUri);
   {$ENDIF}
   Add('UA_CertificateGroup_AcceptAll', @@UA_CertificateGroup_AcceptAll);
   Add('UA_Client_readValueAttribute', @@UA_Client_readValueAttribute);
   Add('UA_Client_writeValueAttribute', @@UA_Client_writeValueAttribute);
   Add('UA_Client_readArrayDimensionsAttribute', @@UA_Client_readArrayDimensionsAttribute);
+  Add('UA_Client_readNodeClassAttribute', @@UA_Client_readNodeClassAttribute);
+  Add('UA_Client_readBrowseNameAttribute', @@UA_Client_readBrowseNameAttribute);
+  Add('UA_Client_readDisplayNameAttribute', @@UA_Client_readDisplayNameAttribute);
+  Add('UA_Client_readDescriptionAttribute', @@UA_Client_readDescriptionAttribute);
+  Add('UA_Client_readDataTypeAttribute', @@UA_Client_readDataTypeAttribute);
+  Add('UA_Client_readValueRankAttribute', @@UA_Client_readValueRankAttribute);
+  Add('UA_Client_readAccessLevelAttribute', @@UA_Client_readAccessLevelAttribute);
+  Add('UA_Client_readUserAccessLevelAttribute', @@UA_Client_readUserAccessLevelAttribute);
+  Add('UA_Client_readMinimumSamplingIntervalAttribute', @@UA_Client_readMinimumSamplingIntervalAttribute);
   Add('UA_Client_writeArrayDimensionsAttribute', @@UA_Client_writeArrayDimensionsAttribute);
   {$IFDEF UA_ENABLE_METHODCALLS}
   Add('UA_Client_call', @@UA_Client_call);
@@ -1270,7 +1324,7 @@ begin
     LoadedLibName := LibName
   else
     LoadedLibName := libopen62541;
-  open62541LibHandle := DynLibs.LoadLibrary(LoadedLibName);
+  open62541LibHandle := LoadDynLibrary(LoadedLibName);
   if open62541LibHandle = NilHandle then begin
     RefCount := 0;
     raise EInOutError.CreateFmt('Can not load library "%s". Check your installation.'+sLineBreak+'%s',
