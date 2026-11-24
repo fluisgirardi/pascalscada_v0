@@ -38,7 +38,7 @@ uses
   hmi_polyline, hmicolorpropertyconnector, HMITransparentButton, HMIButton,
   HMI_Draw_Valves, HMIBasicEletricMotor, hmi_draw_flow_valve,
   hmi_draw_flow_pump, hmi_draw_basic_vector_control, HMIBandeja,
-  CentralUserManagement, TagLinkedSeriesSource,
+  CentralUserManagement, TagLinkedSeriesSource, HMIRecipe, HMIRecipeButton,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -85,6 +85,15 @@ begin
   //retroalimentacao (FeedbackTag)
   //the two-state button with images and feedback
   RegisterComponents(strControlsPallete,  [THMIButton]);
+  //os botoes de comando da biblioteca de receitas (nova, apagar, salvar,
+  //enviar e receber)
+  //the recipe library command buttons (add, delete, save, download, upload)
+  RegisterComponents(strControlsPallete,  [THMIRecipeButton]);
+  {$IFDEF FPC}
+  //a tabela de receitas (biblioteca em disco + download/upload para o CLP)
+  //the recipe table (library on disk + download/upload to the PLC)
+  RegisterComponents(strControlsPallete,  [THMIRecipeGrid]);
+  {$ENDIF}
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   RegisterComponents(strControlsPallete,  [THMIComboBox]);
   RegisterComponents(strControlsPallete,  [THMIKeyboardManager]);

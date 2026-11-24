@@ -65,6 +65,8 @@ uses
   ut.sycreaderkeydecoder,
   ut.hmilogmemo,
   ut.hmilog,
+  ut.hmirecipe,
+  ut.hmirecipebutton,
   ut.opcuaserveredt{$IFDEF WINDOWS},
   ut.sycrfidreaderwin{$ENDIF};
 
