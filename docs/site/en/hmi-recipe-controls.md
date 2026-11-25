@@ -65,6 +65,22 @@ Drop a `THMIRecipeButton` for each role and point `RecipeGrid` to the table. The
 
 Clicking a button without a grid attached reports through `OnError` instead of raising; in the designer the buttons do nothing.
 
+##### The recipe actions
+
+The same commands come as actions too (unit `HMIRecipeActions`, category **PascalSCADA Recipes** of the action list editor), for menus, toolbars or any button. They descend from `TPascalSCADASecureAction`, so a `SecurityCode` restricts the command to the users that hold it: for the others the action — and every control linked to it — is disabled (see `DisableIfNotAuthorized`).
+
+| Action | Command | Extra properties |
+|---|---|---|
+| `TPascalSCADAAddRecipeAction` | `rcAddRecipe` | `RecipeName`, `AutoSave` |
+| `TPascalSCADADeleteRecipeAction` | `rcDeleteRecipe` | `RecipeName`, `AutoSave` |
+| `TPascalSCADASaveRecipeLibraryAction` | `rcSaveLibrary` | – |
+| `TPascalSCADADownloadRecipeAction` | `rcDownload` | – |
+| `TPascalSCADAUploadRecipeAction` | `rcUpload` | `AutoSave` |
+
+All of them have `RecipeGrid`, `OnError` and `OnAfterCommand`, with the same meaning as on the button, and the caption of the command. An `OnExecute` of your own replaces the command, as on the standard LCL actions; the access check still applies. A `THMIRecipeButton` with `Action` set runs the action and ignores its own `Command`.
+
+The button and the actions share the code that runs the commands (`TRecipeCommandRunner`, unit `HMIRecipeCommands`): a command behaves the same from either one.
+
 ##### Step by step
 
 The [recipe library example](https://github.com/fluisgirardi/pascalscada_v0/tree/master/examples/laz_recipe_library) shows the whole assembly:

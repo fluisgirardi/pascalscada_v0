@@ -65,6 +65,22 @@ Solte um `THMIRecipeButton` por papel e aponte `RecipeGrid` para a tabela. A pro
 
 Clicar um botão sem tabela ligada avisa pelo `OnError` em vez de levantar exceção; no designer os botões não fazem nada.
 
+##### As actions de receita
+
+Os mesmos comandos vêm também como actions (unit `HMIRecipeActions`, categoria **PascalSCADA Recipes** do editor de action list), para menus, barras de ferramentas ou qualquer botão. Elas descendem de `TPascalSCADASecureAction`, então um `SecurityCode` restringe o comando aos usuários que o têm: para os outros a action — e todo controle ligado nela — fica desabilitada (veja `DisableIfNotAuthorized`).
+
+| Action | Comando | Propriedades a mais |
+|---|---|---|
+| `TPascalSCADAAddRecipeAction` | `rcAddRecipe` | `RecipeName`, `AutoSave` |
+| `TPascalSCADADeleteRecipeAction` | `rcDeleteRecipe` | `RecipeName`, `AutoSave` |
+| `TPascalSCADASaveRecipeLibraryAction` | `rcSaveLibrary` | – |
+| `TPascalSCADADownloadRecipeAction` | `rcDownload` | – |
+| `TPascalSCADAUploadRecipeAction` | `rcUpload` | `AutoSave` |
+
+Todas têm `RecipeGrid`, `OnError` e `OnAfterCommand`, com o mesmo sentido do botão, e o título do comando. Um `OnExecute` seu substitui o comando, como nas actions padrão do LCL; a verificação de acesso continua valendo. Um `THMIRecipeButton` com `Action` preenchida executa a action e ignora o próprio `Command`.
+
+O botão e as actions dividem o código que executa os comandos (`TRecipeCommandRunner`, unit `HMIRecipeCommands`): um comando se comporta igual pelos dois.
+
 ##### Passo a passo
 
 O [exemplo da biblioteca de receitas](https://github.com/fluisgirardi/pascalscada_v0/tree/master/examples/laz_recipe_library) mostra a montagem completa:
