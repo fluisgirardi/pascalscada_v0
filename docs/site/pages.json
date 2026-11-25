@@ -318,6 +318,56 @@
         "pb": "Download"
       },
       "menu_item": 13
+    },
+    {
+      "slug": "services",
+      "id": null,
+      "title": {
+        "en": "Services",
+        "pb": "Serviços"
+      },
+      "menu_item": null,
+      "hold": "services section: waiting for the quote form, terms/privacy pages and a Services menu"
+    },
+    {
+      "slug": "services-supervisory-applications",
+      "id": null,
+      "title": {
+        "en": "Supervisory applications",
+        "pb": "Aplicações de supervisão"
+      },
+      "menu_item": null,
+      "hold": "services section: waiting for the quote form, terms/privacy pages and a Services menu"
+    },
+    {
+      "slug": "services-protocol-drivers",
+      "id": null,
+      "title": {
+        "en": "Protocol drivers and integrations",
+        "pb": "Drivers de protocolo e integrações"
+      },
+      "menu_item": null,
+      "hold": "services section: waiting for the quote form, terms/privacy pages and a Services menu"
+    },
+    {
+      "slug": "services-support-and-training",
+      "id": null,
+      "title": {
+        "en": "Support and training",
+        "pb": "Suporte e treinamento"
+      },
+      "menu_item": null,
+      "hold": "services section: waiting for the quote form, terms/privacy pages and a Services menu"
+    },
+    {
+      "slug": "services-request-a-quote",
+      "id": null,
+      "title": {
+        "en": "Request a quote",
+        "pb": "Pedido de orçamento"
+      },
+      "menu_item": null,
+      "hold": "services section: waiting for the quote form, terms/privacy pages and a Services menu"
     }
   ],
   "menu_parents": {
