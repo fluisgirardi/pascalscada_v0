@@ -2044,7 +2044,10 @@ end;
 function TTestOPCUAServer.Endpoint(out AppUri, AppName:String):UA_StatusCode;
 var
   c:PUA_Client;
-  n:size_t;
+  //NativeUInt, not size_t: the Sockets unit of the implementation uses declares a 32 bit
+  //size_t on Windows (cuint32) that hides the binding's one, and on Win64 the library
+  //wrote 8 bytes into a 4 byte n - the upper half over c, then UA_Client_delete(nil).
+  n:NativeUInt;
   eps:PUA_EndpointDescription;
 begin
   AppUri := '';

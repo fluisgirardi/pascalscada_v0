@@ -558,7 +558,10 @@ type
   TPLCNumberAccess = class(TPLCNumber);
 
 const
-  StartTimeoutMs = 10000;
+  //Includes the first start with security, which makes the RSA key of the server certificate:
+  //4-9 s on a 32 bit (i386) build, and a key generation is random - one passed the 10 s this
+  //was. A start that works returns as soon as it is up; this is only the ceiling.
+  StartTimeoutMs = 60000;
 
 { helpers }
 
