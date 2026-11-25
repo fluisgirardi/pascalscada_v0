@@ -23,7 +23,7 @@ uses
   hmifaceplatedsgn, HMIBandeja, CentralUserManagement, HMIEventLogger, 
   HMIAlarmLogger, hmi_animation_timers, hmi_draw_basic_vector_control, 
   TagLinkedSeriesSource, HMIS7PlusAlarmLogger, hmilogmemo, HMIRecipe,
-  HMIRecipeButton, LazarusPackageIntf;
+  HMIRecipeButton, HMIRecipeCommands, HMIRecipeActions, LazarusPackageIntf;
 
 implementation
 

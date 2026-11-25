@@ -67,6 +67,7 @@ uses
   ut.hmilog,
   ut.hmirecipe,
   ut.hmirecipebutton,
+  ut.hmirecipeactions,
   ut.opcuaserveredt{$IFDEF WINDOWS},
   ut.sycrfidreaderwin{$ENDIF};
 

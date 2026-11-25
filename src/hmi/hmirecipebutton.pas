@@ -10,6 +10,10 @@
   Command, e o botao aceita imagens - uma para solto e outra para apertado,
   PNG com transparencia inclusive - por arquivo ou por bitmap.
 
+  Os comandos em si ficam na unit HMIRecipeCommands (TRecipeCommandRunner),
+  a mesma que as actions de receita (HMIRecipeActions) usam. Um botao com
+  Action ligada executa a action, nao o Command dele.
+
   @author(PascalSCADA)
 }
 {$ELSE}
@@ -24,6 +28,10 @@
   for the pressed one, PNG with transparency included - either from a file or
   from a bitmap.
 
+  The commands themselves live in the unit HMIRecipeCommands
+  (TRecipeCommandRunner), the same one the recipe actions (HMIRecipeActions)
+  use. A button with an Action linked runs the action, not its own Command.
+
   @author(PascalSCADA)
 }
 {$ENDIF}
@@ -34,45 +42,24 @@ unit HMIRecipeButton;
 interface
 
 uses
-  Classes, SysUtils, Controls, Graphics, Buttons, Dialogs, HMIRecipe;
+  Classes, SysUtils, Controls, Graphics, Buttons, HMIRecipe, HMIRecipeCommands;
 
 type
-  {$IFDEF PORTUGUES}
-  {:
-    O que o botao faz quando e' clicado.
-  }
-  {$ELSE}
-  {:
-    What the button does when clicked.
-  }
-  {$ENDIF}
-  TRecipeCommand = (
-    //: cria uma receita nova / creates a new recipe
-    rcAddRecipe,
-    //: apaga a receita selecionada ou a de RecipeName / deletes the selected
-    //: recipe or the one named in RecipeName
-    rcDeleteRecipe,
-    //: grava a biblioteca no arquivo / writes the library to the file
-    rcSaveLibrary,
-    //: escreve a receita selecionada nos tags / writes the selected recipe
-    //: into the tags
-    rcDownload,
-    //: le os tags para a receita selecionada / reads the tags into the
-    //: selected recipe
-    rcUpload
-  );
+  //os comandos vem de HMIRecipeCommands; os nomes ficam aqui tambem, para o
+  //codigo que so' usa HMIRecipeButton continuar compilando.
+  //the commands come from HMIRecipeCommands; the names stay here too, so code
+  //that only uses HMIRecipeButton keeps compiling.
+  TRecipeCommand = HMIRecipeCommands.TRecipeCommand;
+  TRecipeButtonErrorEvent = HMIRecipeCommands.TRecipeCommandErrorEvent;
 
-  THMIRecipeButton = class;
+const
+  rcAddRecipe    = HMIRecipeCommands.rcAddRecipe;
+  rcDeleteRecipe = HMIRecipeCommands.rcDeleteRecipe;
+  rcSaveLibrary  = HMIRecipeCommands.rcSaveLibrary;
+  rcDownload     = HMIRecipeCommands.rcDownload;
+  rcUpload       = HMIRecipeCommands.rcUpload;
 
-  {$IFDEF PORTUGUES}
-  //: Chamado quando o botao nao consegue executar o comando (nenhuma tabela
-  //: ligada, receita repetida...). A tabela tambem avisa os erros dela.
-  {$ELSE}
-  //: Called when the button cannot run the command (no table linked, a
-  //: repeated recipe...). The table reports its own errors too.
-  {$ENDIF}
-  TRecipeButtonErrorEvent = procedure(Sender: TObject; const aMessage: string) of object;
-
+type
   {$IFDEF PORTUGUES}
   {:
     Botao de comando da biblioteca de receitas.
@@ -84,30 +71,34 @@ type
   {$ENDIF}
   THMIRecipeButton = class(TSpeedButton)
   private
-    FRecipeGrid: THMIRecipeGrid;
+    FRunner: TRecipeCommandRunner;
     FCommand: TRecipeCommand;
-    FRecipeName: string;
-    FAutoSave: Boolean;
     FGlyphUp: TBitmap;
     FGlyphDown: TBitmap;
     FGlyphUpFile: string;
     FGlyphDownFile: string;
-    FLastError: string;
     //o titulo padrao do comando corrente; muda de comando so' enquanto o
     //usuario nao escrever um titulo proprio.
     //the default caption of the current command; switching commands only
     //replaces the caption while the user has not typed one of his own.
     FLastAutoCaption: TCaption;
-    FOnError: TRecipeButtonErrorEvent;
-    FOnAfterCommand: TNotifyEvent;
 
+    function  GetRecipeGrid: THMIRecipeGrid;
     procedure SetRecipeGrid(const v: THMIRecipeGrid);
+    function  GetRecipeName: string;
+    procedure SetRecipeName(const v: string);
+    function  GetAutoSave: Boolean;
+    procedure SetAutoSave(const v: Boolean);
+    function  GetLastError: string;
+    function  GetOnError: TRecipeButtonErrorEvent;
+    procedure SetOnError(const v: TRecipeButtonErrorEvent);
+    function  GetOnAfterCommand: TNotifyEvent;
+    procedure SetOnAfterCommand(const v: TNotifyEvent);
     procedure SetCommand(const v: TRecipeCommand);
     procedure SetGlyphUp(const v: TBitmap);
     procedure SetGlyphDown(const v: TBitmap);
     procedure SetGlyphUpFile(const v: string);
     procedure SetGlyphDownFile(const v: string);
-    procedure DoError(const aMessage: string);
     //: carrega a imagem do arquivo para o bitmap do estado. '' limpa o bitmap.
     //: loads the image file into the state bitmap; '' clears it.
     procedure LoadGlyphFromFile(aBitmap: TBitmap; const aFileName, aPropertyName: string);
@@ -138,13 +129,20 @@ type
     //: directly works too, tests included.
     {$ENDIF}
     procedure Execute;
+
+    {$IFDEF PORTUGUES}
+    //: Quem executa os comandos (compartilhado com as actions de receita).
+    {$ELSE}
+    //: What runs the commands (shared with the recipe actions).
+    {$ENDIF}
+    property Runner: TRecipeCommandRunner read FRunner;
   published
     {$IFDEF PORTUGUES}
     //: Tabela de receitas que o botao comanda.
     {$ELSE}
     //: Recipe table this button commands.
     {$ENDIF}
-    property RecipeGrid: THMIRecipeGrid read FRecipeGrid write SetRecipeGrid;
+    property RecipeGrid: THMIRecipeGrid read GetRecipeGrid write SetRecipeGrid;
 
     {$IFDEF PORTUGUES}
     //: O papel do botao. Trocar de comando tambem troca o titulo, enquanto o
@@ -164,7 +162,7 @@ type
     //: next free name; on delete, empty deletes the recipe selected on the
     //: table.
     {$ENDIF}
-    property RecipeName: string read FRecipeName write FRecipeName;
+    property RecipeName: string read GetRecipeName write SetRecipeName;
 
     {$IFDEF PORTUGUES}
     //: Grava a biblioteca no arquivo depois de adicionar, apagar ou trazer
@@ -173,7 +171,7 @@ type
     //: Writes the library to the file after adding, deleting or uploading
     //: values from the PLC.
     {$ENDIF}
-    property AutoSave: Boolean read FAutoSave write FAutoSave default True;
+    property AutoSave: Boolean read GetAutoSave write SetAutoSave default True;
 
     {$IFDEF PORTUGUES}
     //: Figura do estado solto. PNG com transparencia pode entrar direto aqui.
@@ -210,52 +208,27 @@ type
     property GlyphDownFile: string read FGlyphDownFile write SetGlyphDownFile;
 
     //: ultima mensagem de erro / last error message
-    property LastError: string read FLastError;
+    property LastError: string read GetLastError;
 
-    property OnError: TRecipeButtonErrorEvent read FOnError write FOnError;
+    property OnError: TRecipeButtonErrorEvent read GetOnError write SetOnError;
     {$IFDEF PORTUGUES}
     //: Chamado depois que o comando terminou, com ou sem erro da tabela.
     {$ELSE}
     //: Called after the command finished, with or without a table error.
     {$ENDIF}
-    property OnAfterCommand: TNotifyEvent read FOnAfterCommand write FOnAfterCommand;
+    property OnAfterCommand: TNotifyEvent read GetOnAfterCommand write SetOnAfterCommand;
   end;
 
 implementation
 
-function DefaultCaption(aCommand: TRecipeCommand): TCaption;
-begin
-  {$IFDEF PORTUGUES}
-  case aCommand of
-    rcAddRecipe:    Result := 'Nova receita';
-    rcDeleteRecipe: Result := 'Apagar receita';
-    rcSaveLibrary:  Result := 'Salvar biblioteca';
-    rcDownload:     Result := 'Enviar ao CLP';
-    rcUpload:       Result := 'Receber do CLP';
-  else
-    Result := '';
-  end;
-  {$ELSE}
-  case aCommand of
-    rcAddRecipe:    Result := 'Add recipe';
-    rcDeleteRecipe: Result := 'Delete recipe';
-    rcSaveLibrary:  Result := 'Save library';
-    rcDownload:     Result := 'Download';
-    rcUpload:       Result := 'Upload';
-  else
-    Result := '';
-  end;
-  {$ENDIF}
-end;
-
 constructor THMIRecipeButton.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FAutoSave := True;
+  FRunner := TRecipeCommandRunner.Create(Self);
   FCommand := rcAddRecipe;
   FGlyphUp := TBitmap.Create;
   FGlyphDown := TBitmap.Create;
-  FLastAutoCaption := DefaultCaption(FCommand);
+  FLastAutoCaption := RecipeCommandCaption(FCommand);
   Caption := FLastAutoCaption;
   ShowHint := True;
 end;
@@ -264,17 +237,63 @@ destructor THMIRecipeButton.Destroy;
 begin
   FGlyphUp.Free;
   FGlyphDown.Free;
+  FreeAndNil(FRunner);
   inherited Destroy;
+end;
+
+function THMIRecipeButton.GetRecipeGrid: THMIRecipeGrid;
+begin
+  Result := FRunner.Grid;
 end;
 
 procedure THMIRecipeButton.SetRecipeGrid(const v: THMIRecipeGrid);
 begin
-  if FRecipeGrid = v then exit;
-  if FRecipeGrid <> nil then
-    FRecipeGrid.RemoveFreeNotification(Self);
-  FRecipeGrid := v;
-  if FRecipeGrid <> nil then
-    FRecipeGrid.FreeNotification(Self);
+  FRunner.Grid := v;
+end;
+
+function THMIRecipeButton.GetRecipeName: string;
+begin
+  Result := FRunner.RecipeName;
+end;
+
+procedure THMIRecipeButton.SetRecipeName(const v: string);
+begin
+  FRunner.RecipeName := v;
+end;
+
+function THMIRecipeButton.GetAutoSave: Boolean;
+begin
+  Result := FRunner.AutoSave;
+end;
+
+procedure THMIRecipeButton.SetAutoSave(const v: Boolean);
+begin
+  FRunner.AutoSave := v;
+end;
+
+function THMIRecipeButton.GetLastError: string;
+begin
+  Result := FRunner.LastError;
+end;
+
+function THMIRecipeButton.GetOnError: TRecipeButtonErrorEvent;
+begin
+  Result := FRunner.OnError;
+end;
+
+procedure THMIRecipeButton.SetOnError(const v: TRecipeButtonErrorEvent);
+begin
+  FRunner.OnError := v;
+end;
+
+function THMIRecipeButton.GetOnAfterCommand: TNotifyEvent;
+begin
+  Result := FRunner.OnAfterCommand;
+end;
+
+procedure THMIRecipeButton.SetOnAfterCommand(const v: TNotifyEvent);
+begin
+  FRunner.OnAfterCommand := v;
 end;
 
 procedure THMIRecipeButton.SetCommand(const v: TRecipeCommand);
@@ -286,10 +305,10 @@ begin
   //the caption follows the command while it is still some command's default;
   //a user typed caption keeps its text.
   if Caption = FLastAutoCaption then begin
-    Caption := DefaultCaption(v);
+    Caption := RecipeCommandCaption(v);
     FLastAutoCaption := Caption;
   end else
-    FLastAutoCaption := DefaultCaption(v);
+    FLastAutoCaption := RecipeCommandCaption(v);
 end;
 
 procedure THMIRecipeButton.SetGlyphUp(const v: TBitmap);
@@ -374,8 +393,8 @@ procedure THMIRecipeButton.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if (Operation = opRemove) and (AComponent = FRecipeGrid) then
-    FRecipeGrid := nil;
+  if (Operation = opRemove) and (FRunner <> nil) then
+    FRunner.GridRemoved(AComponent);
 end;
 
 procedure THMIRecipeButton.MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -394,54 +413,19 @@ begin
     Glyph.Assign(FGlyphUp);
 end;
 
-procedure THMIRecipeButton.DoError(const aMessage: string);
-begin
-  FLastError := aMessage;
-  if Assigned(FOnError) then
-    FOnError(Self, aMessage);
-end;
-
 procedure THMIRecipeButton.Execute;
 begin
-  //no designer o clique e' do IDE, nao do operador.
-  //in the designer the click belongs to the IDE, not to the operator.
-  if csDesigning in ComponentState then exit;
-
-  if FRecipeGrid = nil then begin
-    DoError('No recipe table linked to this button.');
-    exit;
-  end;
-
-  case FCommand of
-    rcAddRecipe:
-      FRecipeGrid.AddRecipe(FRecipeName);
-    rcDeleteRecipe:
-      if Trim(FRecipeName) <> '' then
-        FRecipeGrid.DeleteRecipe(FRecipeName)
-      else
-        FRecipeGrid.DeleteRecipe(FRecipeGrid.Row - 1);
-    rcSaveLibrary:
-      FRecipeGrid.SaveLibrary;
-    rcDownload:
-      FRecipeGrid.Download;
-    rcUpload:
-      FRecipeGrid.Upload;
-  end;
-
-  //adicionar, apagar e receber do CLP mudam a biblioteca; salvar na hora
-  //evita perder receitas quando a tela fecha.
-  //adding, deleting and uploading change the library; saving right away keeps
-  //recipes from being lost when the screen closes.
-  if FAutoSave and (FCommand in [rcAddRecipe, rcDeleteRecipe, rcUpload]) then
-    FRecipeGrid.SaveLibrary;
-
-  if Assigned(FOnAfterCommand) then
-    FOnAfterCommand(Self);
+  FRunner.Execute(FCommand);
 end;
 
 procedure THMIRecipeButton.Click;
 begin
-  Execute;
+  //com uma Action ligada quem executa e' ela (no inherited Click), com a
+  //seguranca dela; o Command do botao fica de fora.
+  //with an Action linked it is the action that runs (in inherited Click),
+  //with its security; the button's Command stays out.
+  if Action = nil then
+    Execute;
   inherited Click;
 end;
 

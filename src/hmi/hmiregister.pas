@@ -38,7 +38,7 @@ uses
   hmi_polyline, hmicolorpropertyconnector, HMITransparentButton, HMIButton,
   HMI_Draw_Valves, HMIBasicEletricMotor, hmi_draw_flow_valve,
   hmi_draw_flow_pump, hmi_draw_basic_vector_control, HMIBandeja,
-  CentralUserManagement, TagLinkedSeriesSource, HMIRecipe, HMIRecipeButton,
+  CentralUserManagement, TagLinkedSeriesSource, HMIRecipe, HMIRecipeButton, HMIRecipeActions,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -190,6 +190,15 @@ begin
                                      TPascalSCADALogin_LogoutAction,
                                      TPascalSCADAManageUsersAction,
                                      TPascalSCADASecureAction],nil);
+  {$IFDEF FPC}
+  //os comandos da biblioteca de receitas (os mesmos do THMIRecipeButton)
+  //the recipe library commands (the same ones as THMIRecipeButton)
+  RegisterActions(strRecipeActions, [TPascalSCADAAddRecipeAction,
+                                     TPascalSCADADeleteRecipeAction,
+                                     TPascalSCADASaveRecipeLibraryAction,
+                                     TPascalSCADADownloadRecipeAction,
+                                     TPascalSCADAUploadRecipeAction],nil);
+  {$ENDIF}
 
   //////////////////////////////////////////////////////////////////////////////
   //Component editors

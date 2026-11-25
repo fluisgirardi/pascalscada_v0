@@ -34,6 +34,7 @@ resourcestring
   strControlsPallete  = 'PascalSCADA HCl';
   strDatabasePallete  = 'PascalSCADA Database';
   strUserManagement   = 'PascalSCADA User Management';
+  strRecipeActions    = 'PascalSCADA Recipes';
   strFPCPallete       = 'PascalSCADA - FreePascal';
   strAssistants       = 'PascalSCADA - Assistants';
   

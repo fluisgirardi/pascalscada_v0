@@ -3,9 +3,10 @@ object Form1: TForm1
   Height = 411
   Top = 250
   Width = 792
-  Caption = 'Form1'
+  Caption = 'PascalSCADA recipe library'
   ClientHeight = 411
   ClientWidth = 792
+  Menu = MainMenu1
   LCLVersion = '4.8.0.0'
   object HMIRecipeGrid1: THMIRecipeGrid
     Left = 73
@@ -180,5 +181,70 @@ object Form1: TForm1
     EnableMinValue = False
     Left = 644
     Top = 21
+  end
+  object HMIRecipeButton5: THMIRecipeButton
+    Left = 556
+    Height = 61
+    Top = 279
+    Width = 98
+    Caption = 'Upload'
+    ShowHint = True
+    ParentShowHint = False
+    RecipeGrid = HMIRecipeGrid1
+    Command = rcUpload
+  end
+  object ActionList1: TActionList
+    Left = 696
+    Top = 80
+    object RecipeAddAction: TPascalSCADAAddRecipeAction
+      Category = 'Recipes'
+      Caption = 'Add recipe'
+      RecipeGrid = HMIRecipeGrid1
+    end
+    object RecipeDeleteAction: TPascalSCADADeleteRecipeAction
+      Category = 'Recipes'
+      Caption = 'Delete recipe'
+      RecipeGrid = HMIRecipeGrid1
+    end
+    object RecipeSaveAction: TPascalSCADASaveRecipeLibraryAction
+      Category = 'Recipes'
+      Caption = 'Save library'
+      RecipeGrid = HMIRecipeGrid1
+    end
+    object RecipeDownloadAction: TPascalSCADADownloadRecipeAction
+      Category = 'Recipes'
+      Caption = 'Download'
+      RecipeGrid = HMIRecipeGrid1
+    end
+    object RecipeUploadAction: TPascalSCADAUploadRecipeAction
+      Category = 'Recipes'
+      Caption = 'Upload'
+      RecipeGrid = HMIRecipeGrid1
+    end
+  end
+  object MainMenu1: TMainMenu
+    Left = 744
+    Top = 80
+    object RecipesMenu: TMenuItem
+      Caption = '&Recipes'
+      object RecipeAddItem: TMenuItem
+        Action = RecipeAddAction
+      end
+      object RecipeDeleteItem: TMenuItem
+        Action = RecipeDeleteAction
+      end
+      object RecipesSep1: TMenuItem
+        Caption = '-'
+      end
+      object RecipeSaveItem: TMenuItem
+        Action = RecipeSaveAction
+      end
+      object RecipeDownloadItem: TMenuItem
+        Action = RecipeDownloadAction
+      end
+      object RecipeUploadItem: TMenuItem
+        Action = RecipeUploadAction
+      end
+    end
   end
 end

@@ -668,6 +668,15 @@ begin
     {$ENDIF}
   end;
   FEnabled:=true;
+  //sem codigo de seguranca o acesso e' livre: a flag nascia falsa, e a action
+  //criada em tempo de execucao (sem .lfm, sem Loaded) ficava "sem acesso" ate'
+  //alguem mexer em SecurityCode - e o UpdateTarget da TPascalSCADASecureAction
+  //a desabilitava.
+  //without a security code access is free: the flag was born false, and an
+  //action created at runtime (no .lfm, no Loaded) stayed "without access"
+  //until someone touched SecurityCode - and the UpdateTarget of
+  //TPascalSCADASecureAction disabled it.
+  FAccessAllowed:=true;
   FDisableIfNotAuthorized:=true;
 end;
 
