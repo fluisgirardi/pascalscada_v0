@@ -813,6 +813,8 @@ var
   UA_Client_disconnectSecureChannel: function(client: PUA_Client): UA_StatusCode; cdecl;
   UA_Client_getEndpoints: function(client: PUA_Client; const serverUrl: PAnsiChar; endpointDescriptionsSize: Psize_t; endpointDescriptions: PPUA_EndpointDescription): UA_StatusCode; cdecl;
   UA_Client_getNamespaceIndex: function(client: PUA_Client; nsUri: UA_String; outIndex: PUA_UInt16): UA_StatusCode; cdecl;
+  (* internal to open62541 1.5 (not in client.h, no UA_EXPORT): a gcc .so exports it, an MSVC
+     .dll does not - optional, nil there. Use the UA_Client_Service_* functions below. *)
   __UA_Client_Service: procedure(client: PUA_Client; const request: Pointer; const requestType: PUA_DataType; response: Pointer; const responseType: PUA_DataType); cdecl;
   UA_Client_Service_read: function(client: PUA_Client; request: UA_ReadRequest): UA_ReadResponse; cdecl;
   UA_Client_Service_write: function(client: PUA_Client; request: UA_WriteRequest): UA_WriteResponse; cdecl;
@@ -1195,7 +1197,6 @@ begin
   Add('UA_Client_disconnectSecureChannel', @@UA_Client_disconnectSecureChannel);
   Add('UA_Client_getEndpoints', @@UA_Client_getEndpoints);
   Add('UA_Client_getNamespaceIndex', @@UA_Client_getNamespaceIndex);
-  Add('__UA_Client_Service', @@__UA_Client_Service);
   Add('UA_Client_Service_read', @@UA_Client_Service_read);
   Add('UA_Client_Service_write', @@UA_Client_Service_write);
   Add('UA_Client_Service_browse', @@UA_Client_Service_browse);
@@ -1279,6 +1280,7 @@ var
 begin
   for imp in Imports do
     imp.Addr^ := nil;
+  __UA_Client_Service := nil;
   {$IFDEF ENABLE_SERVER}
   UA_ServerConfig_updateFromFile := nil;
   {$ENDIF}
@@ -1337,6 +1339,8 @@ begin
       if imp.Addr^ = nil then
         missing := missing + ' ' + imp.Name;
     end;
+    //optional: internal in 1.5, exported by the gcc builds only (not by an MSVC .dll)
+    __UA_Client_Service := GetProcedureAddress(open62541LibHandle, '__UA_Client_Service');
     {$IFDEF ENABLE_SERVER}
     //optional: a library built without JSON does not have it
     UA_ServerConfig_updateFromFile := GetProcedureAddress(open62541LibHandle, 'UA_ServerConfig_updateFromFile');
