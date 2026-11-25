@@ -694,8 +694,12 @@ begin
   StartServer(OPCUATestDefaultOptions);
   NewDriver;
   t := NumTag(FServer.NodeId('Counter'), 20);
-  AssertTrue('first value', WaitNotOk(t, 0) or (t.Value>0) or WaitStatus(t, ioOk));
-  Pump(200);
+  //waits for the counting itself: the old "WaitNotOk(t, 0) or ..." was true at once (no read
+  //yet is not ok), so the connection, the subscription and the first value had only a fixed
+  //200 ms - not always enough on the Windows runner ("counting" failed with the value still 0)
+  t0 := GetTickCount64;
+  while (t.Value<=0) and (GetTickCount64-t0<5000) do
+    Pump(20);
   AssertTrue('counting', t.Value>0);
   first := t.Value;
   last := first;
@@ -785,6 +789,12 @@ end;
 
 { TTestOPCUASecurity }
 
+const
+  //the driver makes the RSA key of its client certificate on the first secure connect: 4-9 s
+  //on i386 and more at times (TheRightPasswordOpensTheSession ran out of the 10 s it had on
+  //linux32). A ceiling only - the waits end as soon as the value or the status arrives.
+  SECURE_WAIT = 60000;
+
 procedure TTestOPCUASecurity.SignAndEncryptConnectsAndReads;
 var
   opt:TOPCUATestServerOptions;
@@ -796,7 +806,7 @@ begin
   NewDriver.SecurityMode := osmSignAndEncrypt;
   FDriver.SecurityPolicy := ospBasic256Sha256;
   t := NumTag(FServer.NodeId('Int32'));
-  AssertTrue('read over SignAndEncrypt'+LineEnding+FDriver.LastError+LineEnding+FLog.Text, WaitValue(t, -123456, 10000));
+  AssertTrue('read over SignAndEncrypt'+LineEnding+FDriver.LastError+LineEnding+FLog.Text, WaitValue(t, -123456, SECURE_WAIT));
 end;
 
 procedure TTestOPCUASecurity.TheRightPasswordOpensTheSession;
@@ -813,7 +823,7 @@ begin
   FDriver.Username := 'operator';
   FDriver.Password := 's3cr3t';
   t := NumTag(FServer.NodeId('Int32'));
-  AssertTrue('read with user/password'+LineEnding+FDriver.LastError+LineEnding+FLog.Text, WaitValue(t, -123456, 10000));
+  AssertTrue('read with user/password'+LineEnding+FDriver.LastError+LineEnding+FLog.Text, WaitValue(t, -123456, SECURE_WAIT));
 end;
 
 procedure TTestOPCUASecurity.AWrongPasswordIsAnAuthError;
@@ -831,7 +841,7 @@ begin
   FDriver.Password := 'wrong';
   t := NumTag(FServer.NodeId('Int32'));
   AssertTrue('auth error: '+t.LastASyncReadStatus.ToString+LineEnding+FDriver.LastError,
-    WaitStatus(t, ioAuthError, 8000));
+    WaitStatus(t, ioAuthError, SECURE_WAIT));
 end;
 
 procedure TTestOPCUASecurity.TheGeneratedClientCertificateIsKept;

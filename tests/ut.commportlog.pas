@@ -251,7 +251,15 @@ begin
   FPort.Active := true;
   D.CommunicationPort := FPort;
   NewLog([lcProtocol, lcComm], llTrace);
-  AssertFalse('no PLC, no connection', TS7PlusDriverAccess(D).EnsureConnected);
+  //under the driver's IO lock, as its public API does: the scan thread runs EnsureConnected on
+  //every tick, and two threads finding no connection both made one - the one overwritten
+  //leaked (208 bytes on linux32)
+  TS7PlusDriverAccess(D).LockDriverIO;
+  try
+    AssertFalse('no PLC, no connection', TS7PlusDriverAccess(D).EnsureConnected);
+  finally
+    TS7PlusDriverAccess(D).UnlockDriverIO;
+  end;
   AssertTrue('flush', FLog.Flush);
   i := FLog.IndexOf(lcProtocol, '');
   AssertTrue('a protocol message was posted'+FLog.Dump, i>=0);

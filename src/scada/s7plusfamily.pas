@@ -257,8 +257,6 @@ type
     function GetConnected:Boolean;
     function AreaRIDOf(ReadFunction:LongInt; out AreaRID:Cardinal):Boolean;
     procedure ConnDebug(Sender:TObject; const Msg:String);
-    procedure LockDriverIO;
-    procedure UnlockDriverIO;
 
     //-- Phase 2: symbolic Path resolution (cached) and scan-list lookups.
     function GetCachedDBVars(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):Boolean;
@@ -294,6 +292,12 @@ type
     procedure AfterAlarmSubscription;
     procedure RenewCredit(SubscriptionId:Cardinal; CreditTick:Byte);
   protected
+    //: Serializa o acesso direto contra a thread de varredura (veja a implementação). Protegido
+    //: para subclasses e testes que chamem EnsureConnected por fora da API publica.
+    //: Serializes direct access against the scan thread (see the implementation). Protected for
+    //: subclasses and tests that call EnsureConnected outside the public API.
+    procedure LockDriverIO;
+    procedure UnlockDriverIO;
     {$IFDEF PORTUGUES}
     //: Ponte (somente leitura) para a conexão/sessão viva, para subclasses de download de bloco
     //: (TGP2ES7CommPlusDriver) emitirem CreateObject/SetMultiVariables sobre a sessão já ativa.

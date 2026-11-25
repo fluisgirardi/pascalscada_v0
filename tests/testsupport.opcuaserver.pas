@@ -133,7 +133,9 @@ begin
   inherited Create(true);
   Start;
   t := GetTickCount64;
-  while (not FStarted) and (FStartError='') and (GetTickCount64-t<10000) do
+  //60 s: an Encrypted server makes its RSA key first, 4-9 s on i386 and more at times; a server
+  //that starts ends the wait as soon as it is up
+  while (not FStarted) and (FStartError='') and (GetTickCount64-t<60000) do
     Sleep(10);
   if FStartError<>'' then
     raise Exception.Create('OPC UA test server: '+FStartError);

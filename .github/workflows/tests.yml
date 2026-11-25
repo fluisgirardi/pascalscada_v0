@@ -126,7 +126,12 @@ jobs:
           BIN=tests/bin/pascalscada_tests
           [ -f "$BIN.exe" ] && BIN="$BIN.exe"
           "$BIN" --all --format=plain
-          "$BIN" --all --format=xml --file="tests/results-${{ matrix.name }}.xml"
+          # the second run can fail on its own (a timing test) and writes only to the file:
+          # show what failed in the log, as the container jobs do
+          R="tests/results-${{ matrix.name }}.xml"
+          "$BIN" --all --format=xml --file="$R" || { rc=$?; echo "tests exited with $rc"; \
+            grep -n -E "NumberOf(Errors|Failures)" "$R"; \
+            grep -B4 -A2 -E "<ExceptionClass>E[^I]" "$R"; exit $rc; }
 
       - name: Build the HMI test suite
         # A separate binary: it pulls BGRABitmap in, which only this job has.
