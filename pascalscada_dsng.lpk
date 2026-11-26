@@ -24,7 +24,7 @@
     <Description Value="Package used to register property editors and others tool on Lazarus IDE, to avoid GUI linking."/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="8" Release="1"/>
-    <Files Count="25">
+    <Files Count="28">
       <Item1>
         <Filename Value="src/scada_dsng/bitmappertagassistant.pas"/>
         <UnitName Value="bitmappertagassistant"/>
@@ -127,6 +127,18 @@
         <Filename Value="src\scada_dsng\h5utagassistant.pas"/>
         <UnitName Value="h5utagassistant"/>
       </Item25>
+      <Item26>
+        <Filename Value="src\scada_dsng\codesysxml.pas"/>
+        <UnitName Value="codesysxml"/>
+      </Item26>
+      <Item27>
+        <Filename Value="src\scada_dsng\ucodesysxmlbuilder.pas"/>
+        <UnitName Value="ucodesysxmlbuilder"/>
+      </Item27>
+      <Item28>
+        <Filename Value="src\scada_dsng\codesysxmlassistant.pas"/>
+        <UnitName Value="codesysxmlassistant"/>
+      </Item28>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
