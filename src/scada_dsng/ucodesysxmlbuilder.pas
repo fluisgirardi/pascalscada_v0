@@ -98,7 +98,7 @@ begin
   // Built entirely in code: CreateNew skips .lfm resource loading, which
   // Lazarus otherwise enforces through RequireDerivedFormResource.
   inherited CreateNew(AOwner, 0);
-  Caption := 'Codesys tag import - OPC UA symbol XML';
+  Caption := 'Codesys tag import - symbol protocol (TCP 11740)';
   Position := poScreenCenter;
   Width := 820;
   Height := 590;
@@ -145,7 +145,7 @@ begin
     Cells[2,0] := 'Type';
     Cells[3,0] := 'Access';
     Cells[4,0] := 'Address';
-    Cells[5,0] := 'OPC UA NodeId';
+    Cells[5,0] := 'Symbol path';
     Cells[6,0] := 'Imported';
     ColWidths[0] := 40;
     ColWidths[1] := 246;
@@ -172,24 +172,26 @@ begin
   lblInfo := TLabel.Create(Self);
   with lblInfo do begin
     Parent := Self; Left := 12; Top := 442; Width := 80; Height := 18;
-    Caption := 'Namespace:';
+    Caption := 'Namespace (OPC UA only):';
   end;
   edtNamespace := TSpinEdit.Create(Self);
   with edtNamespace do begin
     Parent := Self; Left := 92; Top := 439; Width := 56; Height := 23;
     MinValue := 0; MaxValue := 65535; Value := FNamespace;
+    Enabled := false;
   end;
 
   lblInfo := TLabel.Create(Self);
   with lblInfo do begin
     Parent := Self; Left := 158; Top := 442; Width := 96; Height := 18;
-    Caption := 'Path prefix:';
+    Caption := 'Prefix (OPC UA only):';
   end;
   edtPathPrefix := TEdit.Create(Self);
   with edtPathPrefix do begin
     Parent := Self; Left := 254; Top := 439; Width := 70; Height := 23;
     Text := FPathPrefix;
-    Hint := 'Codesys often uses |var| as the OPC UA symbol prefix. Leave empty if not needed.';
+    Enabled := false;
+    Hint := 'The symbol protocol uses the full path from the XML directly.';
     ShowHint := true;
   end;
 
@@ -231,8 +233,8 @@ begin
   lblInfo := TLabel.Create(Self);
   with lblInfo do begin
     Parent := Self; Left := 12; Top := 476; Width := 610; Height := 30;
-    Caption := 'Select variables, then click OK. PascalSCADA creates OPC UA tags ' +
-      '(TPLCTagNumber / TPLCBlock / TPLCString) bound to the driver. ' +
+    Caption := 'Select variables, then click OK. PascalSCADA creates symbol-protocol ' +
+      'tags (TPLCTagNumber / TPLCString) bound to the driver. ' +
       'Unselecting a previously imported variable removes its tag.';
     WordWrap := true;
   end;
@@ -305,7 +307,7 @@ begin
     grid.Cells[3,i+1] := V.Access;
     if V.DirectAddress <> '' then grid.Cells[4,i+1] := V.DirectAddress
     else grid.Cells[4,i+1] := '';
-    grid.Cells[5,i+1] := CodesysVarNodeId(V,edtNamespace.Value,edtPathPrefix.Text);
+    grid.Cells[5,i+1] := V.Name;
     if FImportedKeys.IndexOf(ImportedKey(V)) >= 0 then grid.Cells[6,i+1] := 'YES'
     else grid.Cells[6,i+1] := '';
   end;
@@ -315,10 +317,8 @@ end;
 
 function TfrmCodesysXmlBuilder.ImportedKey(const V: TCodesysXmlVar): string;
 begin
-  // The OPC UA driver addresses a tag by its NodeId in LongAddress. Namespace
-  // and prefix are part of the key so changing them yields a different tag.
-  Result := LowerCase(edtPathPrefix.Text) + '|' + IntToStr(edtNamespace.Value) +
-    '|' + V.Name;
+  // The symbol protocol driver addresses a tag by its full symbol path.
+  Result := LowerCase(V.Name);
 end;
 
 function TfrmCodesysXmlBuilder.UseStateKey(const V: TCodesysXmlVar): string;

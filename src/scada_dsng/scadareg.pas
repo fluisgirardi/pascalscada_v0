@@ -101,7 +101,7 @@ begin
                                            TLGXDriver,
                                            TMQTTDriver,
                                            TOPCUADriver,
-                                           TCodesysOPCUADriver]);
+                                           TCodesysSymbolDriver]);
   RegisterComponents(strUtilsPallete,     [TScalesQueue,
                                            TLinearScaleProcessor,
                                            TUserScale,

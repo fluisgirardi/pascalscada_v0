@@ -3214,7 +3214,7 @@ LazarusResources.Add('TpSCADALogger','PNG',[
   +#16'B'#8#135#195#241#127#220'z,'#254#1#3#4'e'#157'm'#190'/'#23#0#0#0#0'IEND'
   +#174'B`'#130
 ]);
-LazarusResources.Add('TCodesysOPCUADriver','PNG',[
+LazarusResources.Add('TCodesysSymbolDriver','PNG',[
   #137'PNG'#13#10#26#10#0#0#0#13'IHDR'#0#0#0#24#0#0#0#24#8#6#0#0#0#224
   +'w='#248#0#0#0#194'IDATx'#156'c`'#160'1`D'#23#16'2'#207#251'O'#137#129
   +#239'NNB1'#147#5#221'p'#30'e'#27#6#10#193#127'dK'#152#168'l8'#3#200
