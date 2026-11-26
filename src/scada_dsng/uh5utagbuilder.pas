@@ -69,6 +69,9 @@ type
     property UseCsvPeriod: Boolean read FUseCsvPeriod write SetUseCsvPeriod;
     {: Variables selected by the user. }
     function SelectedVars: TH5UTagCsvVars;
+    {: Variables that were unchecked ("Use" = N) in the current CSV. Used by
+       the assistant to remove the tags that are no longer wanted. }
+    function DeselectedVars: TH5UTagCsvVars;
     {: Adds the variables to the dialog after it has been created. }
     procedure SetVars(const AVars: TH5UTagCsvVars);
     {: Station / function / address keys of tags that already exist on the
@@ -425,6 +428,22 @@ begin
         Result[Count].Period := FVars[i].Period
       else
         Result[Count].Period := edtPeriod.Value;
+      inc(Count);
+    end;
+end;
+
+function TfrmH5UTagBuilder.DeselectedVars: TH5UTagCsvVars;
+var
+  i, Count: LongInt;
+begin
+  Count := 0;
+  for i:=0 to High(FVars) do
+    if (i >= Length(FChecked)) or (not FChecked[i]) then inc(Count);
+  SetLength(Result,Count);
+  Count := 0;
+  for i:=0 to High(FVars) do
+    if (i >= Length(FChecked)) or (not FChecked[i]) then begin
+      Result[Count] := FVars[i];
       inc(Count);
     end;
 end;

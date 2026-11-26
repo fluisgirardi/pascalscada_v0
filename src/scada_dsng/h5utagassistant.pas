@@ -65,9 +65,90 @@ var
   i, FuncCode: LongInt;
   TagNum: TPLCTagNumber;
   TagBlock: TPLCBlock;
-  UsedNames, ImportedKeys: TStringList;
-  BaseName, TagName: string;
+  UsedNames, ImportedKeys, TagByVarName: TStringList;
+  BaseName, TagName, DeletedList: string;
   N, Skipped: LongInt;
+
+  {: CSVVariableName of a tag component, or '' when not imported from CSV. }
+  function CSVNameOf(C: TComponent): string;
+  begin
+    Result := '';
+    if C is TPLCTagNumber then Result := TPLCTagNumber(C).CSVVariableName
+    else if C is TPLCBlock then Result := TPLCBlock(C).CSVVariableName;
+  end;
+
+  {: Map CSVVariableName -> tag component for tags imported from a CSV, so a
+     variable unchecked in the wizard can have its tag removed. }
+  procedure BuildTagByVarNameMap;
+  var
+    j: LongInt;
+    C: TComponent;
+    Num: TPLCTagNumber;
+    Blk: TPLCBlock;
+    S: string;
+  begin
+    if not Assigned(OwnerOfNewTags) then exit;
+    for j:=0 to OwnerOfNewTags.ComponentCount-1 do begin
+      C := OwnerOfNewTags.Components[j];
+      S := CSVNameOf(C);
+      if (S = '') then continue;
+      if C is TPLCTagNumber then begin
+        if TPLCTagNumber(C).ProtocolDriver <> FDriver then continue;
+      end else if C is TPLCBlock then begin
+        if TPLCBlock(C).ProtocolDriver <> FDriver then continue;
+      end else continue;
+      TagByVarName.AddObject(S,C);
+    end;
+  end;
+
+  {: Delete tags whose CSV variable was unchecked in this wizard run. Only
+     tags from the CURRENT CSV that were un-checked are considered; tags
+     created manually (no CSVVariableName) or belonging to other drivers are
+     never touched. Returns the number of tags actually removed. }
+  function DeleteUncheckedTags(out DeletedList: string): LongInt;
+  var
+    k, m: LongInt;
+    DVars: TH5UTagCsvVars;
+    ToDelete: TList;
+    C: TComponent;
+  begin
+    Result := 0;
+    DeletedList := '';
+    DVars := Dlg.DeselectedVars;
+    ToDelete := TList.Create;
+    try
+      for k:=0 to High(DVars) do
+        for m:=0 to TagByVarName.Count-1 do
+          if TagByVarName[m] = DVars[k].Name then begin
+            C := TComponent(TagByVarName.Objects[m]);
+            if (C <> nil) and (ToDelete.IndexOf(C) < 0) then
+              ToDelete.Add(C);
+          end;
+      if ToDelete.Count = 0 then exit;
+
+      for k:=0 to ToDelete.Count-1 do begin
+        C := TComponent(ToDelete[k]);
+        if DeletedList <> '' then DeletedList := DeletedList + #13#10;
+        DeletedList := DeletedList + '  - ' + C.Name + '  (' + CSVNameOf(C) + ')';
+      end;
+      if MessageDlg('These tag(s) are no longer selected and will be DELETED:' +
+        #13#10#13#10 + DeletedList + #13#10#13#10 + 'Continue?',
+        mtConfirmation,[mbYes,mbNo],0) <> mrYes then exit;
+
+      for k:=0 to ToDelete.Count-1 do begin
+        C := TComponent(ToDelete[k]);
+        try
+          C.Free;
+          inc(Result);
+        except
+          on E: Exception do
+            MessageDlg('Error deleting tag: ' + E.Message,mtError,[mbOK],0);
+        end;
+      end;
+    finally
+      ToDelete.Free;
+    end;
+  end;
 
   {: Build the station|function|address|size key for a tag on the form, so the
      wizard can mark those variables as already imported. }
@@ -160,16 +241,25 @@ begin
   end;
 
   ImportedKeys := TStringList.Create;
+  TagByVarName := TStringList.Create;
   try
     ImportedKeys.Sorted := true;
     ImportedKeys.Duplicates := dupIgnore;
     CollectImportedKeys;
+    BuildTagByVarNameMap;
     Dlg := TfrmH5UTagBuilder.Create(nil);
     try
       // Station / period are restored by the wizard itself from the last
       // session; do not overwrite them here.
       Dlg.SetImportedKeys(ImportedKeys);
       if Dlg.ShowModal = mrOK then begin
+        // Remove tags for variables the user unchecked this time, before
+        // creating new ones so the freed names become available again.
+        N := DeleteUncheckedTags(DeletedList);
+        if N > 0 then
+          MessageDlg(IntToStr(N) + ' tag(s) deleted for unchecked variable(s).',
+            mtInformation,[mbOK],0);
+
         Vars := Dlg.SelectedVars;
         UsedNames := TStringList.Create;
         try
@@ -238,6 +328,7 @@ begin
       Dlg.Free;
     end;
   finally
+    TagByVarName.Free;
     ImportedKeys.Free;
   end;
 end;
