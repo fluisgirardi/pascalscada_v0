@@ -26,6 +26,7 @@ type
   private
     FVars: TH5UTagCsvVars;
     FChecked: array of Boolean;
+    FImportedKeys: TStringList;
     FStation: LongInt;
     FDefaultPeriod: LongInt;
     FUseCsvPeriod: Boolean;
@@ -49,8 +50,10 @@ type
     procedure OKClick(Sender: TObject);
     procedure CancelClick(Sender: TObject);
     procedure RefreshGrid;
+    function ImportedKey(const V: TH5UTagCsvVar): string;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     {: Station used for every generated tag. }
     property Station: LongInt read FStation write FStation;
     {: Default refresh time used when the CSV has no period. }
@@ -61,10 +64,22 @@ type
     function SelectedVars: TH5UTagCsvVars;
     {: Adds the variables to the dialog after it has been created. }
     procedure SetVars(const AVars: TH5UTagCsvVars);
+    {: Station / function / address keys of tags that already exist on the
+       form; rows already imported are shown as "Imported" in the grid. }
+    procedure SetImportedKeys(const AKeys: TStrings);
   end;
 
 var
   frmH5UTagBuilder: TfrmH5UTagBuilder;
+  {: Last AutoShop CSV used in this IDE session; loaded automatically when the
+     wizard is opened again. }
+  H5ULastCSVFile: string = '';
+
+const
+  {: Must match H5UTAG_FUNC_UB / H5UTAG_FUNC_UW in H5UTagDriver.pas. Kept local
+     so the design-time wizard does not need to use the runtime driver unit. }
+  H5U_IMPORT_FUNC_UB = 1;
+  H5U_IMPORT_FUNC_UW = 2;
 
 implementation
 
@@ -86,6 +101,9 @@ begin
   FUseCsvPeriod := true;
   SetLength(FVars,0);
   SetLength(FChecked,0);
+  FImportedKeys := TStringList.Create;
+  FImportedKeys.Sorted := true;
+  FImportedKeys.Duplicates := dupIgnore;
 
   lblInfo := TLabel.Create(Self);
   with lblInfo do begin
@@ -121,19 +139,21 @@ begin
     FixedCols := 0;
     FixedRows := 1;
     RowCount := 1;
-    ColCount := 6;
+    ColCount := 7;
     Cells[0,0] := 'Use';
     Cells[1,0] := 'Variable name';
     Cells[2,0] := 'Type';
     Cells[3,0] := 'Device';
     Cells[4,0] := 'Address';
     Cells[5,0] := 'Period / comment';
-    ColWidths[0] := 44;
-    ColWidths[1] := 240;
-    ColWidths[2] := 78;
-    ColWidths[3] := 62;
-    ColWidths[4] := 100;
-    ColWidths[5] := 228;
+    Cells[6,0] := 'Imported';
+    ColWidths[0] := 40;
+    ColWidths[1] := 218;
+    ColWidths[2] := 72;
+    ColWidths[3] := 56;
+    ColWidths[4] := 92;
+    ColWidths[5] := 186;
+    ColWidths[6] := 88;
     Options := Options + [goRowSelect];
     OnClick := @GridClick;
   end;
@@ -196,6 +216,19 @@ begin
       'create TPLCTagNumber / TPLCBlock components bound to the H5U driver.';
     WordWrap := true;
   end;
+
+  // Restore the CSV used in the previous wizard session so reopening shows
+  // the same variables again without browsing for the file.
+  if (H5ULastCSVFile <> '') and FileExists(H5ULastCSVFile) then begin
+    edtFile.Text := H5ULastCSVFile;
+    LoadClick(nil);
+  end;
+end;
+
+destructor TfrmH5UTagBuilder.Destroy;
+begin
+  FImportedKeys.Free;
+  inherited Destroy;
 end;
 
 procedure TfrmH5UTagBuilder.BrowseClick(Sender: TObject);
@@ -227,6 +260,7 @@ begin
     MessageDlg(Err,mtError,[mbOK],0);
     exit;
   end;
+  H5ULastCSVFile := Trim(edtFile.Text);
   SetVars(Vars);
 end;
 
@@ -255,11 +289,41 @@ begin
       grid.Cells[5,i+1] := IntToStr(FVars[i].Period) + 'ms  ' + FVars[i].Comment
     else
       grid.Cells[5,i+1] := IntToStr(FVars[i].Period) + 'ms';
+    if FImportedKeys.IndexOf(ImportedKey(FVars[i])) >= 0 then
+      grid.Cells[6,i+1] := 'YES'
+    else
+      grid.Cells[6,i+1] := '';
   end;
   if Length(FVars) = 0 then begin
     grid.Cells[0,1] := ''; grid.Cells[1,1] := ''; grid.Cells[2,1] := '';
     grid.Cells[3,1] := ''; grid.Cells[4,1] := ''; grid.Cells[5,1] := '';
+    grid.Cells[6,1] := '';
   end;
+end;
+
+function TfrmH5UTagBuilder.ImportedKey(const V: TH5UTagCsvVar): string;
+var
+  Func, Size: LongInt;
+begin
+  if V.Device = 'UB' then Func := H5U_IMPORT_FUNC_UB
+  else Func := H5U_IMPORT_FUNC_UW;
+  Size := V.Count;
+  if Size < 1 then Size := 1;
+  Result := IntToStr(FStation) + '|' + IntToStr(Func) + '|' +
+    IntToStr(V.Address) + '|' + IntToStr(Size);
+end;
+
+procedure TfrmH5UTagBuilder.SetImportedKeys(const AKeys: TStrings);
+var
+  i: LongInt;
+begin
+  FImportedKeys.Assign(AKeys);
+  // Uncheck variables that already have a tag, so clicking OK again does not
+  // try to recreate them. The user can still tick one manually to refresh it.
+  for i:=0 to High(FVars) do
+    if FImportedKeys.IndexOf(ImportedKey(FVars[i])) >= 0 then
+      FChecked[i] := false;
+  RefreshGrid;
 end;
 
 procedure TfrmH5UTagBuilder.GridClick(Sender: TObject);

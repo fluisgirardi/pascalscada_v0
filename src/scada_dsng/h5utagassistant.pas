@@ -65,9 +65,42 @@ var
   i, FuncCode: LongInt;
   TagNum: TPLCTagNumber;
   TagBlock: TPLCBlock;
-  UsedNames: TStringList;
+  UsedNames, ImportedKeys: TStringList;
   BaseName, TagName: string;
   N, Skipped: LongInt;
+
+  {: Build the station|function|address|size key for a tag on the form, so the
+     wizard can mark those variables as already imported. }
+  function TagKey(AStation, AFunc, AAddress, ASize: LongInt): string;
+  begin
+    Result := IntToStr(AStation) + '|' + IntToStr(AFunc) + '|' +
+      IntToStr(AAddress) + '|' + IntToStr(ASize);
+  end;
+
+  {: Collect all H5U tags already on the form into ImportedKeys. }
+  procedure CollectImportedKeys;
+  var
+    j: LongInt;
+    C: TComponent;
+    Num: TPLCTagNumber;
+    Blk: TPLCBlock;
+  begin
+    if not Assigned(OwnerOfNewTags) then exit;
+    for j:=0 to OwnerOfNewTags.ComponentCount-1 do begin
+      C := OwnerOfNewTags.Components[j];
+      if C is TPLCTagNumber then begin
+        Num := TPLCTagNumber(C);
+        if Num.ProtocolDriver = FDriver then
+          ImportedKeys.Add(TagKey(Num.PLCStation,Num.MemReadFunction,
+            Num.MemAddress,1));
+      end else if C is TPLCBlock then begin
+        Blk := TPLCBlock(C);
+        if Blk.ProtocolDriver = FDriver then
+          ImportedKeys.Add(TagKey(Blk.PLCStation,Blk.MemReadFunction,
+            Blk.MemAddress,Blk.Size));
+      end;
+    end;
+  end;
 
   function MakeUniqueName(const AName: string): string;
   var
@@ -126,75 +159,84 @@ begin
     exit;
   end;
 
-  Dlg := TfrmH5UTagBuilder.Create(nil);
+  ImportedKeys := TStringList.Create;
   try
-    Dlg.Station := 1;
-    Dlg.DefaultPeriod := 100;
-    if Dlg.ShowModal = mrOK then begin
-      Vars := Dlg.SelectedVars;
-      UsedNames := TStringList.Create;
-      try
-        UsedNames.Sorted := true;
-        UsedNames.Duplicates := dupIgnore;
-        CollectExistingNames;
-        Skipped := 0;
+    ImportedKeys.Sorted := true;
+    ImportedKeys.Duplicates := dupIgnore;
+    CollectImportedKeys;
+    Dlg := TfrmH5UTagBuilder.Create(nil);
+    try
+      Dlg.Station := 1;
+      Dlg.DefaultPeriod := 100;
+      Dlg.SetImportedKeys(ImportedKeys);
+      if Dlg.ShowModal = mrOK then begin
+        Vars := Dlg.SelectedVars;
+        UsedNames := TStringList.Create;
         try
-          for i:=0 to High(Vars) do begin
-            V := Vars[i];
-            if V.Device = 'UB' then FuncCode := H5UTAG_FUNC_UB
-            else FuncCode := H5UTAG_FUNC_UW;
+          UsedNames.Sorted := true;
+          UsedNames.Duplicates := dupIgnore;
+          CollectExistingNames;
+          Skipped := 0;
+          try
+            for i:=0 to High(Vars) do begin
+              V := Vars[i];
+              if V.Device = 'UB' then FuncCode := H5UTAG_FUNC_UB
+              else FuncCode := H5UTAG_FUNC_UW;
 
-            if TagAlreadyExists(Dlg.Station,FuncCode,V.Address,
-              Max(1,V.Count)) then begin
-              inc(Skipped);
-              continue;
+              if TagAlreadyExists(Dlg.Station,FuncCode,V.Address,
+                Max(1,V.Count)) then begin
+                inc(Skipped);
+                continue;
+              end;
+
+              BaseName := H5UIdentFromVarName(V.Name,i+1);
+              TagName := MakeUniqueName(BaseName);
+
+              if (V.Count > 1) and (V.Device = 'UW') then begin
+                TagBlock := TPLCBlock(CreateProc(TPLCBlock));
+                TagBlock.Name := TagName;
+                TagBlock.PLCStation := Dlg.Station;
+                TagBlock.MemReadFunction := FuncCode;
+                TagBlock.MemWriteFunction := FuncCode;
+                TagBlock.MemAddress := V.Address;
+                TagBlock.Size := V.Count;
+                TagBlock.TagType := TTagType(GetEnumValue(TypeInfo(TTagType),
+                  H5UVarTypeToTagTypeName(V.VarType)));
+                TagBlock.RefreshTime := V.Period;
+                TagBlock.ProtocolDriver := FDriver;
+                InsertHook(TagBlock);
+              end else begin
+                TagNum := TPLCTagNumber(CreateProc(TPLCTagNumber));
+                TagNum.Name := TagName;
+                TagNum.PLCStation := Dlg.Station;
+                TagNum.MemReadFunction := FuncCode;
+                TagNum.MemWriteFunction := FuncCode;
+                TagNum.MemAddress := V.Address;
+                N := H5UVarTypeToWords(V.VarType);
+                if N > 1 then TagNum.TagType := TTagType(GetEnumValue(TypeInfo(TTagType),
+                  H5UVarTypeToTagTypeName(V.VarType)))
+                else TagNum.TagType := pttDefault;
+                TagNum.RefreshTime := V.Period;
+                TagNum.ProtocolDriver := FDriver;
+                InsertHook(TagNum);
+              end;
             end;
-
-            BaseName := H5UIdentFromVarName(V.Name,i+1);
-            TagName := MakeUniqueName(BaseName);
-
-            if (V.Count > 1) and (V.Device = 'UW') then begin
-              TagBlock := TPLCBlock(CreateProc(TPLCBlock));
-              TagBlock.Name := TagName;
-              TagBlock.PLCStation := Dlg.Station;
-              TagBlock.MemReadFunction := FuncCode;
-              TagBlock.MemWriteFunction := FuncCode;
-              TagBlock.MemAddress := V.Address;
-              TagBlock.Size := V.Count;
-              TagBlock.TagType := TTagType(GetEnumValue(TypeInfo(TTagType),
-                H5UVarTypeToTagTypeName(V.VarType)));
-              TagBlock.RefreshTime := V.Period;
-              TagBlock.ProtocolDriver := FDriver;
-              InsertHook(TagBlock);
-            end else begin
-              TagNum := TPLCTagNumber(CreateProc(TPLCTagNumber));
-              TagNum.Name := TagName;
-              TagNum.PLCStation := Dlg.Station;
-              TagNum.MemReadFunction := FuncCode;
-              TagNum.MemWriteFunction := FuncCode;
-              TagNum.MemAddress := V.Address;
-              N := H5UVarTypeToWords(V.VarType);
-              if N > 1 then TagNum.TagType := TTagType(GetEnumValue(TypeInfo(TTagType),
-                H5UVarTypeToTagTypeName(V.VarType)))
-              else TagNum.TagType := pttDefault;
-              TagNum.RefreshTime := V.Period;
-              TagNum.ProtocolDriver := FDriver;
-              InsertHook(TagNum);
-            end;
+          except
+            on E: Exception do
+              MessageDlg('Error creating tags: ' + E.Message,mtError,[mbOK],0);
           end;
-        except
-          on E: Exception do
-            MessageDlg('Error creating tags: ' + E.Message,mtError,[mbOK],0);
+          if Skipped > 0 then
+            MessageDlg(IntToStr(Skipped) + ' variable(s) already have a tag at ' +
+              'the same station/address and were skipped.',mtInformation,[mbOK],0);
+        finally
+          UsedNames.Free;
         end;
-        if Skipped > 0 then
-          MessageDlg(IntToStr(Skipped) + ' variable(s) already have a tag at ' +
-            'the same station/address and were skipped.',mtInformation,[mbOK],0);
-      finally
-        UsedNames.Free;
       end;
+    finally
+      Dlg.Free;
     end;
   finally
-    Dlg.Free;
+    ImportedKeys.Free;
   end;
 end;
 
