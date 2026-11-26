@@ -10,9 +10,15 @@
   The design-time Tag Builder imports a CODESYS Symbolconfiguration XML and
   creates the tags with their paths and IEC types filled in.
 
+  @bold(TEST STAGE / 测试阶段 - git tag @code(codesys11740-test-stage).)
+  Frozen as an experimental test-stage snapshot. Both packages compile and the
+  wire encoder passes its local self-test, but NO message exchange has been
+  validated against a real CODESYS runtime yet. Do not use in production.
+
   @bold(Anonymous access only:) the runtime must allow access without a
   password; login/challenge-response is not implemented. The protocol is
-  private and this implementation has not been verified against a real PLC.
+  private: handshake, variable registration and read/write requests may need
+  byte-level corrections once a real-PLC capture is available.
 }
 unit CodesysDriver;
 

@@ -18,10 +18,14 @@
     Tags         : 7-bit varint id + 7-bit varint size + data;
                    id >= 0x80 means a parent tag (children follow in data)
 
+  @bold(TEST STAGE / 测试阶段 - git tag @code(codesys11740-test-stage).)
+  Experimental snapshot: compiled and checked by a local wire-encoding
+  self-test, but never exercised against a real CODESYS runtime. The TLV
+  layout, name padding (0x19) and subcommand values still need a real-PLC
+  packet capture to be confirmed.
+
   Only anonymous (no password) access is implemented. PLCs whose runtime
-  requires a login cannot be accessed with this client. Because the protocol
-  is private and no official specification exists, this code is experimental:
-  it has been compiled but not tested against a real PLC.
+  requires a login cannot be accessed with this client (no challenge-response).
 }
 unit CodesysSymbolClient;
 
