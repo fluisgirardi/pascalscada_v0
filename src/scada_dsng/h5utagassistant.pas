@@ -35,7 +35,7 @@ procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
 implementation
 
 uses
-  PLCTagNumber, PLCBlock, Tag, Dialogs, Controls, TypInfo;
+  PLCTagNumber, PLCBlock, Tag, Dialogs, Controls, TypInfo, Math;
 
 procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
@@ -67,7 +67,7 @@ var
   TagBlock: TPLCBlock;
   UsedNames: TStringList;
   BaseName, TagName: string;
-  N: LongInt;
+  N, Skipped: LongInt;
 
   function MakeUniqueName(const AName: string): string;
   var
@@ -80,6 +80,44 @@ var
       Result := AName + '_' + IntToStr(C);
     end;
     UsedNames.Add(Result);
+  end;
+
+  {: Ignore names already used by components on the form. Without this,
+     importing the same CSV twice raises "Duplicate name: a component named
+     ... already exists". }
+  procedure CollectExistingNames;
+  var
+    i: LongInt;
+  begin
+    if not Assigned(OwnerOfNewTags) then exit;
+    for i:=0 to OwnerOfNewTags.ComponentCount-1 do
+      UsedNames.Add(OwnerOfNewTags.Components[i].Name);
+  end;
+
+  {: Returns TRUE when a tag bound to the same station / function / address
+     already exists. Re-importing the same CSV then becomes a no-op instead
+     of creating a second set of tags pointing at the same PLC addresses. }
+  function TagAlreadyExists(AStation, AFunc, AAddress, ASize: LongInt): Boolean;
+  var
+    i: LongInt;
+    C: TComponent;
+    Num: TPLCTagNumber;
+    Blk: TPLCBlock;
+  begin
+    Result := false;
+    if not Assigned(OwnerOfNewTags) then exit;
+    for i:=0 to OwnerOfNewTags.ComponentCount-1 do begin
+      C := OwnerOfNewTags.Components[i];
+      if C is TPLCTagNumber then begin
+        Num := TPLCTagNumber(C);
+        if (Num.PLCStation = AStation) and (Num.MemReadFunction = AFunc) and
+           (Num.MemAddress = AAddress) then exit(true);
+      end else if C is TPLCBlock then begin
+        Blk := TPLCBlock(C);
+        if (Blk.PLCStation = AStation) and (Blk.MemReadFunction = AFunc) and
+           (Blk.MemAddress = AAddress) and (Blk.Size = ASize) then exit(true);
+      end;
+    end;
   end;
 
 begin
@@ -98,11 +136,19 @@ begin
       try
         UsedNames.Sorted := true;
         UsedNames.Duplicates := dupIgnore;
+        CollectExistingNames;
+        Skipped := 0;
         try
           for i:=0 to High(Vars) do begin
             V := Vars[i];
             if V.Device = 'UB' then FuncCode := H5UTAG_FUNC_UB
             else FuncCode := H5UTAG_FUNC_UW;
+
+            if TagAlreadyExists(Dlg.Station,FuncCode,V.Address,
+              Max(1,V.Count)) then begin
+              inc(Skipped);
+              continue;
+            end;
 
             BaseName := H5UIdentFromVarName(V.Name,i+1);
             TagName := MakeUniqueName(BaseName);
@@ -140,6 +186,9 @@ begin
           on E: Exception do
             MessageDlg('Error creating tags: ' + E.Message,mtError,[mbOK],0);
         end;
+        if Skipped > 0 then
+          MessageDlg(IntToStr(Skipped) + ' variable(s) already have a tag at ' +
+            'the same station/address and were skipped.',mtInformation,[mbOK],0);
       finally
         UsedNames.Free;
       end;
