@@ -254,12 +254,9 @@ type
     procedure SetMaxItemsPerSubscription(AValue:Integer);
     function GetExploreDelayMs:Integer;
     procedure SetExploreDelayMs(AValue:Integer);
-    function EnsureConnected:Boolean;
     function GetConnected:Boolean;
     function AreaRIDOf(ReadFunction:LongInt; out AreaRID:Cardinal):Boolean;
     procedure ConnDebug(Sender:TObject; const Msg:String);
-    procedure LockDriverIO;
-    procedure UnlockDriverIO;
 
     //-- Phase 2: symbolic Path resolution (cached) and scan-list lookups.
     function GetCachedDBVars(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):Boolean;
@@ -295,6 +292,26 @@ type
     procedure AfterAlarmSubscription;
     procedure RenewCredit(SubscriptionId:Cardinal; CreditTick:Byte);
   protected
+    //: Serializa o acesso direto contra a thread de varredura (veja a implementação). Protegido
+    //: para subclasses e testes que chamem EnsureConnected por fora da API publica.
+    //: Serializes direct access against the scan thread (see the implementation). Protected for
+    //: subclasses and tests that call EnsureConnected outside the public API.
+    procedure LockDriverIO;
+    procedure UnlockDriverIO;
+    {$IFDEF PORTUGUES}
+    //: Ponte (somente leitura) para a conexão/sessão viva, para subclasses de download de bloco
+    //: (TGP2ES7CommPlusDriver) emitirem CreateObject/SetMultiVariables sobre a sessão já ativa.
+    //: Chame EnsureConnected antes. Único acréscimo à classe base para o download; a lógica de
+    //: download fica toda na subclasse, em outra unit.
+    {$ELSE}
+    //: Read-only bridge to the live connection/session, so a block-download subclass
+    //: (TGP2ES7CommPlusDriver) can issue CreateObject/SetMultiVariables over the active session.
+    //: Call EnsureConnected first. The only base-class addition for the download; all download
+    //: logic lives in the subclass, in another unit.
+    {$ENDIF}
+    property Connection:TS7PlusConnection read FConnection;
+    //: (moved from private to protected so the download subclass can open the session first).
+    function EnsureConnected:Boolean;
     function CompositeWriteSize(SoftDataType:Byte):Integer;
     //: Appends to Items one write per writable member of a whole-DB/area entry, each cut out
     //: of Values (the tag's bytes, laid out like ReadComposite assembles them) at its
@@ -410,6 +427,14 @@ type
     function BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
     //: Lists every DB in the PLC program with its symbolic (TIA Portal) name and number.
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
+    //: Reads attributes of one object of the PLC program (an EXPLORE of RelationId; for a DB it is
+    //: S7PlusIds_DBAccessAreaBase + the DB number), decoded as in S7PlusParseObjectAttrs. For diagnostics
+    //: and tools (e.g. the hashes of a block); it reads the object and everything below it.
+    function ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+      out Values:TS7PlusAttrValues):TProtocolIOResult;
+    //: Every attribute an EXPLORE of the object returns by default (with no attribute list), with the ids.
+    function ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+      out Values:TS7PlusAttrValues):TProtocolIOResult;
     //: Reads the alarms that are active in the PLC now (S7-1200/1500: the alarm subsystem's DAI objects), with
     //: the texts of the languages asked for (Languages empty = all; e.g. S7PlusLang_Portuguese_BR = 1046).
     //: Needs no subscription: it is one EXPLORE, so it can be called whenever a snapshot is wanted.
@@ -633,6 +658,9 @@ function S7PlusPickFillers(const Candidates:TS7PlusFillCandidateArray; ItemsLeft
 
 implementation
 
+uses
+  pscadalog;
+
 var
   S7PlusTagBuilderEditor:TOpenTagEditor = nil;
 
@@ -679,6 +707,9 @@ end;
 
 procedure TS7CommPlusDriver.ConnDebug(Sender:TObject; const Msg:String);
 begin
+  //the driver is the source, also for the messages of its connection
+  if PSLogWants(lcProtocol, llDebug) then
+    PSLog(Self, lcProtocol, llDebug, Msg);
   if Assigned(FOnDebug) then
     FOnDebug(Self, Msg);
 end;
@@ -2846,6 +2877,45 @@ begin
       //that follows must not use the old types
       CheckProgramNow(Blocks);
     end else
+      Result := FailResult;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+  out Values:TS7PlusAttrValues):TProtocolIOResult;
+begin
+  SetLength(Values, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := FailResult;
+      exit;
+    end;
+    if FConnection.ReadObjectAttributes(RelationId, AttrIds, Values) then
+      Result := ioOk
+    else
+      Result := FailResult;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+  out Values:TS7PlusAttrValues):TProtocolIOResult;
+begin
+  SetLength(Ids, 0);
+  SetLength(Values, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := FailResult;
+      exit;
+    end;
+    if FConnection.ReadObjectAllAttributes(RelationId, Ids, Values) then
+      Result := ioOk
+    else
       Result := FailResult;
   finally
     UnlockDriverIO;

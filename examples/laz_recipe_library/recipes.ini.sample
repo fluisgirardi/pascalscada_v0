@@ -1,0 +1,10 @@
+# PascalSCADA recipe library
+Version=1
+
+[Recipe 1]
+Field 0=1.000000
+Field 1=2.000000
+Field 2=3.000000
+$0=1.000000
+$1=2.000000
+$2=3.000000

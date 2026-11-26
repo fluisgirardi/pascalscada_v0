@@ -158,7 +158,15 @@ type
 implementation
 
 uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} ProtocolDriver, hsstrings,
-  dateutils;
+  dateutils, pscadalog;
+
+//: An exception of a tag callback (a value change handler, usually) is posted and the
+//: other tags still get theirs; before, it aborted the batch and nobody heard of it.
+procedure LogCallbackException(Tag:TObject; E:Exception);
+begin
+  if PSLogWants(lcEvent, llError) then
+    PSLog(Tag, lcEvent, llError, Format('exception while updating the tag: %s: %s', [E.ClassName, E.Message]));
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanUpdate
@@ -228,6 +236,8 @@ begin
     end else
       FSleepInterruptable.WaitFor(1);
   except
+    on E: Exception do
+      Log(lcScan, llError, Format('tag update raised %s: %s', [E.ClassName, E.Message]));
   //  on E: Exception do begin
   //    {$IFDEF FDEBUG}
   //    DebugLn('TScanUpdate.Execute:: ' + e.Message);
@@ -283,7 +293,9 @@ begin
     with PScannedValues[c] do
       try
         CallBack(0, Values, GetTickCount64, tcScanRead, LastResult, 0);
-      finally
+      except
+        on E: Exception do
+          LogCallbackException(TObject(TMethod(CallBack).Data), E);
       end;
   end;
 end;
@@ -386,7 +398,12 @@ begin
   try
     if Terminated then exit;
     for i:=0 to FPendingCallbacks.Count-1 do
-      FPendingCallbacks[i].RunOnMainThread;
+      try
+        FPendingCallbacks[i].RunOnMainThread;
+      except
+        on E: Exception do
+          LogCallbackException(TObject(TMethod(FPendingCallbacks[i].CallBack).Data), E);
+      end;
   finally
     FPendingCallbacks.Clear;
   end;

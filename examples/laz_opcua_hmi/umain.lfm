@@ -1,0 +1,338 @@
+object FormMain: TFormMain
+  Left = 300
+  Height = 680
+  Top = 60
+  Width = 760
+  Caption = 'PascalSCADA - IHM com tags OPC UA'
+  ClientHeight = 680
+  ClientWidth = 760
+  Position = poScreenCenter
+  LCLVersion = '4.9.0.0'
+  object LabelInstructions: TLabel
+    Left = 8
+    Height = 270
+    Top = 8
+    Width = 744
+    Align = alTop
+    AutoSize = False
+    BorderSpacing.Around = 8
+    Caption = 'COMO FUNCIONA'#10'Tudo nesta tela foi colocado no form em tempo de projeto: o OPCUADriver1 (TOPCUADriver), os tags (TagCounter, TagDouble, TagInt, TagBool, TagText) e os controles HMI ligados a eles pela propriedade PLCTag. Nao ha codigo de leitura nem de escrita: o driver le os tags (RefreshTime = 100 ms) e cada controle mostra e grava o valor do seu tag.'#10#10'O QUE FAZER'#10'1. Contador: so leitura, muda sozinho no servidor (Test.Counter).'#10'2. Numero real: digite um valor e tecle Enter (ou saia do campo) para gravar em Test.Double; o rotulo ao lado mostra o valor lido de volta.'#10'3. Inteiro: arraste a barra (0 a 100); a barra de progresso e o rotulo mostram o valor lido de Test.Int32.'#10'4. Booleano: marque/desmarque para gravar 1/0 em Test.Bool.'#10'5. Texto: digite e tecle Enter para gravar em Test.String.'#10'6. Desmarque "Servidor de teste local" para derrubar o servidor: os tags entram em erro; marque de novo e o driver reconecta sozinho.'#10#10'As variaveis sao ficticias: vem do servidor de teste que o programa sobe em opc.tcp://localhost:48401. Para um servidor real, mude OPCUADriver1.EndpointUrl e o LongAddress (NodeId) de cada tag.'
+    ParentColor = False
+    WordWrap = True
+  end
+  object GroupCounter: TGroupBox
+    Left = 8
+    Height = 64
+    Top = 286
+    Width = 368
+    Caption = '1. Contador (Test.Counter, so leitura)'
+    ClientHeight = 47
+    ClientWidth = 366
+    TabOrder = 0
+    object HMILabelCounter: THMILabel
+      Left = 12
+      Height = 25
+      Top = 8
+      Width = 340
+      Enabled = True
+      Font.Height = -19
+      Font.Style = [fsBold]
+      ParentColor = False
+      ParentFont = False
+      NumberFormat = '#0'
+      PLCTag = TagCounter
+      Prefix = 'Valor: '
+      FormatDateTimeOptions = []
+    end
+  end
+  object GroupDouble: TGroupBox
+    Left = 384
+    Height = 64
+    Top = 286
+    Width = 368
+    Caption = '2. Numero real (Test.Double)'
+    ClientHeight = 47
+    ClientWidth = 366
+    TabOrder = 1
+    object HMIEditDouble: THMIEdit
+      Left = 12
+      Height = 28
+      Top = 8
+      Width = 150
+      Color = clWindow
+      Enabled = True
+      Font.Color = clWindowText
+      ParentFont = False
+      TabOrder = 0
+      NumberFormat = '#0.00'
+      PLCTag = TagDouble
+      EnableMinValue = False
+      EnableMaxValue = False
+    end
+    object HMILabelDouble: THMILabel
+      Left = 176
+      Height = 17
+      Top = 14
+      Width = 180
+      Enabled = True
+      ParentColor = False
+      NumberFormat = '#0.00'
+      PLCTag = TagDouble
+      Prefix = 'Lido: '
+      FormatDateTimeOptions = []
+    end
+  end
+  object GroupInt: TGroupBox
+    Left = 8
+    Height = 120
+    Top = 358
+    Width = 368
+    Caption = '3. Inteiro (Test.Int32, 0 a 100)'
+    ClientHeight = 103
+    ClientWidth = 366
+    TabOrder = 2
+    object HMITrackBarInt: THMITrackBar
+      Left = 12
+      Height = 40
+      Top = 4
+      Width = 340
+      Max = 100
+      Enabled = True
+      TabOrder = 0
+      PLCTag = TagInt
+    end
+    object HMIProgressBarInt: THMIProgressBar
+      Left = 12
+      Height = 20
+      Top = 50
+      Width = 340
+      Enabled = True
+      PLCTag = TagInt
+      Max = 100
+    end
+    object HMILabelInt: THMILabel
+      Left = 12
+      Height = 17
+      Top = 78
+      Width = 340
+      Enabled = True
+      ParentColor = False
+      NumberFormat = '#0'
+      PLCTag = TagInt
+      Prefix = 'Lido: '
+      FormatDateTimeOptions = []
+    end
+  end
+  object GroupBool: TGroupBox
+    Left = 384
+    Height = 56
+    Top = 358
+    Width = 368
+    Caption = '4. Booleano (Test.Bool)'
+    ClientHeight = 39
+    ClientWidth = 366
+    TabOrder = 3
+    object HMICheckBoxBool: THMICheckBox
+      Left = 12
+      Height = 23
+      Top = 6
+      Width = 85
+      Enabled = True
+      ParentColor = False
+      TabOrder = 0
+      PLCTag = TagBool
+      CaptionFalse = 'Desligado'
+      CaptionTrue = 'Ligado'
+      CaptionGrayed = 'Ligado'
+      ValueTrue = 1
+    end
+  end
+  object GroupText: TGroupBox
+    Left = 384
+    Height = 56
+    Top = 422
+    Width = 368
+    Caption = '5. Texto (Test.String)'
+    ClientHeight = 39
+    ClientWidth = 366
+    TabOrder = 4
+    object HMIEditText: THMIEdit
+      Left = 12
+      Height = 28
+      Top = 4
+      Width = 150
+      Color = clWindow
+      Enabled = True
+      Font.Color = clWindowText
+      ParentFont = False
+      TabOrder = 0
+      NumberFormat = '#0.0'
+      PLCTag = TagText
+      EnableMinValue = False
+      EnableMaxValue = False
+    end
+    object HMILabelText: THMILabel
+      Left = 176
+      Height = 17
+      Top = 10
+      Width = 180
+      Enabled = True
+      ParentColor = False
+      NumberFormat = '#0.0'
+      PLCTag = TagText
+      Prefix = 'Lido: '
+      FormatDateTimeOptions = []
+    end
+  end
+  object CheckServer: TCheckBox
+    Left = 8
+    Height = 23
+    Top = 490
+    Width = 279
+    Caption = '6. Servidor de teste local (localhost:48401)'
+    Checked = True
+    State = cbChecked
+    TabOrder = 5
+    OnChange = CheckServerChange
+  end
+  object PanelStatus: TPanel
+    Left = 0
+    Height = 30
+    Top = 650
+    Width = 760
+    Align = alBottom
+    Alignment = taLeftJustify
+    BevelOuter = bvLowered
+    ClientHeight = 30
+    ClientWidth = 760
+    TabOrder = 6
+    object LabelStatus: TLabel
+      Left = 7
+      Height = 16
+      Top = 7
+      Width = 746
+      Align = alClient
+      BorderSpacing.Around = 6
+      Caption = '...'
+      ParentColor = False
+    end
+  end
+  object OPCUADriver1: TOPCUADriver
+    EndpointUrl = 'opc.tcp://localhost:48401'
+    CertificateDir = '/home/fabiolg/.config/lazarus/opcua-pki'
+    ApplicationUri = 'urn:pascalscada:opcua:client'
+    ApplicationName = 'PascalSCADA OPC UA Client'
+    ReadOnly = False
+    Left = 600
+    Top = 500
+  end
+  object TagCounter: TPLCTagNumber
+    TagGUID = '{03518D93-60DC-4675-AA7B-10ED25DBE022}'
+    CommReadErrors = 3
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    ProtocolDriver = OPCUADriver1
+    UpdateTime = 100
+    LongAddress = 'nsu=urn:pascalscada:test;s=Test.Counter'
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 640
+    Top = 500
+  end
+  object TagDouble: TPLCTagNumber
+    TagGUID = '{EAD33AD1-C62E-4E7C-8170-2CBF5074B6E9}'
+    CommReadErrors = 3
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    ProtocolDriver = OPCUADriver1
+    UpdateTime = 100
+    LongAddress = 'nsu=urn:pascalscada:test;s=Test.Double'
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 680
+    Top = 500
+  end
+  object TagInt: TPLCTagNumber
+    TagGUID = '{49926544-2AF1-439E-A1D3-E144F41E1750}'
+    CommReadErrors = 3
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    ProtocolDriver = OPCUADriver1
+    UpdateTime = 100
+    LongAddress = 'nsu=urn:pascalscada:test;s=Test.Int32'
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 600
+    Top = 550
+  end
+  object TagBool: TPLCTagNumber
+    TagGUID = '{D10CDF20-E36C-4F79-B07D-92CA023CFED4}'
+    CommReadErrors = 3
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    ProtocolDriver = OPCUADriver1
+    UpdateTime = 100
+    LongAddress = 'nsu=urn:pascalscada:test;s=Test.Bool'
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 640
+    Top = 550
+  end
+  object TagText: TPLCString
+    TagGUID = '{34675179-D812-434C-93D0-2D406062810D}'
+    CommReadErrors = 3966
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    ProtocolDriver = OPCUADriver1
+    UpdateTime = 100
+    LongAddress = 'nsu=urn:pascalscada:test;s=Test.String'
+    StringSize = 80
+    Size = 81
+    Left = 680
+    Top = 550
+  end
+  object TimerStatus: TTimer
+    Interval = 300
+    OnTimer = TimerStatusTimer
+    Left = 720
+    Top = 500
+  end
+  object OPCUADriver2: TOPCUADriver
+    CertificateDir = '/home/fabiolg/.config/lazarus/opcua-pki'
+    ApplicationUri = 'urn:pascalscada:opcua:client'
+    ApplicationName = 'PascalSCADA OPC UA Client'
+    ReadOnly = False
+    Left = 614
+    Top = 517
+  end
+end

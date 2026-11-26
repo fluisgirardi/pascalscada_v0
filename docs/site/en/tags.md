@@ -48,7 +48,7 @@ In practice you rarely call these methods. Day-to-day behaviour is governed by a
 
 Every communication tag has the same set of addressing properties. **The meaning of each one depends on the protocol driver**, and the page of each protocol explains how to fill them. As a quick reference:
 
-| Property | Modbus | S7 (ISOTCP) | Melsec | West ASCII / IBox | Logix / S7CommPlus |
+| Property | Modbus | S7 (ISOTCP) | Melsec | West ASCII / IBox | Logix / S7CommPlus / OPC UA |
 |---|---|---|---|---|---|
 | `PLCStation` | Slave address (1–247) | – | Station number | Controller address | – |
 | `PLCRack` / `PLCSlot` | – | CPU rack and slot | – | – | – |
@@ -57,7 +57,7 @@ Every communication tag has the same set of addressing properties. **The meaning
 | `MemWriteFunction` | Modbus write function (5, 6, 15, 16) | – | Device type (same code as read) | – | – |
 | `MemAddress` | Register/coil address | Byte address | Device address | Parameter (West) / PID (IBox) | – |
 | `MemSubElement` | – | – (bits: use `TTagBit`) | – | – | – |
-| `LongAddress` | – | – | – | – | Symbolic tag name in the PLC (`Motor1.Speed`, `"DB10".Setpoint`) |
+| `LongAddress` | – | – | – | – | Symbolic tag name in the PLC (`Motor1.Speed`, `"DB10".Setpoint`); with [OPC UA](/opc-ua/), the NodeId (`ns=3;s="DB1"."Speed"`) |
 | `Retries` | Attempts before declaring a failure (all drivers) | | | | |
 
 The fastest way to get addressing right is the **Tag Builder**: right-click the protocol driver component (`TModBusTCPDriver`, `TISOTCPDriver`…) and choose *Tag Builder*. It creates tags already configured for that protocol.

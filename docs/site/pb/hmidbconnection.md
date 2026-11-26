@@ -2,7 +2,7 @@
 
 ![](img/THMIDBConnection.png) O `THMIDBConnection` é o componente de acesso a banco de dados do PascalSCADA: conecta a um SGBD e executa comandos SQL **de forma assíncrona**, sem travar a interface enquanto a consulta roda. Fica no pacote `pascalscada_db` (que não depende da LCL, então também funciona em aplicações de console) e é a base de componentes como o [`THMIEventLogger` e o `THMIAlarmLogger`](/pb/event-and-alarm-loggers/), além de servir para telas próprias — cadastro de usuários, receitas, histórico.
 
-Por baixo, ele usa o **SQLdb** do Free Pascal (não mais o ZeosLib, removido como dependência a partir da versão 0.7.7 — veja [Como instalar](/pb/how-install-pascalscada/)). Isso significa que o `THMIDBConnection` já sai pronto para os bancos com conector SQLdb; não é um ORM nem esconde SQL de você — você escreve o comando e ele cuida da fila, da thread e do retorno do resultado.
+Por baixo, ele usa o **SQLdb** do Free Pascal (não mais o ZeosLib, que não é dependência na versão 0.8.0 — veja [Como instalar](/pb/how-install-pascalscada/)). Isso significa que o `THMIDBConnection` já sai pronto para os bancos com conector SQLdb; não é um ORM nem esconde SQL de você — você escreve o comando e ele cuida da fila, da thread e do retorno do resultado.
 
 ##### Bancos de dados suportados
 
@@ -91,6 +91,10 @@ SQL := 'INSERT INTO eventos (mensagem, valor, quando, id) VALUES (' +
         THMIDBConnection.FormatSQLUUID(NovoGuid) + ')';
 DBConn.ExecSQL(SQL, nil, false);
 ```
+
+##### Log
+
+Conexões, cada comando, transações e falhas são publicados no [log](/pb/logging/) (`lcDatabase`): falhas como avisos/erros, o texto do SQL em `llDebug`.
 
 ##### Exemplo passo a passo
 

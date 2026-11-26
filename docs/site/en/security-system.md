@@ -164,6 +164,10 @@ The login dialog flow becomes: if a card is sitting on the reader, the warning *
 
 For another kind of reader (serial, TCP, NFC), derive from `TChipCardReader` (unit `ChipCardReader`) and implement `InitializeChipCard`, `ChipCardReady`, `IsEmptyChipCard`, `ChipCardRead` and `FinishChipCard`; the user manager does not know which reader is behind it.
 
+##### Audit log
+
+Logins, failed logins, logouts and access checks are posted to the [logger](/logging/) (`lcSecurity`), and every value an HMI control writes to a tag is posted with the logged user (`lcHMI`). A `TpSCADALogger` with a rule for those two categories and a daily file gives an audit trail of who did what. Passwords are never logged.
+
 ##### Step by step
 
 1. Drop a `TCustomizedUserManagement` on the main form (or on a datamodule created before the forms). Implement `OnCheckUserAndPass` and `OnCanAccess`.

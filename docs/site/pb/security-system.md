@@ -164,6 +164,10 @@ O fluxo no diálogo de login passa a ser: se há um cartão sobre o leitor, apar
 
 Para outro tipo de leitor (serial, TCP, NFC), derive de `TChipCardReader` (unit `ChipCardReader`) e implemente `InitializeChipCard`, `ChipCardReady`, `IsEmptyChipCard`, `ChipCardRead` e `FinishChipCard`; o gerenciador de usuários não sabe qual leitor está por trás.
 
+##### Trilha de auditoria
+
+Logins, falhas de login, logouts e verificações de acesso são publicados no [log](/pb/logging/) (`lcSecurity`), e todo valor que um controle de HMI escreve num tag é publicado com o usuário logado (`lcHMI`). Um `TpSCADALogger` com uma regra para essas duas categorias e um arquivo diário dá uma trilha de quem fez o quê. A senha nunca vai para o log.
+
 ##### Passo a passo
 
 1. Solte um `TCustomizedUserManagement` no form principal (ou em um datamodule criado antes dos forms). Implemente `OnCheckUserAndPass` e `OnCanAccess`.

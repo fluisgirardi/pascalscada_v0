@@ -132,6 +132,8 @@ type
   protected
     //: @exclude
     procedure Loaded; override;
+    //: 'host:port TCP' or 'host:port UDP'.
+    function LogDescription:String; override;
     //: @seealso(TCommPortDriver.Read)
     procedure Read(Packet:PIOPacket); override;
     //: @seealso(TCommPortDriver.Write)
@@ -258,7 +260,7 @@ type
 
 implementation
 
-uses hsstrings, dateutils, sysutils, hsutils, math;
+uses hsstrings, dateutils, sysutils, hsutils, math, pscadalog;
 
 { TConnectThread }
 
@@ -555,8 +557,17 @@ begin
   Result:=true;
 end;
 
+function TTCP_UDPPort.LogDescription:String;
+begin
+  if FPortType=ptUDP then
+    Result := Format('%s:%d UDP', [FHostName, FPortNumber])
+  else
+    Result := Format('%s:%d TCP', [FHostName, FPortNumber]);
+end;
+
 procedure TTCP_UDPPort.reconnectSocket(var Ok: Boolean);
 begin
+  LogConnection(llInfo, 'reconnecting');
   CloseMySocket(Ok);
   connectSocket(Ok);
 end;
@@ -817,6 +828,7 @@ begin
 
   closed:=false;
   if {$IFDEF WINDOWS}ASocket<>INVALID_SOCKET{$ELSE}ASocket>=0{$ENDIF} then begin
+    LogConnection(llDebug, 'closing the socket');
     SetLength(buffer,5);
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
     fpshutdown(ASocket,SHUT_WR);
@@ -1027,6 +1039,7 @@ begin
     {$ELSE}
     InterLockedExchange(FSocket,ASocket);
     {$ENDIF}
+    LogConnection(llInfo, 'connected');
     DoPortOpened(Self);
   finally
     if not Ok then begin

@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="58">
+    <Units Count="64">
       <Unit0>
         <Filename Value="pascalscada_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -267,6 +267,36 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="ut.s7plusbasket"/>
       </Unit57>
+      <Unit58>
+        <Filename Value="ut.s7plusblockhash.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ut.s7plusblockhash"/>
+      </Unit58>
+      <Unit59>
+        <Filename Value="ut.pscadalog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ut.pscadalog"/>
+      </Unit59>
+      <Unit60>
+        <Filename Value="testsupport.logcollector.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="testsupport.logcollector"/>
+      </Unit60>
+      <Unit61>
+        <Filename Value="ut.commportlog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ut.commportlog"/>
+      </Unit61>
+      <Unit62>
+        <Filename Value="ut.scanlog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ut.scanlog"/>
+      </Unit62>
+      <Unit63>
+        <Filename Value="ut.opcuaserver.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ut.opcuaserver"/>
+      </Unit63>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

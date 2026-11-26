@@ -1,0 +1,262 @@
+name: Open62541 v1.5 libraries for windows, linux 32/64 bits and freebsd amd64
+
+# Builds libopen62541 the way fpopen62541 expects it: shared library,
+# UA_ENABLE_DATATYPES_ALL=ON, UA_ENABLE_TYPEDESCRIPTION=ON and encryption
+# (OpenSSL), matching the UA_ENABLE_ENCRYPTION define of open62541.pas.
+# UA_ENABLE_DEBUG_SANITIZER=OFF: with clang (FreeBSD) the Debug build would
+# otherwise use -fsanitize=address and need the ASan runtime in the program.
+# On linux x86_64 it also runs tools/check_layout (C vs Pascal record layout)
+# and loads every 64 bit library with LoadOpen62541 (tools/load_test.pas).
+# FreeBSD amd64 is built in a FreeBSD VM (vmactions/freebsd-vm) against the
+# OpenSSL of the base system.
+#
+# With "publish" (the default) the Release libraries also go to the GitHub
+# release open62541-<version> of this repository, at fixed URLs that the CI of
+# other projects downloads without a token (artifacts need one):
+#   .../releases/download/open62541-<version>/libopen62541-<version>-linux-<x86_64|i386|aarch64>.tar.gz
+#   .../releases/download/open62541-<version>/libopen62541-<version>-freebsd-amd64.tar.gz
+#   .../releases/download/open62541-<version>/libopen62541-<version>-windows-<x64|Win32>.zip
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: open62541 tag
+        default: v1.5.10
+        required: true
+      publish:
+        description: publish the Release libraries in the release open62541-<version>
+        type: boolean
+        default: true
+
+env:
+  OPEN62541_VERSION: ${{ inputs.version || 'v1.5.10' }}
+  CMAKE_OPTIONS: >-
+    -DBUILD_SHARED_LIBS=ON
+    -DUA_ENABLE_ENCRYPTION=OPENSSL
+    -DUA_ENABLE_DATATYPES_ALL=ON
+    -DUA_ENABLE_TYPEDESCRIPTION=ON
+    -DUA_BUILD_EXAMPLES=OFF
+    -DUA_BUILD_UNIT_TESTS=OFF
+    -DUA_ENABLE_DEBUG_SANITIZER=OFF
+
+jobs:
+  build_linux:
+    # oldest supported runners: the libraries also run on older distributions (glibc 2.35, OpenSSL 3)
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, i386, aarch64]
+        config: [Release, Debug]
+    steps:
+    - name: checkout fpopen62541
+      uses: actions/checkout@v4
+      with:
+        path: fpopen62541
+
+    - name: checkout open62541
+      uses: actions/checkout@v4
+      with:
+        repository: open62541/open62541
+        ref: ${{ env.OPEN62541_VERSION }}
+        submodules: recursive
+        path: open62541
+
+    - name: install prerequisites
+      run: |
+        if [ "${{ matrix.arch }}" = i386 ] ; then
+          sudo dpkg --add-architecture i386
+        fi
+        sudo apt-get -q update
+        if [ "${{ matrix.arch }}" = i386 ] ; then
+          sudo apt-get install -y gcc-multilib g++-multilib libssl-dev libssl-dev:i386
+        else
+          sudo apt-get install -y libssl-dev fpc
+        fi
+
+    - name: build
+      run: |
+        extra=()
+        if [ "${{ matrix.arch }}" = i386 ] ; then
+          extra=(-DCMAKE_C_FLAGS="-m32 -I/usr/include/i386-linux-gnu"
+                 -DCMAKE_CXX_FLAGS="-m32 -I/usr/include/i386-linux-gnu"
+                 -DCMAKE_SHARED_LINKER_FLAGS=-m32
+                 -DOPENSSL_INCLUDE_DIR=/usr/include
+                 -DOPENSSL_SSL_LIBRARY=/usr/lib/i386-linux-gnu/libssl.so
+                 -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/i386-linux-gnu/libcrypto.so)
+        fi
+        cmake -S open62541 -B build -DCMAKE_BUILD_TYPE=${{ matrix.config }} $CMAKE_OPTIONS "${extra[@]}"
+        cmake --build build -j $(nproc)
+        file build/bin/libopen62541.so.*.*
+        if [ "${{ matrix.arch }}" = i386 ] ; then
+          file -L build/bin/libopen62541.so | grep -q "ELF 32-bit"
+        fi
+
+    - name: check record layout (C vs Pascal)
+      if: matrix.arch == 'x86_64' && matrix.config == 'Release'
+      run: fpopen62541/tools/check_layout open62541 build fpc check_layout
+
+    - name: load the library from Pascal
+      if: matrix.arch != 'i386'
+      run: |
+        mkdir -p load_test
+        fpc -O- -FEload_test -FUload_test -Fufpopen62541 -Fifpopen62541 fpopen62541/tools/load_test.pas
+        load_test/load_test "$PWD/build/bin/libopen62541.so"
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: open62541 ${{ env.OPEN62541_VERSION }} linux ${{ matrix.arch }} ${{ matrix.config }}
+        path: |
+          build/bin/libopen62541.so*
+          build/src_generated/open62541/config.h
+          build/src_generated/open62541/types_generated.h
+
+  build_freebsd:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64]
+        config: [Release, Debug]
+    steps:
+    - name: checkout fpopen62541
+      uses: actions/checkout@v4
+      with:
+        path: fpopen62541
+
+    - name: checkout open62541
+      uses: actions/checkout@v4
+      with:
+        repository: open62541/open62541
+        ref: ${{ env.OPEN62541_VERSION }}
+        submodules: recursive
+        path: open62541
+
+    - name: build in FreeBSD
+      uses: vmactions/freebsd-vm@v1
+      with:
+        # built on 14.x: the library also runs on newer releases (OpenSSL 3 from base)
+        release: "14.3"
+        usesh: true
+        envs: OPEN62541_VERSION CMAKE_OPTIONS
+        prepare: |
+          pkg install -y cmake ninja python3 fpc
+        run: |
+          set -e
+          cmake -G Ninja -S open62541 -B build -DCMAKE_BUILD_TYPE=${{ matrix.config }} $CMAKE_OPTIONS
+          cmake --build build
+          ls -l build/bin
+          file build/bin/libopen62541.so.*.*
+          file -L build/bin/libopen62541.so | grep -q "ELF 64-bit.*FreeBSD"
+          mkdir -p load_test
+          fpc -O- -FEload_test -FUload_test -Fufpopen62541 -Fifpopen62541 fpopen62541/tools/load_test.pas
+          load_test/load_test "$PWD/build/bin/libopen62541.so"
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: open62541 ${{ env.OPEN62541_VERSION }} freebsd ${{ matrix.arch }} ${{ matrix.config }}
+        path: |
+          build/bin/libopen62541.so*
+          build/src_generated/open62541/config.h
+          build/src_generated/open62541/types_generated.h
+
+  build_windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, Win32]
+        config: [Release, Debug]
+    env:
+      # OpenSSL linked statically into libopen62541.dll (no libcrypto/libssl dll to ship)
+      VCPKG_TRIPLET: ${{ matrix.arch == 'x64' && 'x64-windows-static-md' || 'x86-windows-static-md' }}
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}\vcpkg-cache,readwrite
+    steps:
+    - name: checkout open62541
+      uses: actions/checkout@v4
+      with:
+        repository: open62541/open62541
+        ref: ${{ env.OPEN62541_VERSION }}
+        submodules: recursive
+        path: open62541
+
+    - name: cache vcpkg packages
+      uses: actions/cache@v4
+      with:
+        path: vcpkg-cache
+        key: vcpkg-openssl-${{ env.VCPKG_TRIPLET }}-${{ runner.os }}
+
+    - name: install OpenSSL
+      run: |
+        New-Item -ItemType Directory -Force vcpkg-cache | Out-Null
+        & "$env:VCPKG_INSTALLATION_ROOT\vcpkg" install "openssl:$env:VCPKG_TRIPLET"
+
+    - name: build
+      run: |
+        $opts = $env:CMAKE_OPTIONS -split '\s+' | Where-Object { $_ }
+        cmake -A ${{ matrix.arch }} -S open62541 -B build `
+              "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" `
+              "-DVCPKG_TARGET_TRIPLET=$env:VCPKG_TRIPLET" @opts
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        cmake --build build --config ${{ matrix.config }} --parallel
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        # the pdb keeps its name: the dll refers to it as open62541.pdb
+        Rename-Item build/bin/${{ matrix.config }}/open62541.dll libopen62541.dll
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: open62541 ${{ env.OPEN62541_VERSION }} windows ${{ matrix.arch }} ${{ matrix.config }}
+        path: |
+          build/bin/${{ matrix.config }}/
+          build/src_generated/open62541/config.h
+          build/src_generated/open62541/types_generated.h
+
+  publish:
+    needs: [build_linux, build_freebsd, build_windows]
+    if: ${{ inputs.publish }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: open62541 * Release
+        path: artifacts
+
+    - name: package
+      run: |
+        set -euo pipefail
+        v="$OPEN62541_VERSION"
+        mkdir -p release
+        # an artifact keeps the paths below build/: bin/... (the symbolic links of the
+        # .so came as copies, which is what a download wants anyway)
+        for a in x86_64 i386 aarch64; do
+          d="artifacts/open62541 $v linux $a Release/bin"
+          ls -l "$d"
+          tar -C "$d" -czf "release/libopen62541-$v-linux-$a.tar.gz" .
+        done
+        for a in amd64; do
+          d="artifacts/open62541 $v freebsd $a Release/bin"
+          ls -l "$d"
+          tar -C "$d" -czf "release/libopen62541-$v-freebsd-$a.tar.gz" .
+        done
+        for a in x64 Win32; do
+          d="artifacts/open62541 $v windows $a Release/bin/Release"
+          ls -l "$d"
+          (cd "$d" && zip -q "$GITHUB_WORKSPACE/release/libopen62541-$v-windows-$a.zip" libopen62541.dll)
+        done
+        ls -l release
+
+    - name: publish
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        tag="open62541-$OPEN62541_VERSION"
+        if ! gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          gh release create "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "libopen62541 $OPEN62541_VERSION" \
+            --notes "open62541 $OPEN62541_VERSION built the way fpopen62541 expects it (shared, OpenSSL, all data types, type descriptions; OpenSSL linked statically on Windows, OpenSSL of the base system on FreeBSD), Release. Made by the workflow BuildOpen62541v1.5.yml."
+        fi
+        gh release upload "$tag" release/* --clobber -R "$GITHUB_REPOSITORY"

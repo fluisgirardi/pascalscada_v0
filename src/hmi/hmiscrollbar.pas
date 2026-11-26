@@ -329,7 +329,7 @@ begin
    if (FTag=nil)  then exit;
 
    if Supports(FTag, ITagNumeric) then
-      (FTag as ITagNumeric).Value:=Value;
+      HMIWriteTagNumber(Self, FTag, Value);
 end;
 
 procedure THMIScrollBar.WriteFaultCallBack(Sender: TObject);

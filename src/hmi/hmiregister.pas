@@ -15,7 +15,8 @@ unit hmiregister;
 
 interface
 
-uses hmifaceplatecontainer, HMIEventLogger, HMIAlarmLogger, HMIS7PlusAlarmLogger;
+uses hmifaceplatecontainer, HMIEventLogger, HMIAlarmLogger, HMIS7PlusAlarmLogger,
+     hmilogmemo;
 
 procedure Register;
 
@@ -37,7 +38,7 @@ uses
   hmi_polyline, hmicolorpropertyconnector, HMITransparentButton, HMIButton,
   HMI_Draw_Valves, HMIBasicEletricMotor, hmi_draw_flow_valve,
   hmi_draw_flow_pump, hmi_draw_basic_vector_control, HMIBandeja,
-  CentralUserManagement, TagLinkedSeriesSource,
+  CentralUserManagement, TagLinkedSeriesSource, HMIRecipe, HMIRecipeButton, HMIRecipeActions,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -84,6 +85,15 @@ begin
   //retroalimentacao (FeedbackTag)
   //the two-state button with images and feedback
   RegisterComponents(strControlsPallete,  [THMIButton]);
+  //os botoes de comando da biblioteca de receitas (nova, apagar, salvar,
+  //enviar e receber)
+  //the recipe library command buttons (add, delete, save, download, upload)
+  RegisterComponents(strControlsPallete,  [THMIRecipeButton]);
+  {$IFDEF FPC}
+  //a tabela de receitas (biblioteca em disco + download/upload para o CLP)
+  //the recipe table (library on disk + download/upload to the PLC)
+  RegisterComponents(strControlsPallete,  [THMIRecipeGrid]);
+  {$ENDIF}
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   RegisterComponents(strControlsPallete,  [THMIComboBox]);
   RegisterComponents(strControlsPallete,  [THMIKeyboardManager]);
@@ -114,6 +124,10 @@ begin
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   RegisterComponents(strUserManagement,   [TWinCCUserManagement]);
   {$IFEND}
+  //destino de tela do TpSCADALogger (registrado no pacote dsng)
+  //screen target of TpSCADALogger (registered by the dsng package)
+  RegisterComponents(strUtilsPallete,     [TpSCADALogMemo]);
+
   RegisterComponents(strUserManagement,   [TCustomizedUserManagement,
                                            TCentralUserManagement
                                           ]);
@@ -176,6 +190,15 @@ begin
                                      TPascalSCADALogin_LogoutAction,
                                      TPascalSCADAManageUsersAction,
                                      TPascalSCADASecureAction],nil);
+  {$IFDEF FPC}
+  //os comandos da biblioteca de receitas (os mesmos do THMIRecipeButton)
+  //the recipe library commands (the same ones as THMIRecipeButton)
+  RegisterActions(strRecipeActions, [TPascalSCADAAddRecipeAction,
+                                     TPascalSCADADeleteRecipeAction,
+                                     TPascalSCADASaveRecipeLibraryAction,
+                                     TPascalSCADADownloadRecipeAction,
+                                     TPascalSCADAUploadRecipeAction],nil);
+  {$ENDIF}
 
   //////////////////////////////////////////////////////////////////////////////
   //Component editors

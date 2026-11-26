@@ -41,6 +41,8 @@ type
   {$ENDIF}
   TPLCNumber = class(TPLCTag)
   protected
+    //: The value, and the raw one when a scale processor changes it.
+    function GetLogValueText:AnsiString; override;
     //: @seealso(ITagInterface.GetValueAsText);
     function GetValueAsText(Prefix, Sufix, Format: UTF8String; FormatDateTimeOptions:TFormatDateTimeOptions=[]): UTF8String; virtual;
     //: @seealso(TTag.AsyncNotifyChange)    
@@ -262,6 +264,22 @@ type
 implementation
 
 uses tag, hsstrings;
+
+function TPLCNumber.GetLogValueText:AnsiString;
+var
+  v, r:Double;
+begin
+  try
+    r := GetValueRaw;
+    v := GetValue;
+    Result := FloatToStr(v);
+    if Assigned(PScaleProcessor) and (v<>r) then
+      Result := Result+' (raw '+FloatToStr(r)+')';
+  except
+    on E:Exception do
+      Result := '<'+E.Message+'>';
+  end;
+end;
 
 constructor TPLCNumber.Create(AOwner: TComponent);
 begin

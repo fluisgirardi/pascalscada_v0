@@ -1173,6 +1173,16 @@ var
   tr:TTagRec;
 begin
   tr := tagrec;
+  SetLength(Values,0);
+
+  // Modbus unit id 0 is not a valid single-slave address. Reject it on every
+  // I/O path so a misconfigured station is reported instead of silently
+  // producing a one-way (write-only) communication.
+  if not (tr.Station in [1..255]) then begin
+    Result := ioIllegalStationAddress;
+    exit;
+  end;
+
   NormalizeTagRec(tr);
   Result := ReadTagRec(tr,Values);
 end;
@@ -1182,6 +1192,13 @@ var
   tr:TTagRec;
 begin
   tr := tagrec;
+
+  // See DoRead: keep read and write validation identical.
+  if not (tr.Station in [1..255]) then begin
+    Result := ioIllegalStationAddress;
+    exit;
+  end;
+
   NormalizeTagRec(tr);
   Result := WriteTagRec(tr,Values);
 end;

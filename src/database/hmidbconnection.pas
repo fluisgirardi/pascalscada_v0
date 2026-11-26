@@ -439,7 +439,23 @@ const
 
 implementation
 
-uses StrUtils, hsutils;
+uses StrUtils, hsutils, pscadalog;
+
+//: The SQL in one line and not too long, for the log messages.
+function SQLForLog(const sql:String):String;
+const
+  MaxLen = 1000;
+begin
+  Result := Trim(StringReplace(StringReplace(sql, #13, ' ', [rfReplaceAll]), #10, ' ', [rfReplaceAll]));
+  if Length(Result)>MaxLen then
+    Result := Copy(Result, 1, MaxLen)+' ...';
+end;
+
+procedure LogDB(Sender:TObject; Level:TpSCADALogLevel; const Msg:String);
+begin
+  if PSLogWants(lcDatabase, Level) then
+    PSLog(Sender, lcDatabase, Level, Msg);
+end;
 
 //##############################################################################
 //THREAD DE EXECUÇÃO DOS COMANDOS SQL THMIDBCONNECTION
@@ -527,6 +543,7 @@ begin
           end;
         except
           on e:Exception do begin
+            Log(lcDatabase, llError, Format('SQL command raised %s: %s | %s', [e.ClassName, e.Message, SQLForLog(cmd^.SQLCmd)]));
             if not FErrorOnSync then begin
               ferror:=e;
               if Assigned(cmd^.ReturnDataSetCallback) then
@@ -564,9 +581,11 @@ begin
             on e:Exception do begin
               ferror:=e;
               fLineError:=s;
+              Log(lcDatabase, llWarning, Format('transaction rolled back at statement %d: %s', [s, e.Message]));
               exit;
             end;
           end;
+
         finally
           //Commit/Rollback podem levantar excecao se a conexao caiu; se
           //escapassem daqui a thread morreria e a fila nunca mais seria
@@ -576,15 +595,21 @@ begin
           //escaped from here the thread would die and the queue would never
           //be consumed again.
           try
-            if (err=false) and (ferror=nil) then
-              fCommitTransaction()
-            else
+            if (err=false) and (ferror=nil) then begin
+              fCommitTransaction();
+              Log(lcDatabase, llDebug, Format('transaction committed (%d statements)', [statements^.statements.Count]));
+            end else begin
               fRollbackTransaction();
+              //an exception was already posted where it happened
+              if ferror=nil then
+                Log(lcDatabase, llWarning, Format('transaction rolled back: statement %d of %d failed', [s, statements^.statements.Count]));
+            end;
           except
             on e:Exception do begin
               err:=true;
               if ferror=nil then
                 ferror:=e;
+              Log(lcDatabase, llError, 'commit/rollback failed: '+e.Message);
               {$IFNDEF WINDOWS}
               writeln('Commit/Rollback exception: ', e.Message);
               {$ENDIF}
@@ -604,6 +629,7 @@ begin
             end;
           except
             on e:Exception do begin
+              Log(lcEvent, llError, 'exception in the transaction result callback: '+e.Message);
               {$IFNDEF WINDOWS}
               writeln('ReturnTransactionResult exception: ', e.Message);
               {$ENDIF}
@@ -719,6 +745,7 @@ begin
                                                @StartTransaction,
                                                @CommitTransaction,
                                                @RollBackTransaction);
+  FSQLSpooler.LogOwner:=Self;
   FSQLSpooler.WakeUp;
 end;
 
@@ -892,6 +919,7 @@ begin
         FTransaction.StartTransaction;
       except
         on e:Exception do begin
+          LogDB(Self, llError, 'start transaction failed: '+e.Message);
           {$IFNDEF WINDOWS}
           writeln('Start transaction exception: ', e.Message);
           {$ENDIF}
@@ -945,6 +973,7 @@ begin
 
       if FReadOnly then begin
         Error:=true;
+        LogDB(Self, llWarning, 'SQL refused (ReadOnly): '+SQLForLog(sqlcmd));
         exit;
       end;
 
@@ -995,9 +1024,14 @@ begin
 
         if weStartedTx then
           FTransaction.Commit;
+        if outputdataset=nil then
+          LogDB(Self, llDebug, 'SQL ok: '+SQLForLog(sqlcmd))
+        else
+          LogDB(Self, llDebug, Format('SQL ok (%d rows): %s', [outputdataset.RecordCount, SQLForLog(sqlcmd)]));
       except
         on e:Exception do begin
           msg:=e.Message;
+          LogDB(Self, llError, 'SQL failed: '+msg+' | '+SQLForLog(sqlcmd));
           {$IFNDEF WINDOWS}
           writeln(e.Message);
           WriteLn(sqlcmd);
@@ -1147,7 +1181,19 @@ begin
   end;
   FCS.Enter;
   try
-    FConnection.Connected:=x;
+    try
+      FConnection.Connected:=x;
+    except
+      on e:Exception do begin
+        LogDB(Self, llError, Format('%s failed (%s %s/%s): %s', [IfThen(x, 'connect', 'disconnect'),
+              FConnection.ConnectorType, FConnection.HostName, FConnection.DatabaseName, e.Message]));
+        raise;
+      end;
+    end;
+    if x then
+      LogDB(Self, llInfo, Format('connected (%s %s/%s)', [FConnection.ConnectorType, FConnection.HostName, FConnection.DatabaseName]))
+    else
+      LogDB(Self, llInfo, 'disconnected');
   finally
     FCS.Leave;
   end;

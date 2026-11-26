@@ -1,0 +1,293 @@
+object FormMain: TFormMain
+  Left = 250
+  Height = 680
+  Top = 80
+  Width = 1000
+  Caption = 'PascalSCADA - cliente OPC UA (TOPCUADriver)'
+  ClientHeight = 680
+  ClientWidth = 1000
+  OnClose = FormClose
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  object PanelTop: TPanel
+    Left = 0
+    Height = 80
+    Top = 0
+    Width = 1000
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 80
+    ClientWidth = 1000
+    TabOrder = 0
+    object LabelUrl: TLabel
+      Left = 8
+      Height = 17
+      Top = 12
+      Width = 60
+      Caption = 'Endpoint:'
+    end
+    object EditUrl: TEdit
+      Left = 72
+      Height = 29
+      Top = 6
+      Width = 270
+      TabOrder = 0
+      Text = 'opc.tcp://192.168.56.2:4840'
+    end
+    object LabelUser: TLabel
+      Left = 352
+      Height = 17
+      Top = 12
+      Width = 52
+      Caption = 'Usuario:'
+    end
+    object EditUser: TEdit
+      Left = 408
+      Height = 29
+      Top = 6
+      Width = 110
+      TabOrder = 1
+    end
+    object LabelPassword: TLabel
+      Left = 528
+      Height = 17
+      Top = 12
+      Width = 42
+      Caption = 'Senha:'
+    end
+    object EditPassword: TEdit
+      Left = 576
+      Height = 29
+      Top = 6
+      Width = 110
+      EchoMode = emPassword
+      PasswordChar = '*'
+      TabOrder = 2
+    end
+    object LabelSecurity: TLabel
+      Left = 696
+      Height = 17
+      Top = 12
+      Width = 66
+      Caption = 'Seguranca:'
+    end
+    object ComboSecurity: TComboBox
+      Left = 768
+      Height = 29
+      Top = 6
+      Width = 150
+      ItemHeight = 0
+      ItemIndex = 0
+      Items.Strings = (
+        'None'
+        'Sign'
+        'SignAndEncrypt'
+      )
+      Style = csDropDownList
+      TabOrder = 3
+      Text = 'None'
+    end
+    object LabelScan: TLabel
+      Left = 8
+      Height = 17
+      Top = 50
+      Width = 60
+      Caption = 'Scan (ms):'
+    end
+    object EditScan: TEdit
+      Left = 72
+      Height = 29
+      Top = 44
+      Width = 60
+      TabOrder = 4
+      Text = '500'
+    end
+    object ButtonConnect: TButton
+      Left = 144
+      Height = 29
+      Top = 44
+      Width = 140
+      Caption = 'Conectar e listar'
+      OnClick = ButtonConnectClick
+      TabOrder = 5
+    end
+    object ButtonTestServer: TButton
+      Left = 292
+      Height = 29
+      Top = 44
+      Width = 130
+      Caption = 'Servidor de teste'
+      OnClick = ButtonTestServerClick
+      TabOrder = 6
+    end
+    object LabelStatus: TLabel
+      Left = 436
+      Height = 17
+      Top = 50
+      Width = 70
+      Caption = 'Sem driver'
+    end
+  end
+  object PanelVars: TPanel
+    Left = 0
+    Height = 470
+    Top = 80
+    Width = 480
+    Align = alLeft
+    BevelOuter = bvNone
+    ClientHeight = 470
+    ClientWidth = 480
+    TabOrder = 1
+    object LabelVars: TLabel
+      Left = 0
+      Height = 17
+      Top = 0
+      Width = 480
+      Align = alTop
+      BorderSpacing.Left = 4
+      Caption = 'Variaveis do servidor (duplo clique monitora)'
+    end
+    object GridVars: TStringGrid
+      Left = 0
+      Height = 418
+      Top = 17
+      Width = 480
+      Align = alClient
+      ColCount = 4
+      DefaultColWidth = 90
+      FixedCols = 0
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect, goThumbTracking]
+      RowCount = 1
+      TabOrder = 0
+      OnDblClick = ButtonMonitorClick
+      ColWidths = (
+        120
+        80
+        80
+        360
+      )
+    end
+    object ButtonMonitor: TButton
+      Left = 0
+      Height = 35
+      Top = 435
+      Width = 480
+      Align = alBottom
+      Caption = 'Monitorar >>'
+      OnClick = ButtonMonitorClick
+      TabOrder = 1
+    end
+  end
+  object Splitter1: TSplitter
+    Left = 480
+    Height = 470
+    Top = 80
+    Width = 5
+  end
+  object PanelTags: TPanel
+    Left = 485
+    Height = 470
+    Top = 80
+    Width = 515
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 470
+    ClientWidth = 515
+    TabOrder = 2
+    object LabelTags: TLabel
+      Left = 0
+      Height = 17
+      Top = 0
+      Width = 515
+      Align = alTop
+      BorderSpacing.Left = 4
+      Caption = 'Tags monitorados'
+    end
+    object GridTags: TStringGrid
+      Left = 0
+      Height = 418
+      Top = 17
+      Width = 515
+      Align = alClient
+      ColCount = 4
+      FixedCols = 0
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goRowSelect, goThumbTracking]
+      RowCount = 1
+      TabOrder = 0
+      ColWidths = (
+        120
+        190
+        90
+        100
+      )
+    end
+    object PanelWrite: TPanel
+      Left = 0
+      Height = 35
+      Top = 435
+      Width = 515
+      Align = alBottom
+      BevelOuter = bvNone
+      ClientHeight = 35
+      ClientWidth = 515
+      TabOrder = 1
+      object LabelWrite: TLabel
+        Left = 4
+        Height = 17
+        Top = 10
+        Width = 40
+        Caption = 'Valor:'
+      end
+      object EditWrite: TEdit
+        Left = 48
+        Height = 29
+        Top = 3
+        Width = 220
+        TabOrder = 0
+      end
+      object ButtonWrite: TButton
+        Left = 276
+        Height = 29
+        Top = 3
+        Width = 90
+        Caption = 'Gravar'
+        OnClick = ButtonWriteClick
+        TabOrder = 1
+      end
+      object ButtonRemove: TButton
+        Left = 372
+        Height = 29
+        Top = 3
+        Width = 90
+        Caption = 'Remover'
+        OnClick = ButtonRemoveClick
+        TabOrder = 2
+      end
+    end
+  end
+  object Splitter2: TSplitter
+    Cursor = crVSplit
+    Left = 0
+    Height = 5
+    Top = 550
+    Width = 1000
+    Align = alBottom
+    ResizeAnchor = akBottom
+  end
+  object MemoLog: TMemo
+    Left = 0
+    Height = 125
+    Top = 555
+    Width = 1000
+    Align = alBottom
+    ReadOnly = True
+    ScrollBars = ssAutoBoth
+    TabOrder = 3
+  end
+  object Timer: TTimer
+    Interval = 250
+    OnTimer = TimerTimer
+    Left = 900
+    Top = 40
+  end
+end

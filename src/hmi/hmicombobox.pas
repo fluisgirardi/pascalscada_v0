@@ -308,7 +308,7 @@ procedure THMIComboBox.Select;
 begin
   if (FTag<>nil) and Supports(FTag, ITagNumeric) then begin
     if SendValue then begin
-      (FTag as ITagNumeric).Value:=GetItemValue;
+      HMIWriteTagNumber(Self, FTag, GetItemValue);
       AfterSendValue;
     end else
       TagChangeCallBack(Self);

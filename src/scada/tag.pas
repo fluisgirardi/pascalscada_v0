@@ -664,6 +664,20 @@ type
     {$ENDIF}
     procedure NotifyChange;
 
+    {$IFDEF PORTUGUES}
+    //: Valor do tag como texto, nas mensagens de log de mudanca de valor. Vazio na classe base.
+    {$ELSE}
+    //: The tag value as text, in the value change log messages. Empty in the base class.
+    {$ENDIF}
+    function GetLogValueText:AnsiString; virtual;
+
+    {$IFDEF PORTUGUES}
+    //: Publica que um evento do tag vai ser disparado (lcEvent, llTrace).
+    {$ELSE}
+    //: Posts that an event of the tag is about to be fired (lcEvent, llTrace).
+    {$ENDIF}
+    procedure LogEvent(const EventName:String);
+
 
     {$IFDEF PORTUGUES}
     //: Incrementa o contador de leituras com sucesso.
@@ -956,7 +970,7 @@ type
 
 implementation
 
-uses syncobjs, TypInfo;
+uses syncobjs, TypInfo, pscadalog;
 
 function TagSizeInBits(const TagType: TTagType; const pttDefaultSize: Integer
   ): Integer;
@@ -1231,16 +1245,38 @@ begin
   NotifyChange;
 end;
 
+function TTag.GetLogValueText:AnsiString;
+begin
+  Result := '';
+end;
+
+procedure TTag.LogEvent(const EventName:String);
+begin
+  if PSLogWants(lcEvent, llTrace) then
+    PSLog(Self, lcEvent, llTrace, EventName);
+end;
+
 procedure TTag.NotifyChange;
 var
   c:LongInt;
+  v:String;
 begin
+  if PSLogWants(lcTag, llTrace) then begin
+    v := GetLogValueText;
+    if v<>'' then
+      PSLog(Self, lcTag, llTrace, 'value changed: '+v)
+    else
+      PSLog(Self, lcTag, llTrace, 'value changed');
+  end;
+
   //notifica a mudanca antes de notificar os
   //demais controles.
   //
   // Notify the change before notify the dependent objects.
-  if Assigned(POnValueChangeFirst) then
+  if Assigned(POnValueChangeFirst) then begin
+    LogEvent('OnValueChangeFirst');
     POnValueChangeFirst(Self);
+  end;
 
   //notifica controles e objetos dependentes
   //
@@ -1252,8 +1288,10 @@ begin
   //notificação de mudanca após notificar os controles.
   //
   //Notify the change after notify the dependent objects.
-  if Assigned(POnValueChangeLast) then
+  if Assigned(POnValueChangeLast) then begin
+    LogEvent('OnValueChange');
     POnValueChangeLast(Self);
+  end;
 
   if Assigned(POnAsyncValueChange) and Assigned(FQueuedData) then begin
     FQueuedData.Add(GetValueChangeData);
@@ -1269,6 +1307,8 @@ begin
     FUserData:=FQueuedData.First;
     try
       FQueuedData.Remove(FUserData);
+      if Assigned(POnAsyncValueChange) then
+        LogEvent('OnAsyncValueChange');
       AsyncNotifyChange(Pointer(FUserData));
     finally
       ReleaseChangeData(Pointer(FUserData));
@@ -1298,8 +1338,10 @@ begin
   for c:=0 to high(FReadOKNotificationList) do
     FReadOKNotificationList[c](Self);
 
-  if Assigned(POnReadOk) then
+  if Assigned(POnReadOk) then begin
+    LogEvent('OnReadOk');
     POnReadOk(self)
+  end;
 end;
 
 procedure TTag.NotifyReadFault;
@@ -1309,15 +1351,19 @@ begin
   for c:=0 to high(FReadFaultNotificationList) do
     FReadFaultNotificationList[c](self);
 
-  if Assigned(POnReadFail) then
+  if Assigned(POnReadFail) then begin
+    LogEvent('OnReadFail');
     POnReadFail(self)
+  end;
 end;
 
 procedure TTag.NotifyUpdate;
 begin
   try
-    if Assigned(POnUpdate) then
+    if Assigned(POnUpdate) then begin
+      LogEvent('OnUpdate');
       POnUpdate(self)
+    end;
   finally
   end;
 end;
@@ -1329,8 +1375,10 @@ begin
   for c:=0 to high(FWriteOKNotificationList) do
     FWriteOKNotificationList[c](Self);
 
-  if Assigned(POnWriteOk) then
+  if Assigned(POnWriteOk) then begin
+    LogEvent('OnWriteOk');
     POnWriteOk(self)
+  end;
 end;
 
 procedure TTag.NotifyWriteFault;
@@ -1340,8 +1388,10 @@ begin
   for c:=0 to high(FWriteFaultNotificationList) do
     FWriteFaultNotificationList[c](Self);
 
-  if Assigned(POnWriteFail) then
+  if Assigned(POnWriteFail) then begin
+    LogEvent('OnWriteFail');
     POnWriteFail(self)
+  end;
 end;
 
 procedure TTag.IncCommReadOK(value:Cardinal);

@@ -45,10 +45,10 @@ unit lt.s7plus;
 interface
 
 uses
-  Classes, SysUtils, Math, fpcunit, testregistry,
+  Classes, SysUtils, Math, Types, fpcunit, testregistry,
   Tag, ProtocolTypes, PLCTagNumber, PLCString, PLCBlock, PLCBlockElement, PLCStruct, PLCStructElement, PLCStructString,
   PLCNumber, TagBit, tcp_udpport, S7PlusFamily, S7PlusConnection, S7PlusTypeInfo, S7PlusTypes, S7PlusTagPlan,
-  S7PlusBasket, S7PlusAlarms;
+  S7PlusBasket, S7PlusAlarms, S7PlusBlockHash;
 
 type
   { TLiveCase }
@@ -114,6 +114,18 @@ type
     procedure AWholeDBStructureWritesAnItem;
     procedure AnArrayElementTagWritesOnlyItsElement;
     procedure TheBitsOfABasketDBMatchTheBoolsReadByPath;
+  end;
+
+  { TTestLiveBlockHash }
+
+  //Reads the engineering attributes of a DB and computes the two SHA-1 TIA Portal writes on it (7949 and
+  //7951) to compare them with the ones the PLC reports: the check of the rules of S7PlusBlockHash.
+  TTestLiveBlockHash = class(TLiveCase)
+  private
+    function Describe(const Ids:TCardinalDynArray; const V:TS7PlusAttrValues):String;
+    function CheckDB(const ADb:String; ANumber:Integer):String;
+  published
+    procedure TheHashesOfTheDBsMatchThePLC;
   end;
 
   { TTestLiveReconnect }
@@ -1540,6 +1552,99 @@ begin
   end;
 end;
 
+//which attributes came and how: what is needed to find out why a hash does not match
+function TTestLiveBlockHash.Describe(const Ids:TCardinalDynArray; const V:TS7PlusAttrValues):String;
+const
+  Kinds:array[TS7PlusAttrKind] of String = ('none', 'number', 'text', 'blob', 'struct', 'list');
+var
+  i:Integer;
+begin
+  Result := '';
+  for i:=0 to High(V) do
+    if not V[i].Found then
+      Result := Result+LineEnding+Format('  %d: absent', [Ids[i]])
+    else
+      Result := Result+LineEnding+Format('  %d: %s, %d bytes, %d items, num %d, bytes %s',
+        [Ids[i], Kinds[V[i].Kind], Length(V[i].Bytes), Length(V[i].Items), V[i].Num,
+         Copy(S7PlusHex(V[i].Bytes), 1, 64)]);
+end;
+
+//'' when both hashes of the DB match what the PLC reports; otherwise what differs
+function TTestLiveBlockHash.CheckDB(const ADb:String; ANumber:Integer):String;
+var
+  Ids:TCardinalDynArray;
+  V:TS7PlusAttrValues;
+  Inp:TS7PlusBlockHashInput;
+  Plc7949, Plc7951, My7949, My7951:TBytes;
+  Info:String;
+begin
+  Result := '';
+  Ids := S7PlusBlockHashAttrIds;
+  if GDriver.ReadObjectAttributes(S7PlusIds_DBAccessAreaBase+Cardinal(ANumber), Ids, V)<>ioOk then begin
+    Result := ADb+' (DB'+IntToStr(ANumber)+'): the attributes could not be read';
+    exit;
+  end;
+  Info := Describe(Ids, V);
+  if not (V[S7PlusHashIdx_IfrHash].Found and (Length(V[S7PlusHashIdx_IfrHash].Bytes)=20)) then begin
+    Result := ADb+' (DB'+IntToStr(ANumber)+'): the PLC reports no 7949'+Info;
+    exit;
+  end;
+  Plc7949 := V[S7PlusHashIdx_IfrHash].Bytes;
+  Inp := S7PlusBlockHashInputFromAttrs(ADb, V, true);
+  My7949 := S7PlusBlockIfrHash(Inp);
+  if S7PlusHex(Plc7949)<>S7PlusHex(My7949) then
+    Result := Format('%s (DB%d): 7949 differs, PLC %s, computed %s%sstream %s%sattributes:%s',
+      [ADb, ANumber, S7PlusHex(Plc7949), S7PlusHex(My7949), LineEnding, S7PlusHex(S7PlusBlockIfrStream(Inp)),
+       LineEnding, Info]);
+
+  if V[S7PlusHashIdx_AlarmIfrHash].Found and (Length(V[S7PlusHashIdx_AlarmIfrHash].Bytes)=20) then begin
+    Plc7951 := V[S7PlusHashIdx_AlarmIfrHash].Bytes;
+    My7951 := S7PlusAlarmIfrHash(S7PlusDictOf(V[S7PlusHashIdx_AlarmDescription]),
+                                 S7PlusDictOf(V[S7PlusHashIdx_AlarmTexts]));
+    if S7PlusHex(Plc7951)<>S7PlusHex(My7951) then
+      Result := Result+Format('%s%s (DB%d): 7951 differs, PLC %s, computed %s', [LineEnding, ADb, ANumber,
+        S7PlusHex(Plc7951), S7PlusHex(My7951)]);
+  end else
+    Result := Result+LineEnding+ADb+' (DB'+IntToStr(ANumber)+'): the PLC reports no 7951';
+end;
+
+//one line to a file in the temp folder (the console runner swallows what a test writes)
+procedure DumpLine(const ALine:String);
+var
+  L:TStringList;
+begin
+  L := TStringList.Create;
+  try
+    L.Add(ALine);
+    L.SaveToFile(GetTempDir+'s7plus_block_hashes.txt');
+  finally
+    L.Free;
+  end;
+end;
+
+//every DB of the PLC (the first MaxDBs), so it also works with other programs than tests/plc
+procedure TTestLiveBlockHash.TheHashesOfTheDBsMatchThePLC;
+const
+  MaxDBs = 8;
+var
+  i, Checked:Integer;
+  R, Report, Names:String;
+begin
+  AssertTrue('the PLC has DBs', Length(GBlocks)>0);
+  Report := '';
+  Names := '';
+  Checked := 0;
+  for i:=0 to Min(High(GBlocks), MaxDBs-1) do begin
+    Names := Names+' '+GBlocks[i].Name;
+    R := CheckDB(GBlocks[i].Name, GBlocks[i].Number);
+    Inc(Checked);
+    if R<>'' then Report := Report+LineEnding+R;
+  end;
+  if GetEnvironmentVariable('S7PLUS_DEBUG')='1' then
+    DumpLine(Format('block hashes: %d DBs checked:%s; differences: %d', [Checked, Names, Length(Report)]));
+  AssertEquals(Format('hashes that differ from the PLC (%d DBs checked:%s)%s', [Checked, Names, Report]), '', Report);
+end;
+
 procedure TTestLiveTags.AnArrayElementTagWritesOnlyItsElement;
 var
   Blk:TPLCBlock;
@@ -1775,6 +1880,7 @@ initialization
   RegisterTest(TTestLiveReads);
   RegisterTest(TTestLiveWrites);
   RegisterTest(TTestLiveTags);
+  RegisterTest(TTestLiveBlockHash);
   RegisterTest(TTestLiveReconnect);
   RegisterTest(TTestLiveReadSomethingAlways);
   RegisterTest(TTestLiveZZRestore);

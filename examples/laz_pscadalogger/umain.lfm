@@ -1,0 +1,149 @@
+object FormMain: TFormMain
+  Left = 300
+  Height = 520
+  Top = 200
+  Width = 900
+  Caption = 'PascalSCADA logger demonstration'
+  ClientHeight = 520
+  ClientWidth = 900
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  Position = poScreenCenter
+  object PanelTop: TPanel
+    Left = 0
+    Height = 96
+    Top = 0
+    Width = 900
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 96
+    ClientWidth = 900
+    TabOrder = 0
+    object LabelMessage: TLabel
+      Left = 8
+      Height = 17
+      Top = 8
+      Width = 56
+      Caption = 'Message'
+    end
+    object EditMessage: TEdit
+      Left = 8
+      Height = 27
+      Top = 26
+      Width = 300
+      TabOrder = 0
+      Text = 'something happened'
+    end
+    object LabelLevel: TLabel
+      Left = 316
+      Height = 17
+      Top = 8
+      Width = 32
+      Caption = 'Level'
+    end
+    object ComboLevel: TComboBox
+      Left = 316
+      Height = 27
+      Top = 26
+      Width = 110
+      ItemHeight = 0
+      Style = csDropDownList
+      TabOrder = 1
+    end
+    object LabelCategory: TLabel
+      Left = 434
+      Height = 17
+      Top = 8
+      Width = 59
+      Caption = 'Category'
+    end
+    object ComboCategory: TComboBox
+      Left = 434
+      Height = 27
+      Top = 26
+      Width = 120
+      ItemHeight = 0
+      Style = csDropDownList
+      TabOrder = 2
+    end
+    object ButtonPost: TButton
+      Left = 562
+      Height = 27
+      Top = 26
+      Width = 70
+      Caption = 'Post'
+      Default = True
+      OnClick = ButtonPostClick
+      TabOrder = 3
+    end
+    object ButtonBurst: TButton
+      Left = 640
+      Height = 27
+      Top = 26
+      Width = 140
+      Caption = 'Burst (4 x 1000)'
+      OnClick = ButtonBurstClick
+      TabOrder = 4
+    end
+    object ButtonClear: TButton
+      Left = 788
+      Height = 27
+      Top = 26
+      Width = 100
+      Caption = 'Clear screen'
+      OnClick = ButtonClearClick
+      TabOrder = 5
+    end
+    object CheckActive: TCheckBox
+      Left = 8
+      Height = 23
+      Top = 62
+      Width = 120
+      Caption = 'Logger active'
+      OnChange = CheckActiveChange
+      TabOrder = 6
+    end
+    object LabelErrors: TLabel
+      Left = 140
+      Height = 17
+      Top = 64
+      Width = 56
+      Caption = 'Errors: 0'
+    end
+    object LabelFiles: TLabel
+      Left = 434
+      Height = 17
+      Top = 64
+      Width = 36
+      Caption = 'Files:'
+    end
+  end
+  object LogMemo: TpSCADALogMemo
+    Left = 0
+    Height = 424
+    Top = 96
+    Width = 900
+    MaxLines = 2000
+    Align = alClient
+    TabOrder = 1
+  end
+  object Logger: TpSCADALogger
+    Rules = <
+      item
+        Targets = [ltScreen]
+      end
+      item
+        MinLevel = llTrace
+        Targets = [ltFile]
+        FileName = 'logs/%category%-%date%.log'
+      end
+      item
+        MinLevel = llError
+        Targets = [ltEvent]
+      end>
+    Display = LogMemo
+    OnLog = LoggerLog
+    Left = 800
+    Top = 140
+  end
+end

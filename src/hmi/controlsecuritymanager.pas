@@ -184,9 +184,75 @@ type
 
   function GetControlSecurityManager:TControlSecurityManager;
 
+  {$IFDEF PORTUGUES}
+  {:
+  Escreve num tag numerico pelo controle e publica no log quem escreveu o que
+  (lcHMI, llInfo: controle como fonte, tag, valor e usuario logado). Uma
+  escrita recusada (ex.: fora dos limites) e' publicada como llWarning e a
+  excecao segue adiante.
+  }
+  {$ELSE}
+  {:
+  Writes to a numeric tag through the control and posts who wrote what
+  (lcHMI, llInfo: the control as source, the tag, the value and the logged
+  user). A refused write (e.g. out of bounds) is posted as llWarning and the
+  exception goes on.
+  }
+  {$ENDIF}
+  procedure HMIWriteTagNumber(Control, Tag:TComponent; Value:Double);
+  //: The same, for a text tag.
+  procedure HMIWriteTagString(Control, Tag:TComponent; const Value:UTF8String);
+
 implementation
 
-uses hsstrings, Dialogs;
+uses hsstrings, Dialogs, ProtocolTypes, pscadalog;
+
+function UserForLog:String;
+begin
+  Result := GetControlSecurityManager.GetCurrentUserlogin;
+  if Result='' then
+    Result := 'no user logged in'
+  else
+    Result := 'user '+Result;
+end;
+
+procedure LogHMIWrite(Control, Tag:TComponent; const ValueText:String; E:Exception);
+begin
+  if E=nil then begin
+    if PSLogWants(lcHMI, llInfo) then
+      PSLog(Control, lcHMI, llInfo, Format('wrote %s to %s (%s)',
+            [ValueText, PSLogSourceName(Tag), UserForLog]));
+  end else
+    if PSLogWants(lcHMI, llWarning) then
+      PSLog(Control, lcHMI, llWarning, Format('write of %s to %s refused (%s): %s',
+            [ValueText, PSLogSourceName(Tag), UserForLog, E.Message]));
+end;
+
+procedure HMIWriteTagNumber(Control, Tag:TComponent; Value:Double);
+begin
+  try
+    (Tag as ITagNumeric).Value := Value;
+  except
+    on E:Exception do begin
+      LogHMIWrite(Control, Tag, FloatToStr(Value), E);
+      raise;
+    end;
+  end;
+  LogHMIWrite(Control, Tag, FloatToStr(Value), nil);
+end;
+
+procedure HMIWriteTagString(Control, Tag:TComponent; const Value:UTF8String);
+begin
+  try
+    (Tag as ITagString).Value := Value;
+  except
+    on E:Exception do begin
+      LogHMIWrite(Control, Tag, '"'+Value+'"', E);
+      raise;
+    end;
+  end;
+  LogHMIWrite(Control, Tag, '"'+Value+'"', nil);
+end;
 
 { TPascalSCADACheckSpecialTokenAction }
 
@@ -602,6 +668,15 @@ begin
     {$ENDIF}
   end;
   FEnabled:=true;
+  //sem codigo de seguranca o acesso e' livre: a flag nascia falsa, e a action
+  //criada em tempo de execucao (sem .lfm, sem Loaded) ficava "sem acesso" ate'
+  //alguem mexer em SecurityCode - e o UpdateTarget da TPascalSCADASecureAction
+  //a desabilitava.
+  //without a security code access is free: the flag was born false, and an
+  //action created at runtime (no .lfm, no Loaded) stayed "without access"
+  //until someone touched SecurityCode - and the UpdateTarget of
+  //TPascalSCADASecureAction disabled it.
+  FAccessAllowed:=true;
   FDisableIfNotAuthorized:=true;
 end;
 

@@ -891,7 +891,37 @@ var
 
 implementation
 
-uses dateutils, PLCTag, hsstrings, math, pascalScadaMTPCPU;
+uses dateutils, PLCTag, hsstrings, math, pascalScadaMTPCPU, pscadalog;
+
+{$IFDEF PORTUGUES}
+//: Publica um pedido de escrita (lcTag, llDebug) com o tag como fonte e os valores.
+{$ELSE}
+//: Posts a write request (lcTag, llDebug) with the tag as the source and the values.
+{$ENDIF}
+procedure LogWriteRequest(Driver:TObject; const tagrec:TTagRec; const Values:TArrayOfDouble;
+                          const Kind:String);
+const
+  MaxShown = 8;
+var
+  src:TObject;
+  s:String;
+  i:Integer;
+begin
+  if not PSLogWants(lcTag, llDebug) then exit;
+  //the callback is a method of the tag that asked
+  if Assigned(tagrec.CallBack) then
+    src := TObject(TMethod(tagrec.CallBack).Data)
+  else
+    src := Driver;
+  s := '';
+  for i:=0 to Min(High(Values), MaxShown-1) do begin
+    if i>0 then s := s+', ';
+    s := s+FloatToStr(Values[i]);
+  end;
+  if Length(Values)>MaxShown then
+    s := s+Format(', ... (%d values)', [Length(Values)]);
+  PSLog(src, lcTag, llDebug, Format('%s write requested: [%s]', [Kind, s]));
+end;
 
 const
   //The longest, in ms, the update thread waits for the driver to read a tag whose time has come
@@ -931,6 +961,7 @@ begin
   {$IFNDEF WINCE}
   PScanUpdateThread.Priority:=tpHighest;
   {$ENDIF}
+  PScanUpdateThread.LogOwner       := Self;
   PScanUpdateThread.OnGetValue     := @SafeGetValue;
   PScanUpdateThread.OnScanTags     := @GetMultipleValues;
 
@@ -938,6 +969,7 @@ begin
   {$IFNDEF WINCE}
   PScanReadThread.Priority:=tpTimeCritical;
   {$ENDIF}
+  PScanReadThread.LogOwner           := Self;
   PScanReadThread.OnDoScanRead       := @SafeScanRead;
   PScanReadThread.OnDoScanWrite      := @SafeScanWrite;
   PScanReadThread.OnDoScanMultiWrite := @SafeScanMultiWrite;
@@ -1255,6 +1287,7 @@ function TProtocolDriver.ScanWrite(const tagrec:TTagRec; const Values:TArrayOfDo
 var
    pkg:PScanReqRec;
 begin
+  LogWriteRequest(Self, tagrec, Values, 'scan');
   //read only protocol.
   if GetIsReadOnly then begin
     //o callback e' opcional em toda a API: testar antes de chamar, como faz o
@@ -1344,6 +1377,7 @@ procedure TProtocolDriver.Write(const tagrec:TTagRec; const Values:TArrayOfDoubl
 var
   res:TProtocolIOResult;
 begin
+  LogWriteRequest(Self, tagrec, Values, 'sync');
   if GetIsReadOnly then begin
     //vide ScanWrite: callback opcional, testar antes de chamar.
     //see ScanWrite: the callback is optional, test before calling it.
@@ -1384,6 +1418,8 @@ var
   i:LongInt;
 begin
   if Length(Writes)=0 then exit;
+  for i:=0 to High(Writes) do
+    LogWriteRequest(Self, Writes[i].Tag, Writes[i].Values, 'sync (multiple)');
 
   if GetIsReadOnly then begin
     for i:=0 to High(Writes) do begin
@@ -1424,6 +1460,8 @@ var
 begin
   Result := 0;
   if Length(Writes)=0 then exit;
+  for i:=0 to High(Writes) do
+    LogWriteRequest(Self, Writes[i].Tag, Writes[i].Values, 'scan (multiple)');
 
   //read only protocol.
   if GetIsReadOnly then begin
@@ -1694,8 +1732,9 @@ begin
     PPortWasInError := PortError;
 
     for t:=0 to TagCount-1 do begin
-      if Supports(Tag[t], IScanableTagInterface) then begin
-        tagiface:=Tag[t] as IScanableTagInterface;
+      //Supports with the out parameter, not "as": the cast goes through a hidden temporary
+      //that holds the tag too and is only released in the epilogue, after the lock (see below)
+      if Supports(Tag[t], IScanableTagInterface, tagiface) then begin
         if tagiface.IsValidTag then begin
 
           if PReadSomethingAlways then
@@ -1779,6 +1818,12 @@ begin
     end;
 
   finally
+    //The last tag's interface must go before the lock does: once FReadCS is free, RemoveTag
+    //may let the tag be destroyed (the 50 ms below gave it all the time it needed), and the
+    //_Release of the function's epilogue then ran on a freed object - an access violation
+    //that also skipped the finalization of ScanReadRec (24 bytes leaked) and was swallowed
+    //by the update loop (ut.scanlog ATagDestroyedWhileTheDriverWaitsIsNotTouchedAfterwards).
+    tagiface:=nil;
     FReadCS.Leave;
     FPause.SetEvent;
     if (ErrorStatus in [ioNullCommPort, ioCommPortClosed]) or (IntTagCount<=0) then

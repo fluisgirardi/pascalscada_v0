@@ -1,0 +1,2174 @@
+{$i ../src/common/language.inc}
+{$IFDEF PORTUGUES}
+{:
+  @abstract(Testes do TOPCUAServer: os tags da aplicacao lidos por um cliente OPC UA.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Um cliente open62541 no mesmo processo le as variaveis publicadas: o tipo
+  nativo de cada tag, o valor, a qualidade (status da leitura do tag), as
+  pastas e o ciclo de vida (item adicionado/removido, tag destruido).
+}
+{$ELSE}
+{:
+  @abstract(TOPCUAServer tests: the application tags read by an OPC UA client.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  An open62541 client in the same process reads the published variables: the
+  native type of each tag, the value, the quality (status of the tag's read),
+  the folders and the life cycle (item added/removed, tag destroyed).
+}
+{$ENDIF}
+unit ut.opcuaserver;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, Math, fpcunit, testregistry,
+  open62541, Tag, PLCTag, PLCTagNumber, PLCBlock, PLCString, TagBit, LinearScaleProcessor,
+  PLCStruct, PLCStructElement, PLCStructString,
+  OPCUAClient, OPCUAValues, opcuaserver, testsupport.opcuaserver, testsupport.fakeserver, ut.scanlog;
+
+type
+
+  //: A notification of a monitored item.
+  TDataChange = record
+    Status:UA_StatusCode;
+    Num:Double;
+    HasSourceTime:Boolean;
+  end;
+
+  { TChangeLog: what the subscription of one variable received }
+
+  TChangeLog = class
+  public
+    Changes:array of TDataChange;
+    Count:Integer;
+    procedure Add(const D:TDataChange);
+    function  IndexOfNum(V:Double; From:Integer = 0):Integer;
+    function  IndexOfStatus(St:UA_StatusCode; From:Integer = 0):Integer;
+    function  IndexOfBad(From:Integer = 0):Integer;
+  end;
+
+  { TClientWriter: writes from its own client and thread (the write ends in the main thread) }
+
+  TClientWriter = class(TThread)
+  protected
+    procedure Execute; override;
+    function  WriteRange(c:PUA_Client; const v:UA_Variant):UA_StatusCode;
+  public
+    Url, Id:AnsiString;
+    Ns:Word;
+    TypeIndex:Integer;
+    Num:Double;
+    Text:UTF8String;
+    Values:TArrayOfDouble;   //array writes (with Range: an index range)
+    Range:AnsiString;
+    User, Password:AnsiString;
+    CertDir:String;          //not empty: a secure (SignAndEncrypt) TOPCUAClient keeping its certificate here
+    ConnectStatus:UA_StatusCode;
+    Status:UA_StatusCode;
+    Elapsed:QWord;
+    constructor Create(const AUrl:AnsiString; ANs:Word; const AId:AnsiString; ATypeIndex:Integer;
+                       ANum:Double; const AText:UTF8String = ''; const AValues:TArrayOfDouble = nil;
+                       const ARange:AnsiString = ''; const AUser:AnsiString = ''; const APassword:AnsiString = '';
+                       const ACertDir:String = '');
+  end;
+
+  { TTestOPCUAServer }
+
+  TTestOPCUAServer = class(TTestCase)
+  private
+    FOwner:TComponent;
+    FServer:TOPCUAServer;
+    FClient:PUA_Client;
+    FFPU:TFPUExceptionMask;
+    FUsersSeen:TStringList;
+    FSecClient:TOPCUAClient;
+    FChangeLogs:TList;
+    function  Subscribe(const Id:String):TChangeLog;
+    function  WaitChange(Log:TChangeLog; out Index:Integer; Kind:Integer; V:Double; St:UA_StatusCode;
+                         From:Integer = 0; Ms:Integer = 3000):Boolean;
+    function  WaitNumChange(Log:TChangeLog; V:Double; From:Integer = 0):Integer;
+    function  Browser:TOPCUAClient;
+    function  Child(const Parent, Name:String; out Item:TOPCUABrowseItem):Boolean;
+    function  ChildNames(const Parent:String):String;
+    function  Endpoint(out AppUri, AppName:String):UA_StatusCode;
+    function  NewTag(const AName:String; TT:TTagType):TPLCTagNumber;
+    function  Publish(ATag:TPLCTag; const AFolder:String = ''; const ANodeName:String = ''):TOPCUAServerItem;
+    procedure Start;
+    procedure Connect;
+    function  Read(const Id:String; out TypeIndex:Integer; out Num:Double; out Text:String):UA_StatusCode;
+    function  ReadNum(const Id:String):Double;
+    function  StatusOf(const Id:String):UA_StatusCode;
+    function  WaitStatus(const Id:String; St:UA_StatusCode; Ms:Integer = 3000):Boolean;
+    function  WaitNum(const Id:String; V:Double; Ms:Integer = 3000):Boolean;
+    procedure CheckType(const Id:String; Expected:Integer);
+    function  StartWriter(const Id:String; TypeIndex:Integer; Num:Double; const Text:UTF8String = ''):TClientWriter;
+    function  Finish(W:TClientWriter; Ms:Integer = 5000):UA_StatusCode;
+    function  WriteNode(const Id:String; TypeIndex:Integer; Num:Double; const Text:UTF8String = ''):UA_StatusCode;
+    function  NewDriverTag(const AName:String; TT:TTagType; out D:TLogTestDriver):TPLCTagNumber;
+    function  ReadArray(const Id, Range:String; out TypeIndex:Integer; out Vals:TArrayOfDouble):UA_StatusCode;
+    function  NewBlock(const AName:String; TT:TTagType; Size:Integer):TPLCBlock;
+    procedure CheckUserEvent(Sender:TObject; const User, Password:String; var Accepted:Boolean);
+    procedure CanWriteEvent(Sender:TObject; Item:TOPCUAServerItem; const User:String; var Allowed:Boolean);
+    function  ConnectAs(const User, Password:AnsiString):UA_StatusCode;
+    function  ConnectPlain:UA_StatusCode;
+    function  WriteAs(const Id:String; TypeIndex:Integer; Num:Double; const User, Password:AnsiString;
+                      out ConnectStatus:UA_StatusCode):UA_StatusCode;
+    function  TempDir(const Suffix:String):String;
+    procedure Secure;
+    function  NewStruct(out S:TPLCStruct; out W:TPLCStructItem; out F:TPLCStructItem; out Txt:TPLCStructString):TOPCUAServerItem;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure EachTagTypeBecomesItsNativeType;
+    procedure ADefaultTypeWithoutDriverIsDouble;
+    procedure ADefaultTypeFollowsTheDriverWordSize;
+    procedure ASingleBitIsBooleanAndABitRangeUnsigned;
+    procedure AStringTagIsAString;
+    procedure ScaledDoublePublishesTheEngineeringValue;
+    procedure FoldersAndNodeNamesMakeTheNodeId;
+    procedure AValueChangeReachesTheClient;
+    procedure TheReadStatusOfTheTagIsTheQuality;
+    procedure AnItemAddedWhileRunningIsPublished;
+    procedure ARemovedItemDisappears;
+    procedure ADestroyedTagDisappears;
+    procedure ANotWritableVariableRefusesWrites;
+    procedure AnItemThatCannotBeAddedIsReportedAndTheOthersPublished;
+    procedure APortInUseDoesNotStart;
+    procedure ItStopsAndStartsAgain;
+
+    //writes (P3)
+    procedure AWriteToAMemoryTagIsGood;
+    procedure AWriteReachesTheDeviceAndTheClientWaitsForIt;
+    procedure ADeviceFailureReachesTheClient;
+    procedure ATypeMismatchIsRefused;
+    procedure AValueOutOfTheTagLimitsIsRefusedWithoutWriting;
+    procedure ScaledDoubleWritesTheRawValue;
+    procedure ASingleBitIsWrittenIntoItsWord;
+    procedure ABitRangeIsWrittenIntoItsWord;
+    procedure AStringIsWritten;
+    procedure TheServerAnswersOthersWhileAWriteIsPending;
+    procedure ARemovedItemEndsItsPendingWrite;
+    procedure TheWrittenValueIsReadBackAtOnce;
+
+    //blocks and structures (P4)
+    procedure ABlockIsAnArrayOfItsType;
+    procedure AnIndexRangeReadsPartOfTheArray;
+    procedure AWholeArrayIsWritten;
+    procedure AnIndexRangeWritesPartOfTheArray;
+    procedure AStructureIsAnObjectWithItsItems;
+    procedure AStructItemIsWrittenWithItsOwnType;
+    procedure AStringInsideAStructureIsWritten;
+    procedure RemovingTheStructureRemovesItsItems;
+
+    //security (P5)
+    procedure UsersWithoutSecurityDoNotStart;
+    procedure AnonymousCanBeRefused;
+    procedure AUserOfTheListLogsIn;
+    procedure OnCheckUserDecidesTheLogin;
+    procedure OnCanWriteGetsTheUserOfTheSession;
+    procedure SecureEndpointsUseAKeptCertificate;
+    procedure SecureOnlyRefusesAnInsecureConnection;
+    procedure ASlowDeviceWriteTimesOut;
+
+    //subscriptions (monitored items: how most clients read)
+    procedure ASubscriptionReceivesTheValueChanges;
+    procedure ASubscriptionReceivesTheQualityChanges;
+    procedure AWriteOfAClientReachesTheSubscribers;
+    procedure ARemovedItemEndsItsMonitoredItem;
+    procedure ManyVariablesAreMonitoredTogether;
+
+    //browsing
+    procedure TheTagsAreFoundBrowsingFromObjects;
+    procedure TheVariablesTellTheirTypeAndAccess;
+    procedure AStructureIsBrowsedWithItsItems;
+    procedure ARemovedItemIsNotBrowsedAnymore;
+
+    //identity of the server
+    procedure TheServerReportsItsApplicationIdentity;
+    procedure TheCertificateFollowsTheApplicationUri;
+  end;
+
+implementation
+
+uses
+  {$IFDEF UNIX}BaseUnix,{$ENDIF}{$IFDEF WINDOWS}WinSock2,{$ENDIF} Sockets;
+
+const
+  TIMEOUT = 3000;
+
+{$IFDEF UNIX}
+{$IF NOT DECLARED(IPV6_V6ONLY)}
+//the Sockets unit declares it on Linux only (26 there); the BSDs and macOS use 27
+const
+  IPV6_V6ONLY = {$IFDEF LINUX}26{$ELSE}27{$ENDIF};
+{$IFEND}
+
+//An ordinary IPv6 listener on the port (open62541 listens on IPv4 and IPv6).
+function ListenIPv6(Port:Word):LongInt;
+var
+  addr:TInetSockAddr6;
+  one:LongInt;
+begin
+  Result := fpSocket(AF_INET6, SOCK_STREAM, 0);
+  if Result<0 then exit;
+  one := 1;
+  fpSetSockOpt(Result, IPPROTO_IPV6, IPV6_V6ONLY, @one, SizeOf(one));
+  FillChar(addr, SizeOf(addr), 0);
+  addr.sin6_family := AF_INET6;
+  addr.sin6_port := htons(Port);
+  if (fpBind(Result, @addr, SizeOf(addr))<>0) or (fpListen(Result, 1)<>0) then begin
+    CloseSocket(Result);
+    Result := -1;
+  end;
+end;
+{$ENDIF}
+
+{$IFDEF WINDOWS}
+const
+  //winsock2.h: ~SO_REUSEADDR. A port bound with it can not be taken by a socket with
+  //SO_REUSEADDR, which is what open62541 sets on Windows (and which takes a port in use)
+  SO_EXCLUSIVEADDRUSE = LongInt(not 4);
+{$IF NOT DECLARED(IPPROTO_IPV6)}
+  IPPROTO_IPV6 = 41;
+{$IFEND}
+{$IF NOT DECLARED(IPV6_V6ONLY)}
+  IPV6_V6ONLY = 27; //ws2ipdef.h
+{$IFEND}
+
+//A listener on the port that nobody else can share (Family AF_INET or AF_INET6).
+function ListenExclusive(Family:LongInt; Port:Word):LongInt;
+var
+  a4:TInetSockAddr;
+  a6:TInetSockAddr6;
+  one:LongInt;
+  r:LongInt;
+begin
+  Result := fpSocket(Family, SOCK_STREAM, 0);
+  if Result<0 then exit;
+  one := 1;
+  fpSetSockOpt(Result, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, @one, SizeOf(one));
+  if Family=AF_INET6 then begin
+    fpSetSockOpt(Result, IPPROTO_IPV6, IPV6_V6ONLY, @one, SizeOf(one));
+    FillChar(a6, SizeOf(a6), 0);
+    a6.sin6_family := AF_INET6;
+    a6.sin6_port := htons(Port);
+    r := fpBind(Result, @a6, SizeOf(a6));
+  end else begin
+    FillChar(a4, SizeOf(a4), 0);
+    a4.sin_family := AF_INET;
+    a4.sin_port := htons(Port);
+    r := fpBind(Result, @a4, SizeOf(a4));
+  end;
+  if (r<>0) or (fpListen(Result, 1)<>0) then begin
+    CloseSocket(Result);
+    Result := -1;
+  end;
+end;
+{$ENDIF}
+
+procedure DeleteTree(const Dir:String);
+var
+  sr:TSearchRec;
+begin
+  if FindFirst(IncludeTrailingPathDelimiter(Dir)+'*', faAnyFile, sr)=0 then begin
+    repeat
+      if (sr.Name<>'.') and (sr.Name<>'..') then
+        if (sr.Attr and faDirectory)<>0 then
+          DeleteTree(IncludeTrailingPathDelimiter(Dir)+sr.Name)
+        else
+          DeleteFile(IncludeTrailingPathDelimiter(Dir)+sr.Name);
+    until FindNext(sr)<>0;
+    FindClose(sr);
+  end;
+  RemoveDir(Dir);
+end;
+
+{ TChangeLog }
+
+procedure TChangeLog.Add(const D:TDataChange);
+begin
+  if Count>=Length(Changes) then SetLength(Changes, Count*2+16);
+  Changes[Count] := D;
+  Inc(Count);
+end;
+
+function TChangeLog.IndexOfNum(V:Double; From:Integer):Integer;
+var
+  i:Integer;
+begin
+  for i:=From to Count-1 do
+    if (Changes[i].Status=UA_STATUSCODE_GOOD) and SameValue(Changes[i].Num, V) then exit(i);
+  Result := -1;
+end;
+
+function TChangeLog.IndexOfStatus(St:UA_StatusCode; From:Integer):Integer;
+var
+  i:Integer;
+begin
+  for i:=From to Count-1 do
+    if Changes[i].Status=St then exit(i);
+  Result := -1;
+end;
+
+function TChangeLog.IndexOfBad(From:Integer):Integer;
+var
+  i:Integer;
+begin
+  for i:=From to Count-1 do
+    if (Changes[i].Status and $80000000)<>0 then exit(i);
+  Result := -1;
+end;
+
+procedure DataChanged(client:PUA_Client; subId:UA_UInt32; subContext:Pointer; monId:UA_UInt32;
+  monContext:Pointer; value:PUA_DataValue); cdecl;
+var
+  d:TDataChange;
+  vals:TArrayOfDouble;
+begin
+  d.Status := UA_STATUSCODE_GOOD;
+  if (value^.flags and UA_DATAVALUE_HASSTATUS)<>0 then
+    d.Status := value^.status;
+  d.Num := NaN;
+  if ((value^.flags and UA_DATAVALUE_HASVALUE)<>0) and (value^.value.data<>nil) and
+     (OPCUAVariantToNumbers(value^.value, vals)=ioOk) and (Length(vals)>0) then
+    d.Num := vals[0];
+  d.HasSourceTime := (value^.flags and UA_DATAVALUE_HASSOURCETIMESTAMP)<>0;
+  TChangeLog(monContext).Add(d);
+end;
+
+{ TClientWriter }
+
+constructor TClientWriter.Create(const AUrl:AnsiString; ANs:Word; const AId:AnsiString;
+  ATypeIndex:Integer; ANum:Double; const AText:UTF8String; const AValues:TArrayOfDouble;
+  const ARange:AnsiString; const AUser:AnsiString; const APassword:AnsiString; const ACertDir:String);
+begin
+  CertDir := ACertDir;
+  Values := Copy(AValues);
+  Range := ARange;
+  User := AUser;
+  Password := APassword;
+  Url := AUrl;
+  Ns := ANs;
+  Id := AId;
+  TypeIndex := ATypeIndex;
+  Num := ANum;
+  Text := AText;
+  Status := UA_STATUSCODE_BADINTERNALERROR;
+  FreeOnTerminate := false;
+  inherited Create(false);
+end;
+
+function TClientWriter.WriteRange(c:PUA_Client; const v:UA_Variant):UA_StatusCode;
+var
+  item:UA_WriteValue;
+  req:UA_WriteRequest;
+  resp:UA_WriteResponse;
+begin
+  FillChar(item, SizeOf(item), 0);
+  item.nodeId := UA_NODEID_STRING(Ns, Id);
+  item.attributeId := Ord(UA_ATTRIBUTEID_VALUE);
+  item.indexRange := _UA_STRING(Range);
+  item.value.value := v;
+  item.value.flags := UA_DATAVALUE_HASVALUE;
+  UA_WriteRequest_init(req);
+  req.nodesToWrite := @item;
+  req.nodesToWriteSize := 1;
+  resp := UA_Client_Service_write(c, req);
+  Result := resp.responseHeader.serviceResult;
+  if (Result=UA_STATUSCODE_GOOD) and (resp.resultsSize=1) then
+    Result := resp.results^;
+  UA_WriteResponse_clear(resp);
+end;
+
+procedure TClientWriter.Execute;
+var
+  c:PUA_Client;
+  v:UA_Variant;
+  vals:TArrayOfDouble;
+  t0:QWord;
+  oc:TOPCUAClient;
+begin
+  OPCUAMaskFPU;
+  oc := nil;
+  c := nil;
+  try
+    if CertDir<>'' then begin
+      //a password travels encrypted: a secure session
+      oc := TOPCUAClient.Create;
+      oc.LibraryName := GetEnvironmentVariable('OPEN62541_LIB');
+      oc.EndpointUrl := Url;
+      oc.SecurityMode := osmSignAndEncrypt;
+      oc.CertificateDir := CertDir;
+      oc.Username := User;
+      oc.Password := Password;
+      Status := oc.Connect;
+      ConnectStatus := Status;
+      if Status<>UA_STATUSCODE_GOOD then exit;
+      c := oc.Handle;
+    end else begin
+      c := UA_Client_new();
+      UA_ClientConfig_setDefault(UA_Client_getConfig(c));
+      Status := UA_Client_connect(c, PAnsiChar(Url));
+      ConnectStatus := Status;
+      if Status<>UA_STATUSCODE_GOOD then exit;
+    end;
+    if TypeIndex=UA_TYPES_STRING then
+      OPCUATextToVariant(@UA_TYPES[TypeIndex], Text, v)
+    else if Values<>nil then
+      OPCUANumbersToVariant(@UA_TYPES[TypeIndex], true, Values, v)
+    else begin
+      SetLength(vals, 1);
+      vals[0] := Num;
+      OPCUANumbersToVariant(@UA_TYPES[TypeIndex], false, vals, v);
+    end;
+    t0 := GetTickCount64;
+    if Range<>'' then
+      Status := WriteRange(c, v)
+    else
+      Status := UA_Client_writeValueAttribute(c, UA_NODEID_STRING(Ns, Id), @v);
+    Elapsed := GetTickCount64-t0;
+    UA_clear(@v, @UA_TYPES[UA_TYPES_VARIANT]);
+  finally
+    if oc<>nil then
+      oc.Free
+    else if c<>nil then begin
+      UA_Client_disconnect(c);
+      UA_Client_delete(c);
+    end;
+  end;
+end;
+
+{ TTestOPCUAServer }
+
+procedure TTestOPCUAServer.SetUp;
+begin
+  OPCUATestNeedLibrary(Self);
+  FFPU := OPCUAMaskFPU;
+  FOwner := TComponent.Create(nil);
+  FOwner.Name := 'Form1';
+  FServer := TOPCUAServer.Create(FOwner);
+  FServer.Port := OPCUATestNextPort;
+  FServer.LibraryName := GetEnvironmentVariable('OPEN62541_LIB');
+  FClient := nil;
+end;
+
+procedure TTestOPCUAServer.TearDown;
+begin
+  if FClient<>nil then begin
+    UA_Client_disconnect(FClient);
+    UA_Client_delete(FClient);
+    FClient := nil;
+  end;
+  FreeAndNil(FSecClient);
+  //after the client: no notification comes anymore
+  if FChangeLogs<>nil then begin
+    while FChangeLogs.Count>0 do begin
+      TObject(FChangeLogs.Last).Free;
+      FChangeLogs.Delete(FChangeLogs.Count-1);
+    end;
+    FreeAndNil(FChangeLogs);
+  end;
+  FreeAndNil(FOwner);
+  FreeAndNil(FUsersSeen);
+  DeleteTree(TempDir('srvcert'));
+  DeleteTree(TempDir('clicert'));
+  OPCUARestoreFPU(FFPU);
+end;
+
+function TTestOPCUAServer.NewTag(const AName:String; TT:TTagType):TPLCTagNumber;
+begin
+  Result := TPLCTagNumber.Create(FOwner);
+  Result.Name := AName;
+  Result.TagType := TT;
+end;
+
+function TTestOPCUAServer.Publish(ATag:TPLCTag; const AFolder:String; const ANodeName:String):TOPCUAServerItem;
+begin
+  Result := FServer.Items.Add;
+  Result.Tag := ATag;
+  Result.Folder := AFolder;
+  Result.NodeName := ANodeName;
+end;
+
+procedure TTestOPCUAServer.Start;
+begin
+  FServer.Active := true;
+  AssertTrue('server running: '+FServer.LastError, FServer.Running);
+  Connect;
+end;
+
+procedure TTestOPCUAServer.Connect;
+var
+  st:UA_StatusCode;
+begin
+  FClient := UA_Client_new();
+  UA_ClientConfig_setDefault(UA_Client_getConfig(FClient));
+  st := UA_Client_connect(FClient, PAnsiChar('opc.tcp://localhost:'+IntToStr(FServer.Port)));
+  AssertEquals('client connects', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+end;
+
+function TTestOPCUAServer.Read(const Id:String; out TypeIndex:Integer; out Num:Double;
+  out Text:String):UA_StatusCode;
+var
+  s:AnsiString;
+  v:UA_Variant;
+  vals:TArrayOfDouble;
+  t:UTF8String;
+  k:Integer;
+begin
+  //the server applies what the main thread posted between iterations: give it a moment
+  CheckSynchronize(0);
+  s := Id;
+  TypeIndex := -1;
+  Num := NaN;
+  Text := '';
+  Result := UA_Client_readValueAttribute_range(FClient, UA_NODEID_STRING(FServer.NamespaceIndex, s), '', v);
+  if v._type<>nil then
+    for k:=0 to UA_TYPES_COUNT-1 do
+      if v._type=@UA_TYPES[k] then begin
+        TypeIndex := k;
+        break;
+      end;
+  if (v.data<>nil) and (OPCUAVariantToNumbers(v, vals)=ioOk) and (Length(vals)>0) then
+    Num := vals[0];
+  if (v.data<>nil) and (OPCUAVariantToText(v, t)=ioOk) then
+    Text := t;
+  UA_clear(@v, @UA_TYPES[UA_TYPES_VARIANT]);
+end;
+
+function TTestOPCUAServer.ReadNum(const Id:String):Double;
+var
+  ti:Integer;
+  t:String;
+begin
+  Read(Id, ti, Result, t);
+end;
+
+function TTestOPCUAServer.StatusOf(const Id:String):UA_StatusCode;
+var
+  ti:Integer;
+  n:Double;
+  t:String;
+begin
+  Result := Read(Id, ti, n, t);
+end;
+
+function TTestOPCUAServer.WaitStatus(const Id:String; St:UA_StatusCode; Ms:Integer):Boolean;
+var
+  t0:QWord;
+begin
+  t0 := GetTickCount64;
+  repeat
+    if StatusOf(Id)=St then exit(true);
+    CheckSynchronize(10);
+  until GetTickCount64-t0>=QWord(Ms);
+  Result := false;
+end;
+
+function TTestOPCUAServer.WaitNum(const Id:String; V:Double; Ms:Integer):Boolean;
+var
+  t0:QWord;
+begin
+  t0 := GetTickCount64;
+  repeat
+    if SameValue(ReadNum(Id), V) then exit(true);
+    CheckSynchronize(10);
+  until GetTickCount64-t0>=QWord(Ms);
+  Result := false;
+end;
+
+procedure TTestOPCUAServer.CheckType(const Id:String; Expected:Integer);
+var
+  ti:Integer;
+  n:Double;
+  t:String;
+  st:UA_StatusCode;
+begin
+  st := Read(Id, ti, n, t);
+  AssertEquals(Id+' status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  AssertEquals(Id+' type', String(UA_TYPES[Expected].typeName), String(UA_TYPES[ti].typeName));
+end;
+
+function TTestOPCUAServer.StartWriter(const Id:String; TypeIndex:Integer; Num:Double;
+  const Text:UTF8String):TClientWriter;
+begin
+  Result := TClientWriter.Create('opc.tcp://localhost:'+IntToStr(FServer.Port), FServer.NamespaceIndex,
+                                 Id, TypeIndex, Num, Text);
+end;
+
+function TTestOPCUAServer.Finish(W:TClientWriter; Ms:Integer):UA_StatusCode;
+var
+  t0:QWord;
+begin
+  //the write is done in this (the main) thread: keep its queue going
+  t0 := GetTickCount64;
+  while (not W.Finished) and (GetTickCount64-t0<QWord(Ms)) do
+    CheckSynchronize(5);
+  W.WaitFor;
+  Result := W.Status;
+  W.Free;
+end;
+
+function TTestOPCUAServer.WriteNode(const Id:String; TypeIndex:Integer; Num:Double;
+  const Text:UTF8String):UA_StatusCode;
+begin
+  Result := Finish(StartWriter(Id, TypeIndex, Num, Text));
+end;
+
+function TTestOPCUAServer.NewDriverTag(const AName:String; TT:TTagType; out D:TLogTestDriver):TPLCTagNumber;
+begin
+  D := TLogTestDriver.Create(FOwner);
+  Result := NewTag(AName, TT);
+  Result.RefreshTime := 20;
+  Result.ProtocolDriver := D;
+end;
+
+procedure TTestOPCUAServer.EachTagTypeBecomesItsNativeType;
+const
+  Types:array[0..9] of TTagType = (pttShortInt, pttByte, pttSmallInt, pttWord, pttLongInt,
+                                   pttDWord, pttFloat, pttInt64, pttQWord, pttDouble);
+  Expected:array[0..9] of Integer = (UA_TYPES_SBYTE, UA_TYPES_BYTE, UA_TYPES_INT16, UA_TYPES_UINT16,
+                                     UA_TYPES_INT32, UA_TYPES_UINT32, UA_TYPES_FLOAT, UA_TYPES_INT64,
+                                     UA_TYPES_UINT64, UA_TYPES_DOUBLE);
+  Values:array[0..9] of Double = (-5, 200, -1234, 54321, -123456, 3000000000, 1.5, -9000000000, 9000000000, 3.25);
+var
+  i:Integer;
+  T:TPLCTagNumber;
+begin
+  for i:=0 to High(Types) do begin
+    T := NewTag('T'+IntToStr(i), Types[i]);
+    T.Value := Values[i];
+    Publish(T);
+  end;
+  Start;
+  for i:=0 to High(Types) do begin
+    CheckType('T'+IntToStr(i), Expected[i]);
+    AssertEquals('T'+IntToStr(i)+' value', Values[i], ReadNum('T'+IntToStr(i)), 0.0001);
+  end;
+end;
+
+procedure TTestOPCUAServer.ADefaultTypeWithoutDriverIsDouble;
+var
+  T:TPLCTagNumber;
+begin
+  T := NewTag('Mem', pttDefault);
+  T.Value := 2.5;
+  Publish(T);
+  Start;
+  CheckType('Mem', UA_TYPES_DOUBLE);
+  AssertEquals('value', 2.5, ReadNum('Mem'), 0.0001);
+end;
+
+procedure TTestOPCUAServer.ADefaultTypeFollowsTheDriverWordSize;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+begin
+  D := TLogTestDriver.Create(FOwner);
+  D.Value := 7;
+  T := NewTag('ByDriver', pttDefault);
+  T.RefreshTime := 20;
+  T.ProtocolDriver := D;  //its word size is 8 bits
+  Publish(T);
+  Start;
+  AssertTrue('value read', WaitNum('ByDriver', 7));
+  CheckType('ByDriver', UA_TYPES_BYTE);
+end;
+
+procedure TTestOPCUAServer.ASingleBitIsBooleanAndABitRangeUnsigned;
+var
+  W:TPLCTagNumber;
+  B0, B3:TTagBit;
+begin
+  W := NewTag('Word1', pttWord);
+  B0 := TTagBit.Create(FOwner);
+  B0.Name := 'Bit0';
+  B0.PLCTag := W;
+  B0.StartBit := 0;
+  B0.EndBit := 0;
+  B3 := TTagBit.Create(FOwner);
+  B3.Name := 'Bits0to2';
+  B3.PLCTag := W;
+  B3.StartBit := 0;
+  B3.EndBit := 2;
+  //a bit tag takes its value when the source changes
+  W.Value := 5;
+  Publish(B0);
+  Publish(B3);
+  Start;
+  CheckType('Bit0', UA_TYPES_BOOLEAN);
+  AssertEquals('bit 0 of 5', 1, ReadNum('Bit0'), 0);
+  CheckType('Bits0to2', UA_TYPES_UINT16);
+  AssertEquals('bits 0..2 of 5', 5, ReadNum('Bits0to2'), 0);
+end;
+
+procedure TTestOPCUAServer.AStringTagIsAString;
+var
+  S:TPLCString;
+  ti:Integer;
+  n:Double;
+  txt:String;
+begin
+  S := TPLCString.Create(FOwner);
+  S.Name := 'Recipe';
+  S.StringSize := 20;
+  S.Value := 'abc';
+  Publish(S);
+  Start;
+  CheckType('Recipe', UA_TYPES_STRING);
+  Read('Recipe', ti, n, txt);
+  AssertEquals('text', 'abc', txt);
+end;
+
+procedure TTestOPCUAServer.ScaledDoublePublishesTheEngineeringValue;
+var
+  T:TPLCTagNumber;
+  sp:TLinearScaleProcessor;
+  it:TOPCUAServerItem;
+begin
+  sp := TLinearScaleProcessor.Create(FOwner);
+  sp.PLCMin := 0;
+  sp.PLCMax := 100;
+  sp.SysMin := 0;
+  sp.SysMax := 1000;
+  T := NewTag('Level', pttWord);
+  T.ScaleProcessor := sp;
+  T.ValueRaw := 10;
+  Publish(T, '', 'LevelRaw');
+  it := Publish(T, '', 'LevelScaled');
+  it.DataType := odtScaledDouble;
+  Start;
+  CheckType('LevelRaw', UA_TYPES_UINT16);
+  AssertEquals('raw', 10, ReadNum('LevelRaw'), 0);
+  CheckType('LevelScaled', UA_TYPES_DOUBLE);
+  AssertEquals('engineering value', 100, ReadNum('LevelScaled'), 0.0001);
+end;
+
+procedure TTestOPCUAServer.FoldersAndNodeNamesMakeTheNodeId;
+var
+  T:TPLCTagNumber;
+  it:TOPCUAServerItem;
+begin
+  T := NewTag('PumpSpeed', pttWord);
+  T.Value := 3;
+  it := Publish(T, 'Line1/Pumps', 'Speed');
+  AssertEquals('node id text', 'Line1.Pumps.Speed', it.NodeIdText);
+  Publish(NewTag('Other', pttWord));
+  Start;
+  AssertEquals('in its folder', 3, ReadNum('Line1.Pumps.Speed'), 0);
+  AssertEquals('the folder is a node', OPCUAStatusText(UA_STATUSCODE_BADATTRIBUTEIDINVALID),
+               OPCUAStatusText(StatusOf('Line1.Pumps')));
+  AssertEquals('default name is the tag name', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(StatusOf('Other')));
+end;
+
+procedure TTestOPCUAServer.AValueChangeReachesTheClient;
+var
+  T:TPLCTagNumber;
+begin
+  T := NewTag('Temp', pttSmallInt);
+  T.Value := 20;
+  Publish(T);
+  Start;
+  AssertEquals('first', 20, ReadNum('Temp'), 0);
+  T.Value := -7;
+  AssertTrue('the new value reaches the client', WaitNum('Temp', -7));
+end;
+
+procedure TTestOPCUAServer.TheReadStatusOfTheTagIsTheQuality;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+begin
+  D := TLogTestDriver.Create(FOwner);
+  D.Value := 3;
+  D.ReadResult := ioCommError;
+  T := NewTag('Remote', pttByte); //the test driver reads bytes
+  T.RefreshTime := 20;
+  T.ProtocolDriver := D;
+  Publish(T);
+  Start;
+  AssertTrue('a failing read is BadCommunicationError',
+             WaitStatus('Remote', UA_STATUSCODE_BADCOMMUNICATIONERROR));
+  D.ReadResult := ioOk;
+  AssertTrue('a good read is Good again', WaitStatus('Remote', UA_STATUSCODE_GOOD));
+  AssertEquals('with the value', 3, ReadNum('Remote'), 0);
+end;
+
+procedure TTestOPCUAServer.AnItemAddedWhileRunningIsPublished;
+var
+  T:TPLCTagNumber;
+begin
+  Publish(NewTag('First', pttWord));
+  Start;
+  AssertEquals('not there yet', OPCUAStatusText(UA_STATUSCODE_BADNODEIDUNKNOWN), OPCUAStatusText(StatusOf('Late')));
+  T := NewTag('Late', pttWord);
+  T.Value := 9;
+  Publish(T);
+  AssertTrue('published while running', WaitNum('Late', 9));
+end;
+
+procedure TTestOPCUAServer.ARemovedItemDisappears;
+var
+  it:TOPCUAServerItem;
+begin
+  it := Publish(NewTag('Gone', pttWord));
+  Start;
+  AssertEquals('there', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(StatusOf('Gone')));
+  it.Free;
+  AssertTrue('removed', WaitStatus('Gone', UA_STATUSCODE_BADNODEIDUNKNOWN));
+end;
+
+procedure TTestOPCUAServer.ADestroyedTagDisappears;
+var
+  T:TPLCTagNumber;
+begin
+  T := NewTag('Temporary', pttWord);
+  Publish(T);
+  Start;
+  AssertEquals('there', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(StatusOf('Temporary')));
+  T.Free;
+  AssertTrue('removed with its tag', WaitStatus('Temporary', UA_STATUSCODE_BADNODEIDUNKNOWN));
+  AssertTrue('and the item lost it', FServer.Items[0].Tag=nil);
+end;
+
+procedure TTestOPCUAServer.ANotWritableVariableRefusesWrites;
+var
+  T:TPLCTagNumber;
+  v:UA_Variant;
+  x:UA_UInt16;
+  s:AnsiString;
+  st:UA_StatusCode;
+begin
+  T := NewTag('Fixed', pttWord);
+  T.Value := 1;
+  Publish(T);
+  Start;
+  x := 2;
+  UA_Variant_init(v);
+  UA_Variant_setScalar(@v, @x, @UA_TYPES[UA_TYPES_UINT16]);
+  s := 'Fixed';
+  st := UA_Client_writeValueAttribute(FClient, UA_NODEID_STRING(FServer.NamespaceIndex, s), @v);
+  AssertTrue('refused: '+OPCUAStatusText(st), st<>UA_STATUSCODE_GOOD);
+  AssertEquals('tag untouched', 1, T.Value, 0);
+end;
+
+procedure TTestOPCUAServer.AnItemThatCannotBeAddedIsReportedAndTheOthersPublished;
+begin
+  //two items with the same NodeId: the second can not be added
+  Publish(NewTag('Dup1', pttWord), '', 'Same');
+  Publish(NewTag('Dup2', pttWord), '', 'Same');
+  Publish(NewTag('Fine', pttWord));
+  Start;
+  StatusOf('Fine'); //the server has applied the commands
+  AssertTrue('reported: '+FServer.LastError, Pos('Same', FServer.LastError)>0);
+  AssertEquals('the other one is there', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(StatusOf('Fine')));
+end;
+
+procedure TTestOPCUAServer.APortInUseDoesNotStart;
+{$IFDEF WINDOWS}
+var
+  v4, v6:LongInt;
+  port:Word;
+begin
+  //exclusive listeners, IPv4 and IPv6: on Windows SO_REUSEADDR (open62541) takes over
+  //a port in use by an ordinary listener
+  port := OPCUATestNextPort;
+  v4 := ListenExclusive(AF_INET, port);
+  v6 := ListenExclusive(AF_INET6, port);
+  try
+    AssertTrue('the test took the port', v4>=0);
+    FServer.Port := port;
+    FServer.Active := true;
+    AssertFalse('not running', FServer.Running);
+    AssertFalse('Active went back to false', FServer.Active);
+    AssertTrue('the reason: '+FServer.LastError, FServer.LastError<>'');
+  finally
+    if v6>=0 then CloseSocket(v6);
+    if v4>=0 then CloseSocket(v4);
+  end;
+end;
+{$ELSE}
+var
+  other:TServidorDeTeste;
+  v6:LongInt;
+begin
+  //ordinary listeners, IPv4 and IPv6 (no SO_REUSEPORT: open62541 servers share a port
+  //with each other)
+  other := TServidorDeTeste.Create;
+  v6 := -1;
+  try
+    {$IFDEF UNIX}
+    v6 := ListenIPv6(other.Porta);
+    {$ENDIF}
+    FServer.Port := other.Porta;
+    FServer.Active := true;
+    AssertFalse('not running', FServer.Running);
+    AssertFalse('Active went back to false', FServer.Active);
+    AssertTrue('the reason: '+FServer.LastError, FServer.LastError<>'');
+  finally
+    {$IFDEF UNIX}
+    if v6>=0 then CloseSocket(v6);
+    {$ENDIF}
+    other.Free;
+  end;
+end;
+{$ENDIF}
+
+procedure TTestOPCUAServer.ItStopsAndStartsAgain;
+var
+  T:TPLCTagNumber;
+begin
+  T := NewTag('Again', pttWord);
+  T.Value := 4;
+  Publish(T);
+  Start;
+  UA_Client_disconnect(FClient);
+  UA_Client_delete(FClient);
+  FClient := nil;
+  FServer.Active := false;
+  AssertFalse('stopped', FServer.Running);
+  T.Value := 6;
+  Start;
+  AssertEquals('published again, current value', 6, ReadNum('Again'), 0);
+end;
+
+procedure TTestOPCUAServer.AWriteToAMemoryTagIsGood;
+var
+  T:TPLCTagNumber;
+begin
+  T := NewTag('Setpoint', pttWord);
+  Publish(T).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Setpoint', UA_TYPES_UINT16, 42)));
+  AssertEquals('the tag has it', 42, T.Value, 0);
+end;
+
+procedure TTestOPCUAServer.AWriteReachesTheDeviceAndTheClientWaitsForIt;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+  W:TClientWriter;
+  st:UA_StatusCode;
+  spent:QWord;
+begin
+  T := NewDriverTag('Speed', pttByte, D);
+  D.WriteDelayMs := 300;
+  Publish(T).Writable := true;
+  Start;
+  W := StartWriter('Speed', UA_TYPES_BYTE, 9);
+  try
+    while not W.Finished do CheckSynchronize(5);
+    st := W.Status;
+    spent := W.Elapsed;
+  finally
+    W.WaitFor;
+    W.Free;
+  end;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  AssertTrue('the client waited for the device ('+IntToStr(spent)+' ms)', spent>=250);
+  AssertEquals('one device write', 1, D.WriteCount);
+  AssertEquals('the value written', 9, D.LastWritten[0], 0);
+end;
+
+procedure TTestOPCUAServer.ADeviceFailureReachesTheClient;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+begin
+  T := NewDriverTag('Valve', pttByte, D);
+  D.WriteResult := ioCommError;
+  Publish(T).Writable := true;
+  Start;
+  AssertEquals('the device failure', OPCUAStatusText(UA_STATUSCODE_BADCOMMUNICATIONERROR),
+               OPCUAStatusText(WriteNode('Valve', UA_TYPES_BYTE, 1)));
+  D.WriteResult := ioTimeOut;
+  AssertEquals('a timeout too', OPCUAStatusText(UA_STATUSCODE_BADCOMMUNICATIONERROR),
+               OPCUAStatusText(WriteNode('Valve', UA_TYPES_BYTE, 1)));
+end;
+
+procedure TTestOPCUAServer.ATypeMismatchIsRefused;
+var
+  T:TPLCTagNumber;
+  st:UA_StatusCode;
+begin
+  T := NewTag('Count', pttWord);
+  T.Value := 3;
+  Publish(T).Writable := true;
+  Start;
+  st := WriteNode('Count', UA_TYPES_INT32, 5);
+  AssertTrue('refused: '+OPCUAStatusText(st), st<>UA_STATUSCODE_GOOD);
+  AssertEquals('tag untouched', 3, T.Value, 0);
+end;
+
+procedure TTestOPCUAServer.AValueOutOfTheTagLimitsIsRefusedWithoutWriting;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+begin
+  T := NewDriverTag('Limited', pttByte, D);
+  T.EnableMaxValue := true;
+  T.MaxValue := 100;
+  Publish(T).Writable := true;
+  Start;
+  AssertEquals('out of the limits', OPCUAStatusText(UA_STATUSCODE_BADOUTOFRANGE),
+               OPCUAStatusText(WriteNode('Limited', UA_TYPES_BYTE, 200)));
+  AssertEquals('the device was not written', 0, D.WriteCount);
+  AssertEquals('inside the limits', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Limited', UA_TYPES_BYTE, 50)));
+end;
+
+procedure TTestOPCUAServer.ScaledDoubleWritesTheRawValue;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+  sp:TLinearScaleProcessor;
+begin
+  sp := TLinearScaleProcessor.Create(FOwner);
+  sp.PLCMin := 0;
+  sp.PLCMax := 100;
+  sp.SysMin := 0;
+  sp.SysMax := 1000;
+  T := NewDriverTag('Level', pttByte, D);
+  T.ScaleProcessor := sp;
+  with Publish(T) do begin
+    Writable := true;
+    DataType := odtScaledDouble;
+  end;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Level', UA_TYPES_DOUBLE, 500)));
+  AssertEquals('the raw value reached the device', 50, D.LastWritten[0], 0.0001);
+end;
+
+procedure TTestOPCUAServer.ASingleBitIsWrittenIntoItsWord;
+var
+  W:TPLCTagNumber;
+  B:TTagBit;
+begin
+  W := NewTag('Word1', pttWord);
+  B := TTagBit.Create(FOwner);
+  B.Name := 'Bit1';
+  B.PLCTag := W;
+  B.StartBit := 1;
+  B.EndBit := 1;
+  W.Value := 5;
+  Publish(B).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Bit1', UA_TYPES_BOOLEAN, 1)));
+  AssertEquals('5 with bit 1 set', 7, W.Value, 0);
+  AssertEquals('cleared again', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Bit1', UA_TYPES_BOOLEAN, 0)));
+  AssertEquals('5 again', 5, W.Value, 0);
+end;
+
+procedure TTestOPCUAServer.ABitRangeIsWrittenIntoItsWord;
+var
+  W:TPLCTagNumber;
+  B:TTagBit;
+begin
+  W := NewTag('Word2', pttWord);
+  B := TTagBit.Create(FOwner);
+  B.Name := 'Nibble1';
+  B.PLCTag := W;
+  B.StartBit := 4;
+  B.EndBit := 7;
+  W.Value := $0F0F;
+  Publish(B).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Nibble1', UA_TYPES_UINT16, 3)));
+  AssertEquals('bits 4..7 = 3, the others kept', $0F3F, W.Value, 0);
+  AssertEquals('more than 4 bits hold', OPCUAStatusText(UA_STATUSCODE_BADOUTOFRANGE),
+               OPCUAStatusText(WriteNode('Nibble1', UA_TYPES_UINT16, 16)));
+end;
+
+procedure TTestOPCUAServer.AStringIsWritten;
+var
+  S:TPLCString;
+begin
+  S := TPLCString.Create(FOwner);
+  S.Name := 'Batch';
+  S.StringSize := 20;
+  S.Value := 'old';
+  Publish(S).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Batch', UA_TYPES_STRING, 0, 'new batch')));
+  AssertEquals('the tag has it', 'new batch', S.Value);
+end;
+
+procedure TTestOPCUAServer.TheServerAnswersOthersWhileAWriteIsPending;
+var
+  T, O:TPLCTagNumber;
+  D:TLogTestDriver;
+  W:TClientWriter;
+  t0, spent:QWord;
+begin
+  T := NewDriverTag('Slow', pttByte, D);
+  D.WriteDelayMs := 800;
+  Publish(T).Writable := true;
+  O := NewTag('Other', pttWord);
+  O.Value := 11;
+  Publish(O);
+  Start;
+  W := StartWriter('Slow', UA_TYPES_BYTE, 4);
+  try
+    //let the write reach the device
+    t0 := GetTickCount64;
+    while (D.WriteCount=0) and (GetTickCount64-t0<300) do CheckSynchronize(5);
+    Sleep(50);
+    t0 := GetTickCount64;
+    AssertEquals('another variable is read', 11, ReadNum('Other'), 0);
+    spent := GetTickCount64-t0;
+    AssertTrue('right away ('+IntToStr(spent)+' ms)', spent<300);
+    AssertFalse('while the write is still pending', W.Finished);
+  finally
+    AssertEquals('and the write ends good', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(Finish(W)));
+  end;
+end;
+
+procedure TTestOPCUAServer.ARemovedItemEndsItsPendingWrite;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+  W:TClientWriter;
+  it:TOPCUAServerItem;
+  t0:QWord;
+begin
+  T := NewDriverTag('Going', pttByte, D);
+  D.WriteDelayMs := 1500;
+  it := Publish(T);
+  it.Writable := true;
+  Start;
+  W := StartWriter('Going', UA_TYPES_BYTE, 2);
+  t0 := GetTickCount64;
+  while (D.WriteCount=0) and (GetTickCount64-t0<1000) do CheckSynchronize(5);
+  //the device is still busy: the item goes away
+  t0 := GetTickCount64;
+  while (GetTickCount64-t0<100) do CheckSynchronize(5);
+  it.Free;
+  AssertEquals('ended right away, not after the device', OPCUAStatusText(UA_STATUSCODE_BADNODEIDUNKNOWN),
+               OPCUAStatusText(Finish(W, 1000)));
+end;
+
+procedure TTestOPCUAServer.TheWrittenValueIsReadBackAtOnce;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+begin
+  T := NewDriverTag('Echo', pttByte, D);
+  T.RefreshTime := 5000; //no scan to bring it in
+  Publish(T).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Echo', UA_TYPES_BYTE, 77)));
+  AssertEquals('read back at once', 77, ReadNum('Echo'), 0);
+end;
+
+function TTestOPCUAServer.ReadArray(const Id, Range:String; out TypeIndex:Integer;
+  out Vals:TArrayOfDouble):UA_StatusCode;
+var
+  s:AnsiString;
+  v:UA_Variant;
+  k:Integer;
+begin
+  CheckSynchronize(0);
+  s := Id;
+  TypeIndex := -1;
+  Vals := nil;
+  Result := UA_Client_readValueAttribute_range(FClient, UA_NODEID_STRING(FServer.NamespaceIndex, s), Range, v);
+  if v._type<>nil then
+    for k:=0 to UA_TYPES_COUNT-1 do
+      if v._type=@UA_TYPES[k] then begin
+        TypeIndex := k;
+        break;
+      end;
+  if v.data<>nil then
+    OPCUAVariantToNumbers(v, Vals);
+  UA_clear(@v, @UA_TYPES[UA_TYPES_VARIANT]);
+end;
+
+function TTestOPCUAServer.NewBlock(const AName:String; TT:TTagType; Size:Integer):TPLCBlock;
+var
+  i:Integer;
+  vals:TArrayOfDouble;
+begin
+  Result := TPLCBlock.Create(FOwner);
+  Result.Name := AName;
+  Result.TagType := TT;
+  Result.Size := Size;
+  SetLength(vals, Size);
+  for i:=0 to Size-1 do vals[i] := i+1;
+  Result.ValuesRaw := vals;
+end;
+
+//a 12 byte structure: a Word at 0, a Float at 2 and a C string of 4 bytes at 6
+function TTestOPCUAServer.NewStruct(out S:TPLCStruct; out W:TPLCStructItem; out F:TPLCStructItem;
+  out Txt:TPLCStructString):TOPCUAServerItem;
+begin
+  S := TPLCStruct.Create(FOwner);
+  S.Name := 'Recipe1';
+  S.Size := 12;
+  W := TPLCStructItem.Create(FOwner);
+  W.Name := 'Speed';
+  W.PLCBlock := S;
+  W.TagType := pttWord;
+  W.Index := 0;
+  F := TPLCStructItem.Create(FOwner);
+  F.Name := 'Ratio';
+  F.PLCBlock := S;
+  F.TagType := pttFloat;
+  F.Index := 2;
+  Txt := TPLCStructString.Create(FOwner);
+  Txt.Name := 'Code';
+  Txt.PLCBlock := S;
+  Txt.StringSize := 4;
+  Txt.Index := 6;
+  W.Value := 1234;
+  F.Value := 2.5;
+  Txt.Value := 'ab';
+  Result := Publish(S);
+end;
+
+procedure TTestOPCUAServer.ABlockIsAnArrayOfItsType;
+var
+  ti:Integer;
+  vals:TArrayOfDouble;
+begin
+  Publish(NewBlock('Block1', pttWord, 5));
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ReadArray('Block1', '', ti, vals)));
+  AssertEquals('type', String(UA_TYPES[UA_TYPES_UINT16].typeName), String(UA_TYPES[ti].typeName));
+  AssertEquals('5 elements', 5, Length(vals));
+  AssertEquals('first', 1, vals[0], 0);
+  AssertEquals('last', 5, vals[4], 0);
+end;
+
+procedure TTestOPCUAServer.AnIndexRangeReadsPartOfTheArray;
+var
+  ti:Integer;
+  vals:TArrayOfDouble;
+begin
+  Publish(NewBlock('Block2', pttSmallInt, 6));
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ReadArray('Block2', '2:4', ti, vals)));
+  AssertEquals('3 elements', 3, Length(vals));
+  AssertEquals('element 2', 3, vals[0], 0);
+  AssertEquals('element 4', 5, vals[2], 0);
+  AssertEquals('one element', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ReadArray('Block2', '5', ti, vals)));
+  AssertEquals('it', 6, vals[0], 0);
+  AssertEquals('past the end', OPCUAStatusText(UA_STATUSCODE_BADINDEXRANGENODATA),
+               OPCUAStatusText(ReadArray('Block2', '9:10', ti, vals)));
+end;
+
+procedure TTestOPCUAServer.AWholeArrayIsWritten;
+var
+  B:TPLCBlock;
+  W:TClientWriter;
+  vals:TArrayOfDouble;
+begin
+  B := NewBlock('Block3', pttWord, 4);
+  Publish(B).Writable := true;
+  Start;
+  SetLength(vals, 4);
+  vals[0] := 10; vals[1] := 20; vals[2] := 30; vals[3] := 40;
+  W := TClientWriter.Create('opc.tcp://localhost:'+IntToStr(FServer.Port), FServer.NamespaceIndex,
+                            'Block3', UA_TYPES_UINT16, 0, '', vals);
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(Finish(W)));
+  AssertEquals('element 0', 10, B.ValueRaw[0], 0);
+  AssertEquals('element 3', 40, B.ValueRaw[3], 0);
+end;
+
+procedure TTestOPCUAServer.AnIndexRangeWritesPartOfTheArray;
+var
+  B:TPLCBlock;
+  W:TClientWriter;
+  vals:TArrayOfDouble;
+  ti:Integer;
+  back:TArrayOfDouble;
+begin
+  B := NewBlock('Block4', pttWord, 5);
+  Publish(B).Writable := true;
+  Start;
+  SetLength(vals, 2);
+  vals[0] := 70; vals[1] := 80;
+  W := TClientWriter.Create('opc.tcp://localhost:'+IntToStr(FServer.Port), FServer.NamespaceIndex,
+                            'Block4', UA_TYPES_UINT16, 0, '', vals, '1:2');
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(Finish(W)));
+  AssertEquals('element 0 kept', 1, B.ValueRaw[0], 0);
+  AssertEquals('element 1', 70, B.ValueRaw[1], 0);
+  AssertEquals('element 2', 80, B.ValueRaw[2], 0);
+  AssertEquals('element 3 kept', 4, B.ValueRaw[3], 0);
+  ReadArray('Block4', '', ti, back);
+  AssertEquals('read back at once', 70, back[1], 0);
+end;
+
+procedure TTestOPCUAServer.AStructureIsAnObjectWithItsItems;
+var
+  S:TPLCStruct;
+  W, F:TPLCStructItem;
+  Txt:TPLCStructString;
+  ti:Integer;
+  n:Double;
+  t:String;
+begin
+  NewStruct(S, W, F, Txt);
+  Start;
+  AssertEquals('the structure is an object (no value)', OPCUAStatusText(UA_STATUSCODE_BADATTRIBUTEIDINVALID),
+               OPCUAStatusText(StatusOf('Recipe1')));
+  CheckType('Recipe1.Speed', UA_TYPES_UINT16);
+  AssertEquals('word', 1234, ReadNum('Recipe1.Speed'), 0);
+  CheckType('Recipe1.Ratio', UA_TYPES_FLOAT);
+  AssertEquals('float', 2.5, ReadNum('Recipe1.Ratio'), 0.0001);
+  CheckType('Recipe1.Code', UA_TYPES_STRING);
+  Read('Recipe1.Code', ti, n, t);
+  AssertEquals('string', 'ab', t);
+end;
+
+procedure TTestOPCUAServer.AStructItemIsWrittenWithItsOwnType;
+var
+  S:TPLCStruct;
+  W, F:TPLCStructItem;
+  Txt:TPLCStructString;
+begin
+  NewStruct(S, W, F, Txt).Writable := true;
+  Start;
+  AssertEquals('word', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Recipe1.Speed', UA_TYPES_UINT16, 4321)));
+  AssertEquals('float', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Recipe1.Ratio', UA_TYPES_FLOAT, 7.25)));
+  //encoded in the structure by their types: the neighbours are intact
+  AssertEquals('word in the structure', 4321, W.Value, 0);
+  AssertEquals('float in the structure', 7.25, F.Value, 0.0001);
+  AssertEquals('string untouched', 'ab', Txt.Value);
+end;
+
+procedure TTestOPCUAServer.AStringInsideAStructureIsWritten;
+var
+  S:TPLCStruct;
+  W, F:TPLCStructItem;
+  Txt:TPLCStructString;
+begin
+  NewStruct(S, W, F, Txt).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Recipe1.Code', UA_TYPES_STRING, 0, 'xyz')));
+  AssertEquals('the string', 'xyz', Txt.Value);
+  AssertEquals('the word untouched', 1234, W.Value, 0);
+end;
+
+procedure TTestOPCUAServer.RemovingTheStructureRemovesItsItems;
+var
+  S:TPLCStruct;
+  W, F:TPLCStructItem;
+  Txt:TPLCStructString;
+  it:TOPCUAServerItem;
+begin
+  it := NewStruct(S, W, F, Txt);
+  Start;
+  AssertEquals('there', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(StatusOf('Recipe1.Speed')));
+  it.Free;
+  AssertTrue('its items are gone', WaitStatus('Recipe1.Speed', UA_STATUSCODE_BADNODEIDUNKNOWN));
+  AssertTrue('and the object', WaitStatus('Recipe1', UA_STATUSCODE_BADNODEIDUNKNOWN));
+end;
+
+procedure TTestOPCUAServer.CheckUserEvent(Sender:TObject; const User, Password:String; var Accepted:Boolean);
+begin
+  if FUsersSeen=nil then FUsersSeen := TStringList.Create;
+  FUsersSeen.Add(User);
+  //called in the main thread
+  if GetCurrentThreadId<>MainThreadID then Accepted := false
+  else Accepted := (User='maria') and (Password='segredo');
+end;
+
+procedure TTestOPCUAServer.CanWriteEvent(Sender:TObject; Item:TOPCUAServerItem; const User:String; var Allowed:Boolean);
+begin
+  if FUsersSeen=nil then FUsersSeen := TStringList.Create;
+  FUsersSeen.Add(User);
+  Allowed := User='op';
+end;
+
+//a session without security, anonymous (FClient)
+function TTestOPCUAServer.ConnectPlain:UA_StatusCode;
+begin
+  if FClient<>nil then begin
+    UA_Client_disconnect(FClient);
+    UA_Client_delete(FClient);
+  end;
+  FClient := UA_Client_new();
+  UA_ClientConfig_setDefault(UA_Client_getConfig(FClient));
+  Result := UA_Client_connect(FClient, PAnsiChar('opc.tcp://localhost:'+IntToStr(FServer.Port)));
+end;
+
+//a secure session (the password travels encrypted)
+function TTestOPCUAServer.ConnectAs(const User, Password:AnsiString):UA_StatusCode;
+begin
+  FreeAndNil(FSecClient);
+  FSecClient := TOPCUAClient.Create;
+  FSecClient.LibraryName := FServer.LibraryName;
+  FSecClient.EndpointUrl := 'opc.tcp://localhost:'+IntToStr(FServer.Port);
+  FSecClient.SecurityMode := osmSignAndEncrypt;
+  FSecClient.CertificateDir := TempDir('clicert');
+  FSecClient.Username := User;
+  FSecClient.Password := Password;
+  Result := FSecClient.Connect;
+end;
+
+function TTestOPCUAServer.WriteAs(const Id:String; TypeIndex:Integer; Num:Double;
+  const User, Password:AnsiString; out ConnectStatus:UA_StatusCode):UA_StatusCode;
+var
+  W:TClientWriter;
+begin
+  W := TClientWriter.Create('opc.tcp://localhost:'+IntToStr(FServer.Port), FServer.NamespaceIndex,
+                            Id, TypeIndex, Num, '', nil, '', User, Password, TempDir('clicert'));
+  ConnectStatus := UA_STATUSCODE_BADINTERNALERROR;
+  try
+    while not W.Finished do CheckSynchronize(5);
+    W.WaitFor;
+    ConnectStatus := W.ConnectStatus;
+    Result := W.Status;
+  finally
+    W.Free;
+  end;
+end;
+
+procedure TTestOPCUAServer.Secure;
+begin
+  FServer.Security := ossNoneAndSecure;
+  FServer.CertificateDir := TempDir('srvcert');
+end;
+
+function TTestOPCUAServer.TempDir(const Suffix:String):String;
+begin
+  Result := IncludeTrailingPathDelimiter(GetTempDir(false))+'pscada-opcuasrv-'+IntToStr(GetProcessID)+'-'+Suffix;
+end;
+
+procedure TTestOPCUAServer.UsersWithoutSecurityDoNotStart;
+begin
+  FServer.Users.Add('op=123');
+  FServer.Active := true;
+  AssertFalse('not running', FServer.Running);
+  AssertTrue('the reason: '+FServer.LastError, Pos('Security', FServer.LastError)>0);
+end;
+
+procedure TTestOPCUAServer.AnonymousCanBeRefused;
+begin
+  Secure;
+  FServer.AllowAnonymous := false;
+  FServer.Users.Add('op=123');
+  FServer.Active := true;
+  AssertTrue('running: '+FServer.LastError, FServer.Running);
+  AssertTrue('anonymous refused', ConnectAs('', '')<>UA_STATUSCODE_GOOD);
+  AssertEquals('a user logs in', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectAs('op', '123')));
+end;
+
+procedure TTestOPCUAServer.AUserOfTheListLogsIn;
+begin
+  Secure;
+  FServer.Users.Add('op=123');
+  FServer.Users.Add('chefe=abc');
+  FServer.Active := true;
+  AssertTrue('running: '+FServer.LastError, FServer.Running);
+  AssertEquals('op', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectAs('op', '123')));
+  AssertEquals('chefe', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectAs('chefe', 'abc')));
+  AssertTrue('wrong password refused', ConnectAs('op', 'abc')<>UA_STATUSCODE_GOOD);
+  AssertTrue('unknown user refused', ConnectAs('ninguem', '123')<>UA_STATUSCODE_GOOD);
+end;
+
+procedure TTestOPCUAServer.OnCheckUserDecidesTheLogin;
+var
+  T:TPLCTagNumber;
+  cst, st:UA_StatusCode;
+begin
+  T := NewTag('Pressure', pttWord);
+  Publish(T).Writable := true;
+  Secure;
+  FServer.OnCheckUser := @CheckUserEvent;
+  FServer.Active := true;
+  AssertTrue('running: '+FServer.LastError, FServer.Running);
+  //an anonymous session creates the client certificate (no event for it)
+  AssertEquals('anonymous', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectAs('', '')));
+  FreeAndNil(FSecClient);
+  //the event runs in the main thread: the clients connect from their own thread
+  st := WriteAs('Pressure', UA_TYPES_UINT16, 5, 'maria', 'segredo', cst);
+  AssertEquals('accepted by the event (in the main thread)', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(cst));
+  AssertEquals('and wrote', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  WriteAs('Pressure', UA_TYPES_UINT16, 6, 'joao', 'x', cst);
+  AssertTrue('refused by the event: '+OPCUAStatusText(cst), cst<>UA_STATUSCODE_GOOD);
+  AssertTrue('the event saw both', (FUsersSeen<>nil) and (FUsersSeen.IndexOf('maria')>=0) and (FUsersSeen.IndexOf('joao')>=0));
+end;
+
+procedure TTestOPCUAServer.OnCanWriteGetsTheUserOfTheSession;
+var
+  T:TPLCTagNumber;
+  cst:UA_StatusCode;
+begin
+  T := NewTag('Setpoint2', pttWord);
+  T.Value := 1;
+  Publish(T).Writable := true;
+  Secure;
+  FServer.Users.Add('op=1');
+  FServer.Users.Add('viewer=2');
+  FServer.OnCanWrite := @CanWriteEvent;
+  FServer.Active := true;
+  AssertTrue('running: '+FServer.LastError, FServer.Running);
+  AssertEquals('op may write', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteAs('Setpoint2', UA_TYPES_UINT16, 2, 'op', '1', cst)));
+  AssertEquals('viewer may not', OPCUAStatusText(UA_STATUSCODE_BADUSERACCESSDENIED),
+               OPCUAStatusText(WriteAs('Setpoint2', UA_TYPES_UINT16, 3, 'viewer', '2', cst)));
+  AssertEquals('anonymous may not', OPCUAStatusText(UA_STATUSCODE_BADUSERACCESSDENIED),
+               OPCUAStatusText(WriteAs('Setpoint2', UA_TYPES_UINT16, 4, '', '', cst)));
+  AssertEquals('the tag got only the allowed write', 2, T.Value, 0);
+  AssertEquals('three writes asked', 3, FUsersSeen.Count);
+  AssertEquals('op', 'op', FUsersSeen[0]);
+  AssertEquals('viewer', 'viewer', FUsersSeen[1]);
+  AssertEquals('anonymous is an empty user', '', FUsersSeen[2]);
+end;
+
+procedure TTestOPCUAServer.SecureEndpointsUseAKeptCertificate;
+var
+  dir, cdir:String;
+  first, again:RawByteString;
+  C:TOPCUAClient;
+  st:UA_StatusCode;
+
+  function FileText(const F:String):RawByteString;
+  var
+    fs:TFileStream;
+  begin
+    Result := '';
+    if not FileExists(F) then exit;
+    fs := TFileStream.Create(F, fmOpenRead);
+    try
+      SetLength(Result, fs.Size);
+      if fs.Size>0 then fs.ReadBuffer(Result[1], fs.Size);
+    finally
+      fs.Free;
+    end;
+  end;
+
+begin
+  dir := TempDir('srv');
+  cdir := TempDir('cli');
+  try
+    Publish(NewTag('Secret', pttWord));
+    FServer.Security := ossNoneAndSecure;
+    FServer.CertificateDir := dir;
+    FServer.Active := true;
+    AssertTrue('running: '+FServer.LastError, FServer.Running);
+    first := FileText(IncludeTrailingPathDelimiter(dir)+'server_cert.der');
+    AssertTrue('a certificate was created', first<>'');
+    AssertTrue('and its key', FileExists(IncludeTrailingPathDelimiter(dir)+'server_key.der'));
+    AssertEquals('None still connects', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectPlain));
+
+    C := TOPCUAClient.Create;
+    try
+      C.LibraryName := FServer.LibraryName;
+      C.EndpointUrl := 'opc.tcp://localhost:'+IntToStr(FServer.Port);
+      C.SecurityMode := osmSignAndEncrypt;
+      C.CertificateDir := cdir;
+      st := C.Connect;
+      AssertEquals('SignAndEncrypt connects: '+C.LastError, OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+      C.Disconnect;
+    finally
+      C.Free;
+    end;
+
+    UA_Client_disconnect(FClient);
+    UA_Client_delete(FClient);
+    FClient := nil;
+    FServer.Active := false;
+    FServer.Active := true;
+    again := FileText(IncludeTrailingPathDelimiter(dir)+'server_cert.der');
+    AssertTrue('the same certificate on the next start', again=first);
+  finally
+    DeleteTree(dir);
+    DeleteTree(cdir);
+  end;
+end;
+
+procedure TTestOPCUAServer.SecureOnlyRefusesAnInsecureConnection;
+var
+  dir, cdir:String;
+  C:TOPCUAClient;
+begin
+  dir := TempDir('srv2');
+  cdir := TempDir('cli2');
+  try
+    FServer.Security := ossSecureOnly;
+    FServer.CertificateDir := dir;
+    FServer.Active := true;
+    AssertTrue('running: '+FServer.LastError, FServer.Running);
+    AssertTrue('no session without security', ConnectPlain<>UA_STATUSCODE_GOOD);
+    C := TOPCUAClient.Create;
+    try
+      C.LibraryName := FServer.LibraryName;
+      C.EndpointUrl := 'opc.tcp://localhost:'+IntToStr(FServer.Port);
+      C.SecurityMode := osmSignAndEncrypt;
+      C.CertificateDir := cdir;
+      AssertEquals('a secure one connects: '+C.LastError, OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(C.Connect));
+      C.Disconnect;
+    finally
+      C.Free;
+    end;
+  finally
+    DeleteTree(dir);
+    DeleteTree(cdir);
+  end;
+end;
+
+procedure TTestOPCUAServer.ASlowDeviceWriteTimesOut;
+var
+  t0:QWord;
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+  W:TClientWriter;
+  st:UA_StatusCode;
+  spent:QWord;
+begin
+  T := NewDriverTag('Sluggish', pttByte, D);
+  D.WriteDelayMs := 1500;
+  Publish(T).Writable := true;
+  FServer.WriteTimeoutMs := 500;
+  Start;
+  W := StartWriter('Sluggish', UA_TYPES_BYTE, 3);
+  try
+    while not W.Finished do CheckSynchronize(5);
+    st := W.Status;
+    spent := W.Elapsed;
+  finally
+    W.WaitFor;
+    W.Free;
+  end;
+  AssertEquals('timed out', OPCUAStatusText(UA_STATUSCODE_BADTIMEOUT), OPCUAStatusText(st));
+  AssertTrue('before the device answered ('+IntToStr(spent)+' ms)', spent<1400);
+  //the late result of the device is dropped without harm
+  t0 := GetTickCount64;
+  while GetTickCount64-t0<1500 do CheckSynchronize(10);
+  AssertEquals('still serving', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(StatusOf('Sluggish')));
+end;
+
+{ subscriptions }
+
+function TTestOPCUAServer.Subscribe(const Id:String):TChangeLog;
+var
+  req:UA_CreateSubscriptionRequest;
+  resp:UA_CreateSubscriptionResponse;
+  item:UA_MonitoredItemCreateRequest;
+  res:UA_MonitoredItemCreateResult;
+  s:AnsiString;
+  st:UA_StatusCode;
+  subId:UA_UInt32;
+begin
+  if FChangeLogs=nil then FChangeLogs := TList.Create;
+  Result := TChangeLog.Create;
+  FChangeLogs.Add(Result);
+  //one subscription per variable keeps the bookkeeping simple
+  req := UA_CreateSubscriptionRequest_default();
+  req.requestedPublishingInterval := 20;
+  resp := UA_Client_Subscriptions_create(FClient, req, nil, nil, nil);
+  st := resp.responseHeader.serviceResult;
+  subId := resp.subscriptionId;
+  UA_clear(@resp, @UA_TYPES[UA_TYPES_CREATESUBSCRIPTIONRESPONSE]);
+  AssertEquals('subscription created', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  s := Id;
+  item := UA_MonitoredItemCreateRequest_default(UA_NODEID_STRING(FServer.NamespaceIndex, s));
+  item.requestedParameters.samplingInterval := 10;
+  item.requestedParameters.queueSize := 100;
+  res := UA_Client_MonitoredItems_createDataChange(FClient, subId, UA_TIMESTAMPSTORETURN_BOTH, item,
+                                                   Result, @DataChanged, nil);
+  st := res.statusCode;
+  UA_clear(@res, @UA_TYPES[UA_TYPES_MONITOREDITEMCREATERESULT]);
+  AssertEquals('monitored item of '+Id, OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+end;
+
+//Kind: 0 a good value V, 1 the status St, 2 any bad status
+function TTestOPCUAServer.WaitChange(Log:TChangeLog; out Index:Integer; Kind:Integer; V:Double;
+  St:UA_StatusCode; From:Integer; Ms:Integer):Boolean;
+var
+  t0:QWord;
+begin
+  t0 := GetTickCount64;
+  repeat
+    //the notifications come through the client's iterations (this thread)
+    UA_Client_run_iterate(FClient, 10);
+    CheckSynchronize(0);
+    case Kind of
+      0: Index := Log.IndexOfNum(V, From);
+      1: Index := Log.IndexOfStatus(St, From);
+    else
+      Index := Log.IndexOfBad(From);
+    end;
+    if Index>=0 then exit(true);
+  until GetTickCount64-t0>=QWord(Ms);
+  Result := false;
+end;
+
+function TTestOPCUAServer.WaitNumChange(Log:TChangeLog; V:Double; From:Integer):Integer;
+begin
+  if not WaitChange(Log, Result, 0, V, 0, From) then
+    Fail(Format('no notification of %g (from #%d; %d received)', [V, From, Log.Count]));
+end;
+
+procedure TTestOPCUAServer.ASubscriptionReceivesTheValueChanges;
+var
+  T:TPLCTagNumber;
+  L:TChangeLog;
+  i, k:Integer;
+begin
+  T := NewTag('Level', pttSmallInt);
+  T.Value := 10;
+  Publish(T);
+  Start;
+  L := Subscribe('Level');
+  i := WaitNumChange(L, 10);
+  AssertTrue('the first value has the source timestamp', L.Changes[i].HasSourceTime);
+  //each change on its own, in order
+  for k:=11 to 15 do begin
+    T.Value := k;
+    i := WaitNumChange(L, k, i+1);
+  end;
+  //no change, no notification
+  k := L.Count;
+  T.Value := 15;
+  WaitChange(L, i, 2, 0, 0, k, 300);
+  AssertEquals('the same value notifies nothing', k, L.Count);
+end;
+
+procedure TTestOPCUAServer.ASubscriptionReceivesTheQualityChanges;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+  L:TChangeLog;
+  i:Integer;
+begin
+  T := NewDriverTag('Remote', pttByte, D);
+  D.Value := 3;
+  Publish(T);
+  Start;
+  L := Subscribe('Remote');
+  i := WaitNumChange(L, 3);
+  D.ReadResult := ioCommError;
+  AssertTrue('a failing read is notified as BadCommunicationError',
+             WaitChange(L, i, 1, 0, UA_STATUSCODE_BADCOMMUNICATIONERROR, i+1));
+  D.ReadResult := ioOk;
+  D.Value := 4;
+  i := WaitNumChange(L, 4, i+1);
+end;
+
+procedure TTestOPCUAServer.AWriteOfAClientReachesTheSubscribers;
+var
+  T:TPLCTagNumber;
+  L:TChangeLog;
+  i:Integer;
+begin
+  T := NewTag('Setpoint', pttWord);
+  T.Value := 100;
+  Publish(T).Writable := true;
+  Start;
+  L := Subscribe('Setpoint');
+  i := WaitNumChange(L, 100);
+  //another client writes; this one is told
+  AssertEquals('written', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Setpoint', UA_TYPES_UINT16, 250)));
+  WaitNumChange(L, 250, i+1);
+  AssertEquals('in the tag too', 250, T.Value, 0);
+end;
+
+procedure TTestOPCUAServer.ARemovedItemEndsItsMonitoredItem;
+var
+  T:TPLCTagNumber;
+  L:TChangeLog;
+  i:Integer;
+begin
+  T := NewTag('Gone', pttWord);
+  T.Value := 1;
+  Publish(T);
+  Start;
+  L := Subscribe('Gone');
+  i := WaitNumChange(L, 1);
+  FServer.Items.Delete(0);
+  AssertTrue('the subscriber gets a bad status, not a frozen value', WaitChange(L, i, 2, 0, 0, i+1));
+  AssertEquals('the node is unknown', OPCUAStatusText(UA_STATUSCODE_BADNODEIDUNKNOWN),
+               OPCUAStatusText(L.Changes[i].Status));
+end;
+
+procedure TTestOPCUAServer.ManyVariablesAreMonitoredTogether;
+const
+  N = 200;
+var
+  tags:array of TPLCTagNumber;
+  logs:array of TChangeLog;
+  i, k, idx:Integer;
+  t0:QWord;
+  req:UA_CreateSubscriptionRequest;
+  resp:UA_CreateSubscriptionResponse;
+  mreq:UA_CreateMonitoredItemsRequest;
+  mresp:UA_CreateMonitoredItemsResponse;
+  items:array of UA_MonitoredItemCreateRequest;
+  ctx:array of Pointer;
+  cbs:array of UA_Client_DataChangeNotificationCallback;
+  ids:array of AnsiString;
+  st:UA_StatusCode;
+  missing:Integer;
+  subId:UA_UInt32;
+begin
+  SetLength(tags, N);
+  for i:=0 to N-1 do begin
+    tags[i] := NewTag('V'+IntToStr(i), pttLongInt);
+    tags[i].Value := i;
+    Publish(tags[i], 'Many');
+  end;
+  t0 := GetTickCount64;
+  Start;
+  AssertTrue('started in '+IntToStr(GetTickCount64-t0)+' ms', GetTickCount64-t0<5000);
+  //all in one subscription, created in one request, as the clients do
+  req := UA_CreateSubscriptionRequest_default();
+  req.requestedPublishingInterval := 20;
+  resp := UA_Client_Subscriptions_create(FClient, req, nil, nil, nil);
+  st := resp.responseHeader.serviceResult;
+  subId := resp.subscriptionId;
+  UA_clear(@resp, @UA_TYPES[UA_TYPES_CREATESUBSCRIPTIONRESPONSE]);
+  AssertEquals('subscription', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  if FChangeLogs=nil then FChangeLogs := TList.Create;
+  SetLength(logs, N);
+  SetLength(items, N);
+  SetLength(ctx, N);
+  SetLength(cbs, N);
+  SetLength(ids, N);
+  for i:=0 to N-1 do begin
+    logs[i] := TChangeLog.Create;
+    FChangeLogs.Add(logs[i]);
+    ids[i] := 'Many.V'+IntToStr(i);
+    items[i] := UA_MonitoredItemCreateRequest_default(UA_NODEID_STRING(FServer.NamespaceIndex, ids[i]));
+    items[i].requestedParameters.samplingInterval := 10;
+    items[i].requestedParameters.queueSize := 10;
+    ctx[i] := logs[i];
+    cbs[i] := @DataChanged;
+  end;
+  FillChar(mreq, SizeOf(mreq), 0);
+  mreq.subscriptionId := subId;
+  mreq.timestampsToReturn := UA_TIMESTAMPSTORETURN_BOTH;
+  mreq.itemsToCreate := @items[0];
+  mreq.itemsToCreateSize := N;
+  mresp := UA_Client_MonitoredItems_createDataChanges(FClient, mreq, @ctx[0], @cbs[0], nil);
+  st := mresp.responseHeader.serviceResult;
+  k := 0;
+  for i:=0 to Integer(mresp.resultsSize)-1 do
+    if mresp.results[i].statusCode=UA_STATUSCODE_GOOD then Inc(k);
+  UA_clear(@mresp, @UA_TYPES[UA_TYPES_CREATEMONITOREDITEMSRESPONSE]);
+  AssertEquals('monitored items', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  AssertEquals('every one created', N, k);
+  //every variable changes at once; every subscriber gets its value
+  for i:=0 to N-1 do
+    tags[i].Value := 1000+i;
+  t0 := GetTickCount64;
+  repeat
+    UA_Client_run_iterate(FClient, 10);
+    CheckSynchronize(0);
+    missing := 0;
+    for i:=0 to N-1 do
+      if logs[i].IndexOfNum(1000+i)<0 then Inc(missing);
+  until (missing=0) or (GetTickCount64-t0>5000);
+  AssertEquals('notifications missing after '+IntToStr(GetTickCount64-t0)+' ms', 0, missing);
+  idx := logs[N-1].IndexOfNum(1000+N-1);
+  AssertTrue('the last one too', idx>=0);
+end;
+
+{ browsing }
+
+function TTestOPCUAServer.Browser:TOPCUAClient;
+var
+  st:UA_StatusCode;
+begin
+  if FSecClient=nil then begin
+    FSecClient := TOPCUAClient.Create;
+    FSecClient.LibraryName := FServer.LibraryName;
+    FSecClient.EndpointUrl := 'opc.tcp://localhost:'+IntToStr(FServer.Port);
+    st := FSecClient.Connect;
+    AssertEquals('browser connects: '+FSecClient.LastError, OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  end;
+  Result := FSecClient;
+end;
+
+function TTestOPCUAServer.Child(const Parent, Name:String; out Item:TOPCUABrowseItem):Boolean;
+var
+  items:TOPCUABrowseItemArray;
+  st:UA_StatusCode;
+  i:Integer;
+begin
+  CheckSynchronize(0);
+  st := Browser.Browse(Parent, items);
+  AssertEquals('browse '+Parent, OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  for i:=0 to High(items) do
+    if items[i].BrowseName=Name then begin
+      Item := items[i];
+      exit(true);
+    end;
+  Item := Default(TOPCUABrowseItem);
+  Result := false;
+end;
+
+function TTestOPCUAServer.ChildNames(const Parent:String):String;
+var
+  items:TOPCUABrowseItemArray;
+  i:Integer;
+  sl:TStringList;
+begin
+  CheckSynchronize(0);
+  Browser.Browse(Parent, items);
+  sl := TStringList.Create;
+  try
+    sl.Sorted := true;
+    for i:=0 to High(items) do sl.Add(items[i].BrowseName);
+    sl.Delimiter := ',';
+    sl.StrictDelimiter := true;
+    Result := sl.DelimitedText;
+  finally
+    sl.Free;
+  end;
+end;
+
+procedure TTestOPCUAServer.TheTagsAreFoundBrowsingFromObjects;
+var
+  root, line, oven, v:TOPCUABrowseItem;
+  ns:String;
+begin
+  Publish(NewTag('Top', pttWord));
+  Publish(NewTag('SP', pttWord), 'Linha1');
+  Publish(NewTag('Temp', pttSmallInt), 'Linha1/Forno', 'Temperatura');
+  Start;
+  ns := 'ns='+IntToStr(FServer.NamespaceIndex)+';';
+  AssertTrue('the server folder is under Objects', Child('i=85', FServer.ServerName, root));
+  AssertTrue('an object', root.NodeClass=oncObject);
+  AssertEquals('its display name', FServer.ServerName, root.DisplayName);
+  AssertEquals('what it holds', 'Linha1,Top', ChildNames(root.NodeIdNs));
+  AssertTrue('a folder', Child(root.NodeIdNs, 'Linha1', line));
+  AssertTrue('the folder is an object', line.NodeClass=oncObject);
+  AssertEquals('folder node id', ns+'s=Linha1', line.NodeIdNs);
+  AssertEquals('what the folder holds', 'Forno,SP', ChildNames(line.NodeIdNs));
+  AssertTrue('a folder in the folder', Child(line.NodeIdNs, 'Forno', oven));
+  AssertTrue('the variable with its node name', Child(oven.NodeIdNs, 'Temperatura', v));
+  AssertTrue('a variable', v.NodeClass=oncVariable);
+  AssertEquals('display name', 'Temperatura', v.DisplayName);
+  AssertEquals('node id', ns+'s=Linha1.Forno.Temperatura', v.NodeIdNs);
+  AssertTrue('a top level variable', Child(root.NodeIdNs, 'Top', v));
+  AssertEquals('its node id', ns+'s=Top', v.NodeIdNs);
+end;
+
+procedure TTestOPCUAServer.TheVariablesTellTheirTypeAndAccess;
+var
+  it:TOPCUAServerItem;
+  id:UA_NodeId;
+  info:TOPCUAVariableInfo;
+
+  procedure InfoOf(const Name:String);
+  var
+    st:UA_StatusCode;
+  begin
+    AssertEquals('parse', OPCUAStatusText(UA_STATUSCODE_GOOD),
+      OPCUAStatusText(Browser.ParseNodeId('ns='+IntToStr(FServer.NamespaceIndex)+';s='+Name, id)));
+    st := Browser.ReadVariableInfo(id, info);
+    UA_NodeId_clear(id);
+    AssertEquals('info of '+Name, OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  end;
+
+begin
+  Publish(NewTag('RO', pttWord));
+  it := Publish(NewTag('RW', pttFloat));
+  it.Writable := true;
+  Publish(NewBlock('Arr', pttSmallInt, 4));
+  Start;
+  InfoOf('RO');
+  AssertTrue('UInt16', info.BuiltinType=@UA_TYPES[UA_TYPES_UINT16]);
+  AssertEquals('scalar', UA_VALUERANK_SCALAR, info.ValueRank);
+  AssertEquals('read only', UA_ACCESSLEVELMASK_READ, info.AccessLevel and (UA_ACCESSLEVELMASK_READ or UA_ACCESSLEVELMASK_WRITE));
+  InfoOf('RW');
+  AssertTrue('Float', info.BuiltinType=@UA_TYPES[UA_TYPES_FLOAT]);
+  AssertEquals('read and write', UA_ACCESSLEVELMASK_READ or UA_ACCESSLEVELMASK_WRITE,
+               info.AccessLevel and (UA_ACCESSLEVELMASK_READ or UA_ACCESSLEVELMASK_WRITE));
+  InfoOf('Arr');
+  AssertTrue('Int16', info.BuiltinType=@UA_TYPES[UA_TYPES_INT16]);
+  AssertEquals('one dimension', UA_VALUERANK_ONE_DIMENSION, info.ValueRank);
+  AssertEquals('dimensions', 1, Length(info.ArrayDimensions));
+  AssertEquals('of the block size', 4, info.ArrayDimensions[0]);
+end;
+
+procedure TTestOPCUAServer.AStructureIsBrowsedWithItsItems;
+var
+  S:TPLCStruct;
+  W, F:TPLCStructItem;
+  Txt:TPLCStructString;
+  root, rec, v:TOPCUABrowseItem;
+begin
+  NewStruct(S, W, F, Txt);
+  Start;
+  AssertTrue('root', Child('i=85', FServer.ServerName, root));
+  AssertTrue('the structure', Child(root.NodeIdNs, 'Recipe1', rec));
+  AssertTrue('is an object', rec.NodeClass=oncObject);
+  AssertEquals('with its items', 'Code,Ratio,Speed', ChildNames(rec.NodeIdNs));
+  AssertTrue('an item', Child(rec.NodeIdNs, 'Speed', v));
+  AssertTrue('a variable', v.NodeClass=oncVariable);
+  AssertEquals('node id', 'ns='+IntToStr(FServer.NamespaceIndex)+';s=Recipe1.Speed', v.NodeIdNs);
+end;
+
+procedure TTestOPCUAServer.ARemovedItemIsNotBrowsedAnymore;
+var
+  root:TOPCUABrowseItem;
+  t0:QWord;
+begin
+  Publish(NewTag('Stays', pttWord));
+  Publish(NewTag('Leaves', pttWord));
+  Start;
+  AssertTrue('root', Child('i=85', FServer.ServerName, root));
+  AssertEquals('both', 'Leaves,Stays', ChildNames(root.NodeIdNs));
+  FServer.Items.Delete(1);
+  t0 := GetTickCount64;
+  while (ChildNames(root.NodeIdNs)<>'Stays') and (GetTickCount64-t0<3000) do CheckSynchronize(10);
+  AssertEquals('only the one left', 'Stays', ChildNames(root.NodeIdNs));
+  Publish(NewTag('Back', pttWord));
+  t0 := GetTickCount64;
+  while (ChildNames(root.NodeIdNs)<>'Back,Stays') and (GetTickCount64-t0<3000) do CheckSynchronize(10);
+  AssertEquals('a new one shows up', 'Back,Stays', ChildNames(root.NodeIdNs));
+end;
+
+{ identity }
+
+function TTestOPCUAServer.Endpoint(out AppUri, AppName:String):UA_StatusCode;
+var
+  c:PUA_Client;
+  //NativeUInt, not size_t: the Sockets unit of the implementation uses declares a 32 bit
+  //size_t on Windows (cuint32) that hides the binding's one, and on Win64 the library
+  //wrote 8 bytes into a 4 byte n - the upper half over c, then UA_Client_delete(nil).
+  n:NativeUInt;
+  eps:PUA_EndpointDescription;
+begin
+  AppUri := '';
+  AppName := '';
+  c := UA_Client_new();
+  try
+    UA_ClientConfig_setDefault(UA_Client_getConfig(c));
+    n := 0;
+    eps := nil;
+    Result := UA_Client_getEndpoints(c, PAnsiChar('opc.tcp://localhost:'+IntToStr(FServer.Port)), @n, @eps);
+    if (Result=UA_STATUSCODE_GOOD) and (n>0) then begin
+      AppUri := UA_StringToStr(eps[0].server.applicationUri);
+      AppName := UA_StringToStr(eps[0].server.applicationName.text);
+    end;
+    if eps<>nil then
+      UA_Array_delete(eps, n, @UA_TYPES[UA_TYPES_ENDPOINTDESCRIPTION]);
+  finally
+    UA_Client_delete(c);
+  end;
+end;
+
+procedure TTestOPCUAServer.TheServerReportsItsApplicationIdentity;
+var
+  uri, name:String;
+begin
+  FServer.ServerName := 'Plant';
+  FServer.Active := true;
+  AssertTrue('running: '+FServer.LastError, FServer.Running);
+  AssertEquals('endpoints', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(Endpoint(uri, name)));
+  AssertEquals('default URI', FServer.EffectiveApplicationUri, uri);
+  AssertTrue('made of the computer and the server name: '+uri,
+             (Copy(uri, 1, 4)='urn:') and (Copy(uri, Length(uri)-17, 18)=':PascalSCADA:Plant'));
+  AssertEquals('default name: the server name', 'Plant', name);
+  FServer.Active := false;
+  FServer.ApplicationUri := 'urn:example:line1';
+  FServer.ApplicationName := 'Line 1 "north" \ hall';
+  FServer.Active := true;
+  AssertTrue('running again: '+FServer.LastError, FServer.Running);
+  AssertEquals('endpoints', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(Endpoint(uri, name)));
+  AssertEquals('the URI given', 'urn:example:line1', uri);
+  AssertEquals('the name given (quotes and backslash survive)', 'Line 1 "north" \ hall', name);
+end;
+
+procedure TTestOPCUAServer.TheCertificateFollowsTheApplicationUri;
+var
+  dir, cdir:String;
+  first, second:RawByteString;
+  C:TOPCUAClient;
+  st:UA_StatusCode;
+
+  function FileText(const F:String):RawByteString;
+  var
+    fs:TFileStream;
+  begin
+    Result := '';
+    if not FileExists(F) then exit;
+    fs := TFileStream.Create(F, fmOpenRead or fmShareDenyNone);
+    try
+      SetLength(Result, fs.Size);
+      if fs.Size>0 then fs.ReadBuffer(Result[1], fs.Size);
+    finally
+      fs.Free;
+    end;
+  end;
+
+  function IsFor(const Cert:RawByteString; const Uri:AnsiString):Boolean;
+  var
+    bs:UA_ByteString;
+    us:UA_String;
+    u:AnsiString;
+  begin
+    bs.length := Length(Cert);
+    bs.data := Pointer(Cert);
+    u := Uri;
+    us := _UA_STRING(u);
+    Result := UA_CertificateUtils_verifyApplicationUri(@bs, @us)=UA_STATUSCODE_GOOD;
+  end;
+
+begin
+  dir := TempDir('srvuri');
+  cdir := TempDir('cliuri');
+  try
+    FServer.Security := ossNoneAndSecure;
+    FServer.CertificateDir := dir;
+    FServer.Active := true;
+    AssertTrue('running: '+FServer.LastError, FServer.Running);
+    first := FileText(IncludeTrailingPathDelimiter(dir)+'server_cert.der');
+    AssertTrue('generated', first<>'');
+    AssertTrue('for the default URI', IsFor(first, FServer.EffectiveApplicationUri));
+    FServer.Active := false;
+    FServer.ApplicationUri := 'urn:example:other';
+    FServer.Active := true;
+    AssertTrue('running again: '+FServer.LastError, FServer.Running);
+    second := FileText(IncludeTrailingPathDelimiter(dir)+'server_cert.der');
+    AssertTrue('generated again', second<>first);
+    AssertTrue('for the new URI', IsFor(second, 'urn:example:other'));
+    //and a secure client takes it
+    C := TOPCUAClient.Create;
+    try
+      C.LibraryName := FServer.LibraryName;
+      C.EndpointUrl := 'opc.tcp://localhost:'+IntToStr(FServer.Port);
+      C.SecurityMode := osmSignAndEncrypt;
+      C.CertificateDir := cdir;
+      st := C.Connect;
+      AssertEquals('SignAndEncrypt connects: '+C.LastError, OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+      C.Disconnect;
+    finally
+      C.Free;
+    end;
+    //the same URI keeps the certificate
+    FServer.Active := false;
+    FServer.Active := true;
+    AssertTrue('kept', FileText(IncludeTrailingPathDelimiter(dir)+'server_cert.der')=second);
+  finally
+    FServer.Active := false;
+    DeleteTree(dir);
+    DeleteTree(cdir);
+  end;
+end;
+
+initialization
+  RegisterTest(TTestOPCUAServer);
+
+end.

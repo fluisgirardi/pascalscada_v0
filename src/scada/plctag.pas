@@ -22,9 +22,27 @@ unit PLCTag;
 interface
 
 uses
-  SysUtils, Classes, Tag, ProtocolDriver, ProtocolTypes, Math;
+  SysUtils, Classes, Tag, ProtocolDriver, ProtocolTypes, Math, pscadalog;
 
 type
+
+  TPLCTag = class;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Resultado de um comando de um tag (leitura ou escrita), com o id da
+  requisicao que o driver devolveu (ScanWrite/ScanRead). Chamado na thread
+  principal, antes de o tag aplicar os valores.
+  }
+  {$ELSE}
+  {:
+  Result of a command of a tag (read or write), with the id of the request the
+  driver returned (ScanWrite/ScanRead). Called in the main thread, before the
+  tag applies the values.
+  }
+  {$ENDIF}
+  TTagCommandResultEvent = procedure(Sender:TPLCTag; TagCommand:TTagCommand; ReqID:LongWord;
+                                     LastResult:TProtocolIOResult) of object;
 
   {$IFDEF PORTUGUES}
   {:
@@ -45,6 +63,9 @@ type
     FTotalTime, FReadCount:Int64;
     FFirtsRead:Boolean;
     FProtocoloOnLoading:TProtocolDriver;
+    //read state last posted to the log: 0 none yet, 1 ok, 2 failing
+    FLogReadState:Byte;
+    FCommandResultHandlers:array of TTagCommandResultEvent;
     function GetLastScanReadReqID: Int64;
     function GetLastScanWriteReqID: Int64;
     procedure RebuildTagGUID;
@@ -439,6 +460,23 @@ type
 
     {$IFDEF PORTUGUES}
     {:
+    Publica o resultado de um comando do tag: escritas sempre (llDebug, ou
+    llWarning na falha), leituras em llTrace e, quando a leitura passa a falhar
+    ou volta, uma vez so' (llWarning / llInfo); antes, avisa os handlers de
+    AddCommandResultHandler. Chamado por TagCommandCallBack.
+    }
+    {$ELSE}
+    {:
+    Posts the result of a tag command: writes always (llDebug, or llWarning on
+    failure), reads at llTrace and, when reading starts failing or comes back,
+    once (llWarning / llInfo); before that it tells the handlers of
+    AddCommandResultHandler. Called by TagCommandCallBack.
+    }
+    {$ENDIF}
+    procedure LogCommandResult(ReqID:LongWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult);
+
+    {$IFDEF PORTUGUES}
+    {:
     Compila uma estrutura com as informações do tag.
     @seealso(TTagRec)
     }
@@ -630,6 +668,13 @@ type
     {$ENDIF}
     property LastScanWriteReqID:Int64 read GetLastScanWriteReqID;
   public
+    {$IFDEF PORTUGUES}
+    //: Passa a receber o resultado de cada comando do tag (veja TTagCommandResultEvent).
+    {$ELSE}
+    //: Starts getting the result of each command of the tag (see TTagCommandResultEvent).
+    {$ENDIF}
+    procedure AddCommandResultHandler(Handler:TTagCommandResultEvent);
+    procedure RemoveCommandResultHandler(Handler:TTagCommandResultEvent);
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
@@ -831,12 +876,80 @@ begin
   end;
 end;
 
+procedure TPLCTag.AddCommandResultHandler(Handler:TTagCommandResultEvent);
+var
+  i:Integer;
+begin
+  for i:=0 to High(FCommandResultHandlers) do
+    if (TMethod(FCommandResultHandlers[i]).Code=TMethod(Handler).Code) and
+       (TMethod(FCommandResultHandlers[i]).Data=TMethod(Handler).Data) then
+      exit;
+  SetLength(FCommandResultHandlers, Length(FCommandResultHandlers)+1);
+  FCommandResultHandlers[High(FCommandResultHandlers)] := Handler;
+end;
+
+procedure TPLCTag.RemoveCommandResultHandler(Handler:TTagCommandResultEvent);
+var
+  i, j:Integer;
+begin
+  for i:=High(FCommandResultHandlers) downto 0 do
+    if (TMethod(FCommandResultHandlers[i]).Code=TMethod(Handler).Code) and
+       (TMethod(FCommandResultHandlers[i]).Data=TMethod(Handler).Data) then begin
+      for j:=i to High(FCommandResultHandlers)-1 do
+        FCommandResultHandlers[j] := FCommandResultHandlers[j+1];
+      SetLength(FCommandResultHandlers, Length(FCommandResultHandlers)-1);
+    end;
+end;
+
+procedure TPLCTag.LogCommandResult(ReqID:LongWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult);
+const
+  Kind:array[TTagCommand] of String = ('scan', 'scan', 'sync', 'sync', 'internal', 'single scan');
+var
+  handlers:array of TTagCommandResultEvent;
+  i:Integer;
+begin
+  //the handlers may remove themselves while called: a copy is walked
+  if Length(FCommandResultHandlers)>0 then begin
+    handlers := Copy(FCommandResultHandlers);
+    for i:=0 to High(handlers) do
+      handlers[i](Self, TagCommand, ReqID, LastResult);
+  end;
+  //a tag without driver is not a failure
+  if LastResult in [ioNone, ioNullDriver] then exit;
+  case TagCommand of
+    tcScanWrite, tcWrite:
+      if LastResult=ioOk then begin
+        if PSLogWants(lcTag, llDebug) then
+          PSLog(Self, lcTag, llDebug, Kind[TagCommand]+' write ok');
+      end else
+        if PSLogWants(lcTag, llWarning) then
+          PSLog(Self, lcTag, llWarning, Kind[TagCommand]+' write failed: '+LastResult.ToString);
+
+    tcScanRead, tcSingleScanRead, tcRead: begin
+      if PSLogWants(lcTag, llTrace) then
+        PSLog(Self, lcTag, llTrace, Kind[TagCommand]+' read '+LastResult.ToString);
+      //only the transitions: a PLC that is down would repeat it on every scan
+      if LastResult=ioOk then begin
+        if FLogReadState=2 then
+          PSLog(Self, lcTag, llInfo, 'reading again');
+        FLogReadState := 1;
+      end else begin
+        if FLogReadState<>2 then
+          PSLog(Self, lcTag, llWarning, 'read failed: '+LastResult.ToString);
+        FLogReadState := 2;
+      end;
+    end;
+  end;
+end;
+
 procedure TPLCTag.TagCommandCallBack(const ReqID: LongWord;
   Values: TArrayOfDouble; ValuesTimeStamp: QWord; TagCommand: TTagCommand;
   LastResult: TProtocolIOResult; Offset: LongInt);
 var
   c, poffset:LongInt;
 begin
+  LogCommandResult(ReqID, TagCommand, LastResult);
+
   if (not FFirtsRead) and (TagCommand =tcScanRead) and (LastResult=ioOk) and (ValuesTimeStamp<>PClockMonotonicTimeStamp) then begin
     inc(FTotalTime, (ValuesTimeStamp - PClockMonotonicTimeStamp));
     inc(FReadCount);
@@ -1195,7 +1308,16 @@ begin
   FTagType:=newType;
 
   if [csReading,csLoading]*ComponentState=[] then begin
-    UpdateTagSizeOnProtocol;
+    //pergunta de novo ao driver: num driver cujo tamanho de palavra depende do
+    //TagType (OPC UA, que entrega o valor ja convertido) o tamanho antigo deixaria
+    //o tag com o numero errado de valores. Os outros drivers respondem o mesmo.
+    //asks the driver again: on a driver whose word size depends on the TagType
+    //(OPC UA, which hands the value already converted) the old size would leave the
+    //tag with the wrong number of values. The other drivers answer the same.
+    if PProtocolDriver<>nil then
+      GetNewProtocolTagSize
+    else
+      UpdateTagSizeOnProtocol;
     RebuildValues;
   end;
 

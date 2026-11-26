@@ -5,12 +5,13 @@ program pascalscada_live_tests;
 {: Testes AO VIVO do driver S7CommPlus (precisam de um PLC / PLCSim com os DBs de tests/plc).
    Veja lt.s7plus.pas: S7PLUS_HOST, S7PLUS_PORT, S7PLUS_USER, S7PLUS_PASSWORD.
    LIVE tests of the S7CommPlus driver (they need a PLC / PLCSim with the DBs of tests/plc).
-   See lt.s7plus.pas: S7PLUS_HOST, S7PLUS_PORT, S7PLUS_USER, S7PLUS_PASSWORD. }
+   See lt.s7plus.pas: S7PLUS_HOST, S7PLUS_PORT, S7PLUS_USER, S7PLUS_PASSWORD.
+   OPC UA: lt.opcua.pas (OPCUA_URL, OPCUA_USER, OPCUA_PASSWORD, OPCUA_SECURITY, ...). }
 
 uses
   {$IFDEF UNIX}cthreads,{$ENDIF}
   Classes, SysUtils, consoletestrunner,
-  lt.s7plus;
+  lt.s7plus, lt.opcua;
 
 type
   TPascalSCADALiveRunner = class(TTestRunner)
@@ -25,7 +26,7 @@ begin
 
   App := TPascalSCADALiveRunner.Create(nil);
   App.Initialize;
-  App.Title := 'PascalSCADA 0.x - testes ao vivo (S7CommPlus)';
+  App.Title := 'PascalSCADA 0.x - testes ao vivo (S7CommPlus, OPC UA)';
   App.Run;
   App.Free;
 end.

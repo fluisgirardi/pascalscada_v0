@@ -5,7 +5,7 @@ unit crossthreads;
 interface
 
 uses
-  Classes, SysUtils, ctypes, crossevent, syncobjs
+  Classes, SysUtils, ctypes, crossevent, syncobjs, pscadalog
   {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
   , Windows;
   {$ELSEIF defined(freebsd) or defined(darwin)}
@@ -31,8 +31,29 @@ type
 
   TpSCADACoreAffinityThread = class(TThread)
   private
+    FLogOwner:TObject;
     function GetUniqueID:Int64;
+  protected
+    {$IFDEF PORTUGUES}
+    //: Publica uma mensagem no log com LogOwner (ou a propria thread) como fonte.
+    {$ELSE}
+    //: Posts a log message with LogOwner (or the thread itself) as the source.
+    {$ENDIF}
+    procedure Log(Category:TpSCADALogCategory; Level:TpSCADALogLevel; const Msg:String);
   public
+    {$IFDEF PORTUGUES}
+    {:
+    Fonte das mensagens de log da thread (ex.: o driver dono dela). Sem ele, a
+    fonte e' a propria thread (o nome da classe).
+    }
+    {$ELSE}
+    {:
+    Source of the thread's log messages (e.g. the driver that owns it).
+    Without it the source is the thread itself (its class name).
+    }
+    {$ENDIF}
+    property LogOwner:TObject read FLogOwner write FLogOwner;
+
     constructor Create(CreateSuspended: Boolean; const StackSize: SizeUInt=
   DefaultStackSize);
 
@@ -100,10 +121,20 @@ begin
   while not FEndLoop.ResetEvent do;
   while not FStartLoop.SetEvent do;
 
-  while not Terminated do
-    Loop;
+  Log(lcThread, llDebug, ClassName+' started');
+  try
+    while not Terminated do
+      Loop;
+  except
+    //the thread ends as before (FatalException), but it is no longer silent
+    on E:Exception do begin
+      Log(lcThread, llError, Format('%s stopped by an exception: %s: %s', [ClassName, E.ClassName, E.Message]));
+      raise;
+    end;
+  end;
 
   LoopTerminated;
+  Log(lcThread, llDebug, ClassName+' finished');
 
   while not FEndLoop.SetEvent do;
 end;
@@ -250,6 +281,16 @@ end;
 
 var
   CurrentCore:cint32 = 1; //Core Number 0 reserved to mainthread;
+
+procedure TpSCADACoreAffinityThread.Log(Category:TpSCADALogCategory;
+  Level:TpSCADALogLevel; const Msg:String);
+begin
+  if not PSLogWants(Category, Level) then exit;
+  if FLogOwner<>nil then
+    PSLog(FLogOwner, Category, Level, Msg)
+  else
+    PSLog(Self, Category, Level, Msg);
+end;
 
 function TpSCADACoreAffinityThread.GetUniqueID: Int64;
 begin

@@ -36,7 +36,8 @@ REGISTRO="$(mktemp)"
 trap 'rm -f "$REGISTRO"' EXIT
 
 echo "== registering the PascalSCADA packages"
-for pkg in pascalscada_common.lpk pascalscada.lpk pascalscada_db.lpk \
+for pkg in src/external/fpopen62541/fpopen62541.lpk \
+           pascalscada_common.lpk pascalscada.lpk pascalscada_db.lpk \
            pascalscada_dsng.lpk pascalscada_hmi.lpk pascalscada_full.lpk; do
     $LAZBUILD --add-package-link "$pkg" >/dev/null 2>&1
 done

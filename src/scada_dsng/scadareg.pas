@@ -33,7 +33,8 @@ uses
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
-  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP,
+  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, opcuatagassistant, CommPort,
+  SysUtils, pscadalog, ObjInspStrConsts, opcuaserver, opcuaserveredt, MQTTDriver,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -43,6 +44,41 @@ uses
       {$MESSAGE ERROR 'Only Lazarus/Freepascal are supported!'}
     {$ENDIF}
   {$ENDIF}
+type
+  {$IFDEF PORTUGUES}
+  //: Lista em TpSCADALogger.Display so' os componentes que implementam IpSCADALogDisplay.
+  {$ELSE}
+  //: Lists in TpSCADALogger.Display only the components that implement IpSCADALogDisplay.
+  {$ENDIF}
+  TpSCADALogDisplayPropertyEditor = class(TComponentPropertyEditor)
+  private
+    FProc:TGetStrProc;
+    procedure AddIfDisplay(const S:String);
+  public
+    procedure GetValues(Proc:TGetStrProc); override;
+  end;
+
+procedure TpSCADALogDisplayPropertyEditor.AddIfDisplay(const S:String);
+var
+  C:TPersistent;
+begin
+  if S=oisNone then begin
+    FProc(S);
+    exit;
+  end;
+  C := nil;
+  if Assigned(PropertyHook) then
+    C := PropertyHook.GetComponent(S);
+  if (C<>nil) and Supports(C, IpSCADALogDisplay) then
+    FProc(S);
+end;
+
+procedure TpSCADALogDisplayPropertyEditor.GetValues(Proc:TGetStrProc);
+begin
+  FProc := Proc;
+  inherited GetValues(@AddIfDisplay);
+end;
+
 procedure Register;
 var
   Cat: TIDECommandCategory;
@@ -61,12 +97,16 @@ begin
                                            TInovanceTCPDriver,
                                            TH5UTagTCPDriver,
                                            TS7CommPlusDriver,
-                                           TLGXDriver]);
+                                           TLGXDriver,
+                                           TMQTTDriver,
+                                           TOPCUADriver]);
   RegisterComponents(strUtilsPallete,     [TScalesQueue,
                                            TLinearScaleProcessor,
                                            TUserScale,
                                            TMutexServer,
-                                           TMutexClient]);
+                                           TMutexClient,
+                                           TpSCADALogger,
+                                           TOPCUAServer]);
   RegisterComponents(strTagsPallete,      [TPLCTagNumber,
                                            TPLCBlock,
                                            TPLCBlockElement,
@@ -78,8 +118,17 @@ begin
                                            TPLCStructString]);
 
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'COMPort', TPortPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(TComponent), TpSCADALogger, 'Display', TpSCADALogDisplayPropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ServerCertificate', TS7PlusCertificatePropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ClientCertificate', TS7PlusClientCertificatePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'CertificateFile', TFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'PrivateKeyFile', TFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'LibraryName', TFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'CertificateDir', TDirectoryPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'TrustListDir', TDirectoryPropertyEditor);
+  //the library opens the connection to EndpointUrl: no communication port to pick
+  //(published by TProtocolDriver, a descendant cannot unpublish it - only hide it here)
+  RegisterPropertyEditor(TypeInfo(TCommPortDriver), TOPCUADriver, 'CommunicationPort', THiddenPropertyEditor);
   {$IF defined(WIN32) or defined(WIN64)}
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'DevDir', THiddenPropertyEditor);
   {$IFEND}
@@ -132,6 +181,7 @@ begin
   //RegisterPropertyEditor(TypeInfo(Cardinal),   TComponent,     'Tag'            , TWinControlBoundsEditor);
 
   RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);
+  RegisterComponentEditor(TOPCUAServer,       TOPCUAServerComponentEditor);
   RegisterComponentEditor(TPLCNumberMappable, TTagBitMapperComponentEditor);
   RegisterComponentEditor(TPLCBlock,          TBlockElementMapperComponentEditor);
 
