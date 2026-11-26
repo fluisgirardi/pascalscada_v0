@@ -465,9 +465,10 @@ begin
 end;
 
 initialization
+  // Must stay UNSORTED: TStringList.Values[key] := value updates an existing
+  // entry via Strings[i] := ..., which raises "Operation not allowed on
+  // sorted list" on a sorted list. Values[] already de-duplicates by name.
   H5UUseState := TStringList.Create;
-  H5UUseState.Sorted := true;
-  H5UUseState.Duplicates := dupIgnore;
 
 finalization
   H5UUseState.Free;
