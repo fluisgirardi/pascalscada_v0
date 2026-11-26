@@ -189,7 +189,7 @@ begin
                 continue;
               end;
 
-              BaseName := H5UIdentFromVarName(V.Name,i+1);
+              BaseName := H5UIdentFromVarName(V.Name,i+1,V.Device,V.Address);
               TagName := MakeUniqueName(BaseName);
 
               if (V.Count > 1) and (V.Device = 'UW') then begin
@@ -204,6 +204,7 @@ begin
                   H5UVarTypeToTagTypeName(V.VarType)));
                 TagBlock.RefreshTime := V.Period;
                 TagBlock.ProtocolDriver := FDriver;
+                TagBlock.CSVVariableName := V.Name;
                 InsertHook(TagBlock);
               end else begin
                 TagNum := TPLCTagNumber(CreateProc(TPLCTagNumber));
@@ -218,6 +219,7 @@ begin
                 else TagNum.TagType := pttDefault;
                 TagNum.RefreshTime := V.Period;
                 TagNum.ProtocolDriver := FDriver;
+                TagNum.CSVVariableName := V.Name;
                 InsertHook(TagNum);
               end;
             end;

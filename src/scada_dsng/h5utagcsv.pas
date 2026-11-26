@@ -63,10 +63,15 @@ function H5UVarTypeToTagTypeName(const V: string): string;
 {: Converts a variable type name from AutoShop to a word count. }
 function H5UVarTypeToWords(const V: string): LongInt;
 
-{: Builds a valid Pascal identifier from an AutoShop variable name.
-  The part after the last '.' is used; non ASCII characters are replaced by
-  underscores. }
-function H5UIdentFromVarName(const Name: string; Index: LongInt): string;
+{: Builds a readable, unique Pascal identifier for an AutoShop variable.
+  - A purely ASCII tail (e.g. "BackwardLimite", "Jog_Forward") is kept as-is.
+  - A tail containing non ASCII characters (Chinese names) is NOT expanded
+    into long runs of underscores; instead a name based on the PLC device and
+    address (e.g. "H5U_UW_21004F0") is produced, which stays readable and is
+    unique per memory address. A collision suffix is added by the caller.
+  Device/Address may be empty; then "Tag_<Index>" is used. }
+function H5UIdentFromVarName(const Name: string; Index: LongInt;
+  const Device: string = ''; Address: LongInt = 0): string;
 
 implementation
 
@@ -280,11 +285,13 @@ begin
   else Result := 'pttDefault';
 end;
 
-function H5UIdentFromVarName(const Name: string; Index: LongInt): string;
+function H5UIdentFromVarName(const Name: string; Index: LongInt;
+  const Device: string; Address: LongInt): string;
 var
   Tail: string;
   i, DotPos: LongInt;
   c: Char;
+  HasNonASCII: Boolean;
 begin
   DotPos := 0;
   for i:=1 to Length(Name) do
@@ -294,17 +301,31 @@ begin
   else
     Tail := Name;
 
-  Result := '';
+  // Keep the tail verbatim when it already is a valid ASCII identifier.
+  // This preserves meaningful English names such as "BackwardLimite".
+  HasNonASCII := false;
   for i:=1 to Length(Tail) do begin
     c := Tail[i];
-    if (c in ['A'..'Z','a'..'z','0'..'9','_']) then
-      Result := Result + c
-    else
-      Result := Result + '_';
+    if not (c in ['A'..'Z','a'..'z','0'..'9','_']) then begin
+      HasNonASCII := true;
+      break;
+    end;
   end;
-  if Result = '' then Result := 'Tag_' + IntToStr(Index);
-  if not (Result[1] in ['A'..'Z','a'..'z','_']) then
-    Result := 'Tag_' + Result;
+
+  if (not HasNonASCII) and (Tail <> '') then begin
+    Result := Tail;
+    if not (Result[1] in ['A'..'Z','a'..'z','_']) then
+      Result := 'Tag_' + Result;
+    exit;
+  end;
+
+  // Non ASCII (usually Chinese) tail: a run of underscores would be both
+  // unreadable and heavily duplicated. Use device + hexadecimal address,
+  // which is unique for each distinct memory location.
+  if (Device <> '') and (Address >= 0) then
+    Result := 'H5U_' + UpperCase(Device) + '_' + IntToHex(Address,8)
+  else
+    Result := 'Tag_' + IntToStr(Index);
 end;
 
 end.
