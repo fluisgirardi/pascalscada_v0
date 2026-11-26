@@ -86,6 +86,7 @@ type
     procedure APLCErrorBecomesAProtocolResult;
     procedure AnAnswerFromAnotherFunctionIsIgnored;
     procedure MoreItemsInTheAnswerThanInTheRequestDoNotOverflow;
+    procedure ARefusedRequestFaultsEveryItem;
 
     //ciclo de vida / lifecycle
     procedure TheDestructorRemovesEveryPLC;
@@ -311,6 +312,22 @@ begin
 
   valores:=FDrv.ReadFromTheManager(DBRequest(0, 4), res);
   AssertEquals('the item asked for was processed', $0A, valores[0], 0);
+end;
+
+procedure TTestS7FamilyAnswer.ARefusedRequestFaultsEveryItem;
+var
+  res:TProtocolIOResult;
+begin
+  //o CLP recusou o pedido inteiro: cabecalho tipo 3 com erro $8500 (resposta
+  //maior que a PDU) e nenhum parametro. Os itens pedidos tem que ficar com a
+  //falha (e como atualizados), senao voltam ao topo da varredura para sempre.
+  //the PLC refused the whole request: type 3 header with error $8500 and no
+  //parameters. The items must keep the failure (and be taken as updated).
+  FDrv.DecodeIt(BytesOf('32 03 00 00 00 00 00 00 00 00 85 00'),
+                   ListOfOneItem(0, 0, 4));
+
+  FDrv.ReadFromTheManager(DBRequest(0, 4), res);
+  AssertEquals('failure passed on', Ord(ioPLCError), Ord(res));
 end;
 
 procedure TTestS7FamilyAnswer.TheDestructorRemovesEveryPLC;

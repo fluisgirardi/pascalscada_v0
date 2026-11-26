@@ -826,7 +826,15 @@ begin
       if c<High(FAddress) then continue;
     end;
 
-    if (FAddress[c].Address>BlockEnd) or ((FMaxBlockSize<>0) AND (BlockItems>=FMaxBlockSize)) then begin
+    //o limite vale para a EXTENSAO do bloco (adrstart..novo endereco), nao
+    //para a quantidade de enderecos: os buracos engolidos tambem sao lidos do
+    //CLP. Contando so' os enderecos, um bloco com buracos passava do limite
+    //(no S7, a resposta nao cabia na PDU e o CLP recusava o pedido inteiro).
+    //the limit applies to the block SPAN (adrstart..new address), not to the
+    //number of addresses: the swallowed holes are read from the PLC as well.
+    //Counting only the addresses, a block with holes went over the limit (on
+    //S7, the answer did not fit the PDU and the PLC refused the whole request).
+    if (FAddress[c].Address>BlockEnd) or ((FMaxBlockSize<>0) AND ((FAddress[c].Address-adrstart+1)>FMaxBlockSize)) then begin
       //bloco terminou, feche esse e inicie um novo!!
       //the block can't be extended, starts another...
       SetLength(newBlocks,Length(newBlocks)+1);

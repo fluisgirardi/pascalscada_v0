@@ -57,6 +57,7 @@ type
     procedure AHoleTheSizeOfTheLimitStillJoins;
     procedure AHoleOneOverTheLimitSplits;
     procedure TheSizeCountsTheSwallowedHole;
+    procedure TheItemLimitCountsTheSwallowedHole;
 
     //o RegSize / the RegSize parameter
     procedure RegSizeMultipliesTheNumberOfAddresses;
@@ -167,6 +168,27 @@ begin
   AssertEquals('one block', 1, Length(FMM.Blocks));
   AssertEquals('the block goes from 0 to 14', 14, FMM.Blocks[0].AddressEnd);
   AssertEquals('12 addresses asked for, 15 read', 15, FMM.Size);
+end;
+
+procedure TTestMemoryManager.TheItemLimitCountsTheSwallowedHole;
+var
+  b:LongInt;
+begin
+  //o caso do DB106: DBW18 (18..19) + uma estrutura em 22..1669. O buraco 20..21
+  //e' lido do CLP, entao conta para o limite do bloco. Contando so' os
+  //enderecos, o primeiro bloco passava 2 bytes do limite e, no S7, a resposta
+  //nao cabia na PDU.
+  //the DB106 case: DBW18 (18..19) + a structure at 22..1669. The hole 20..21 is
+  //read from the PLC, so it counts for the block limit.
+  FMM.MaxBlockItems:=222; //PDU 240 - 18
+  FMM.AddAddress(18, 2, 1, 250);
+  FMM.AddAddress(22, 1648, 1, 500);
+
+  AssertTrue('sliced into several blocks', Length(FMM.Blocks)>1);
+  for b:=0 to High(FMM.Blocks) do
+    AssertTrue('block '+IntToStr(b)+' within the limit', FMM.Blocks[b].Size<=222);
+  AssertEquals('the first block starts at 18', 18, FMM.Blocks[0].AddressStart);
+  AssertEquals('the last block ends at 1669', 1669, FMM.Blocks[High(FMM.Blocks)].AddressEnd);
 end;
 
 procedure TTestMemoryManager.RegSizeMultipliesTheNumberOfAddresses;

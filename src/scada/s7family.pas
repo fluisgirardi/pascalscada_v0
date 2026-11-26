@@ -1643,13 +1643,53 @@ var
   CurValue,
   err:LongInt;
   ProtocolErrorCode:TProtocolIOResult;
+
+  //o CLP recusou o pedido inteiro (erro no cabecalho, sem parametros): marca a
+  //falha em todos os itens pedidos e os da' como atualizados. Sem isso os
+  //blocos continuavam "precisando de atualizacao", voltavam ao topo da lista
+  //a cada varredura e o mesmo pedido recusado era repetido para sempre.
+  //the PLC refused the whole request (error on the header, no parameters):
+  //marks the failure on every requested item and takes them as updated.
+  //Without it the blocks kept "needing refresh", came back to the top of the
+  //list on every scan and the same refused request was repeated forever.
+  procedure FaultTheWholeRequest;
+  var
+    r:LongInt;
+  begin
+    for r:=0 to High(ReqList) do
+      with ReqList[r] do
+        if (PLCIdx>=0) and (PLCIdx<=High(FPLCs)) then
+          case ReqType of
+            vtS7_DB:
+              if (DBIdx>=0) AND (DBIdx<=High(FPLCs[PLCIdx].DBs)) then
+                FPLCs[PLCIdx].DBs[DBIdx].DBArea.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_Inputs:       FPLCs[PLCIdx].Inputs.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_Outputs:      FPLCs[PLCIdx].Outputs.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_200_AnInput:  FPLCs[PLCIdx].S7200AnInput.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_200_AnOutput: FPLCs[PLCIdx].S7200AnOutput.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_Timer:        FPLCs[PLCIdx].Timers.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_Counter:      FPLCs[PLCIdx].Counters.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_Flags:        FPLCs[PLCIdx].Flags.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_200_SM:       FPLCs[PLCIdx].S7200SMs.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_200_Timer:    FPLCs[PLCIdx].S7200Timers.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_200_Counter:  FPLCs[PLCIdx].S7200Counters.SetFault(StartAddress,Size,1,ioPLCError, true);
+            vtS7_Peripheral:   FPLCs[PLCIdx].PeripheralInputs.SetFault(StartAddress,Size,1,ioPLCError, true);
+          end;
+  end;
+
 begin
   if writepkg then begin
     if not SetupPDU(pkgout, true, PDU, err) then exit;
     if (PDU.param=nil) or (PDU.param[0]<>S7FuncWrite) then exit;
   end else begin
     if not SetupPDU(pkgin, false, PDU, err) then exit;
-    if (PDU.param=nil) or (PDU.param[0]<>S7FuncRead) then exit;
+    if PDU.param=nil then begin
+      if (PPDUHeader(PDU.header)^.PDUHeadertype in [2,3]) and
+         (PPDUHeader(PDU.header)^.Error<>0) then
+        FaultTheWholeRequest;
+      exit;
+    end;
+    if PDU.param[0]<>S7FuncRead then exit;
   end;
   NumResults:=Min(PDU.param[1], Length(ReqList));
   CurResult:=0;
@@ -1985,7 +2025,14 @@ var
 
   function AcceptThisRequest(CPU:TS7CPU; iSize:LongInt):Boolean;
   begin
-    if ((OutgoingPDUSize+12)<CPU.MaxPDULen) AND ((IncomingPDUSize+4+iSize)<CPU.MaxPDULen) then
+    //o pacote precisa estar inicializado, senao os tamanhos estao zerados e o
+    //primeiro item passaria sem contar os cabecalhos. Uma resposta que ocupa
+    //exatamente a PDU (bloco de MaxBlockSize bytes) e' valida, dai o <=.
+    //the packet must be initialized, otherwise the sizes are zero and the
+    //first item would pass without counting the headers. An answer that takes
+    //exactly the PDU (a block of MaxBlockSize bytes) is valid, hence the <=.
+    pkg_initialized;
+    if ((OutgoingPDUSize+12)<=CPU.MaxPDULen) AND ((IncomingPDUSize+4+iSize)<=CPU.MaxPDULen) then
       Result:=true
     else
       Result:=false;
@@ -2287,6 +2334,15 @@ begin
         end;
 
         if not AcceptThisRequest(FPLCs[ReqItem.iPLC], ReqItem.iSize) then begin
+          //nem num pacote vazio o item cabe: nao ha' como le-lo, entao ele
+          //e' pulado em vez de travar a varredura (antes ele ficava sempre no
+          //topo da lista e nada mais era lido).
+          //the item does not fit even an empty packet: it cannot be read, so
+          //it is skipped instead of locking the scan (before, it stayed on top
+          //of the list forever and nothing else was read).
+          if not RequestsPendding then
+            continue;
+
           for c2:=(c+1) to EntireTagList.Count-1 do begin
             ReqItem2:=EntireTagList.Items[c2];
             if ReqItem2.Read then continue;
