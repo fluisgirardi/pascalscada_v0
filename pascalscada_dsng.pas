@@ -14,7 +14,7 @@ uses
   ustructuremapper, uwesttagbuilder, westasciitagassistant, 
   rockwelltagassistant, ulgxtagbuilder, s7plustagassistant, us7plustagbuilder, 
   s7pluscertpropedit, us7plusbasketbuilder, opcuatagassistant, opcuaserveredt, 
-  LazarusPackageIntf;
+  h5utagcsv, uh5utagbuilder, h5utagassistant, LazarusPackageIntf;
 
 implementation
 

@@ -260,15 +260,48 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor Destroy; override;
+    //: @seealso(TProtocolDriver.OpenTagEditor)
+    procedure OpenTagEditor(InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); override;
+    //: @seealso(TProtocolDriver.HasTabBuilderEditor)
+    function  HasTabBuilderEditor:Boolean; override;
     //: @seealso(TProtocolDriver.SizeOfTag)
     function  SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
     //: Builds the address as it is written on the AutoShop CSV (UB 21004E0, UW 21004F0...).
     function  LiteralTagAddress(aTag:TTag; aBlockTag:TTag=nil):AnsiString; override;
   end;
 
+  {: Registers the design-time Tag Builder callback for the H5U tag driver.
+      Called by h5utagassistant during package initialization. }
+  procedure SetTagBuilderToolForH5UTagProtocol(TagBuilderTool:TOpenTagEditor);
+
 implementation
 
 uses pascalScadaMTPCPU;
+
+var
+  H5UTagBuilderEditor:TOpenTagEditor = nil;
+
+procedure TH5UTagDriver.OpenTagEditor(InsertHook:TAddTagInEditorHook;
+  CreateProc:TCreateTagProc);
+begin
+  if Assigned(H5UTagBuilderEditor) then
+    H5UTagBuilderEditor(Self,Self.Owner,InsertHook,CreateProc)
+  else
+    inherited;
+end;
+
+function TH5UTagDriver.HasTabBuilderEditor:Boolean;
+begin
+  Result := Assigned(H5UTagBuilderEditor);
+end;
+
+procedure SetTagBuilderToolForH5UTagProtocol(TagBuilderTool:TOpenTagEditor);
+begin
+  if Assigned(H5UTagBuilderEditor) then
+    raise Exception.Create('A Tag Builder editor for the H5U tag protocol was already assigned.')
+  else
+    H5UTagBuilderEditor := TagBuilderTool;
+end;
 
 constructor TH5UTagDriver.Create(AOwner:TComponent);
 begin
