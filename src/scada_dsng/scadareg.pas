@@ -33,7 +33,7 @@ uses
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
-  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, opcuatagassistant, CommPort,
+  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, CodesysDriver, opcuatagassistant, CommPort,
   h5utagassistant, codesysxmlassistant,
   SysUtils, pscadalog, ObjInspStrConsts, opcuaserver, opcuaserveredt, MQTTDriver,
   {$IFDEF FPC}
@@ -100,7 +100,8 @@ begin
                                            TS7CommPlusDriver,
                                            TLGXDriver,
                                            TMQTTDriver,
-                                           TOPCUADriver]);
+                                           TOPCUADriver,
+                                           TCodesysOPCUADriver]);
   RegisterComponents(strUtilsPallete,     [TScalesQueue,
                                            TLinearScaleProcessor,
                                            TUserScale,

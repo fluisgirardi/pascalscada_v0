@@ -1,15 +1,14 @@
 {$i ../common/language.inc}
 {:
-  @abstract(Design-time Tag Builder for importing Codesys symbol XML into OPC UA tags.)
+  @abstract(Design-time Tag Builder for the Codesys OPC UA driver.)
 
-  This is the SECOND Tag Builder of the OPC UA driver. It is registered in a
-  separate hook (SetTagBuilderToolForCodesysXMLProtocol) so the existing
-  online-browse wizard (opcuatagassistant) is left untouched. Switching the
-  driver's TagBuilderMode property selects which wizard OpenTagEditor opens.
+  This is the Tag Builder of TCodesysOPCUADriver. It is registered in its own
+  hook (SetTagBuilderToolForCodesysDriver) so the generic OPC UA online-browse
+  wizard (opcuatagassistant) is left untouched.
 
   The wizard reads a Codesys Symbolconfiguration XML, and creates the selected
-  TPLCTagNumber / TPLCBlock / TPLCString components bound to the OPC UA driver,
-  with LongAddress set to the OPC UA NodeId derived from the symbol path.
+  TPLCTagNumber / TPLCString components bound to the Codesys driver, with
+  LongAddress set to the OPC UA NodeId derived from the symbol path.
 }
 unit codesysxmlassistant;
 
@@ -20,18 +19,18 @@ unit codesysxmlassistant;
 interface
 
 uses
-  Classes, SysUtils, OPCUADriver, ProtocolTypes, ucodesysxmlbuilder, codesysxml;
+  Classes, SysUtils, CodesysDriver, ProtocolTypes, ucodesysxmlbuilder, codesysxml;
 
 type
   { TCodesysXmlAssistant }
   TCodesysXmlAssistant = class
   private
-    FDriver: TOPCUADriver;
+    FDriver: TCodesysOPCUADriver;
   public
     procedure OpenTagEditor(OwnerOfNewTags: TComponent;
       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
   published
-    property Driver: TOPCUADriver read FDriver write FDriver;
+    property Driver: TCodesysOPCUADriver read FDriver write FDriver;
   end;
 
 procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
@@ -47,12 +46,12 @@ procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
 var
   Wizard: TCodesysXmlAssistant;
 begin
-  if not (aProtocolDriver is TOPCUADriver) then
-    raise Exception.Create('An OPC UA driver is required as protocol.');
+  if not (aProtocolDriver is TCodesysOPCUADriver) then
+    raise Exception.Create('A Codesys OPC UA driver is required as protocol.');
 
   Wizard := TCodesysXmlAssistant.Create;
   try
-    Wizard.Driver := TOPCUADriver(aProtocolDriver);
+    Wizard.Driver := TCodesysOPCUADriver(aProtocolDriver);
     Wizard.OpenTagEditor(aOwnerOfNewTags,InsertHook,CreateProc);
   finally
     Wizard.Free;
@@ -217,6 +216,6 @@ begin
 end;
 
 initialization
-  SetTagBuilderToolForCodesysXMLProtocol(@OpenTagEditor);
+  SetTagBuilderToolForCodesysDriver(@OpenTagEditor);
 
 end.

@@ -58,15 +58,8 @@ uses
 
 //: Registers the Tag Builder of the OPC UA driver (the design package does it, the tool has forms).
 procedure SetTagBuilderToolForOPCUAProtocol(TagBuilderTool:TOpenTagEditor);
-//: Registers the second Tag Builder used to import a Codesys symbol XML.
-procedure SetTagBuilderToolForCodesysXMLProtocol(TagBuilderTool:TOpenTagEditor);
 
 type
-  {: Selects which design-time Tag Builder TOPCUADriver.OpenTagEditor opens.
-     tbBrowse is the default and keeps the original online-browse wizard;
-     tbCodesysXML opens the Codesys Symbolconfiguration XML import wizard. }
-  TOPCUATagBuilderMode = (tbBrowse, tbCodesysXML);
-
   { TOPCUAItem }
 
   //: A node read by the driver (shared by every tag with the same address). Internal.
@@ -130,10 +123,7 @@ type
     FOnLog:TOPCUALogEvent;
     FLibLoadFailed:Boolean;
     FLockFPU:TFPUExceptionMask;
-    FTagBuilderMode:TOPCUATagBuilderMode;
 
-    function GetTagBuilderMode:TOPCUATagBuilderMode;
-    procedure SetTagBuilderMode(AValue:TOPCUATagBuilderMode);
     function GetEndpointUrl:AnsiString;
     procedure SetEndpointUrl(const AValue:AnsiString);
     function GetUsername:AnsiString;
@@ -231,12 +221,6 @@ type
     function LastError:String;
   published
     {$IFDEF PORTUGUES}
-    //: Seleciona o Tag Builder: navegação online ou importação de XML Codesys.
-    {$ELSE}
-    //: Selects the design-time Tag Builder: online browse (default) or Codesys XML import.
-    {$ENDIF}
-    property TagBuilderMode:TOPCUATagBuilderMode read GetTagBuilderMode write SetTagBuilderMode default tbBrowse;
-    {$IFDEF PORTUGUES}
     //: Endereço do servidor, @code(opc.tcp://host:4840).
     {$ELSE}
     //: Server address, @code(opc.tcp://host:4840).
@@ -300,20 +284,12 @@ type
 
 var
   OPCUATagBuilderEditor:TOpenTagEditor = nil;
-  CodesysXMLTagBuilderEditor:TOpenTagEditor = nil;
 
 procedure SetTagBuilderToolForOPCUAProtocol(TagBuilderTool:TOpenTagEditor);
 begin
   if Assigned(OPCUATagBuilderEditor) then
     raise Exception.Create('A Tag Builder editor for the OPC UA protocol was already assigned.');
   OPCUATagBuilderEditor := TagBuilderTool;
-end;
-
-procedure SetTagBuilderToolForCodesysXMLProtocol(TagBuilderTool:TOpenTagEditor);
-begin
-  if Assigned(CodesysXMLTagBuilderEditor) then
-    raise Exception.Create('A Codesys XML Tag Builder editor was already assigned.');
-  CodesysXMLTagBuilderEditor := TagBuilderTool;
 end;
 
 const
@@ -444,7 +420,6 @@ begin
   FItems.Duplicates := dupError;
   FBySerial := TDictionary<Cardinal, TOPCUAItem>.Create;
   FNextSerial := 1;
-  FTagBuilderMode := tbBrowse;
   FUseSubscriptions := true;
   FPublishingInterval := 100;
   FReconnectInterval := 3000;
@@ -507,9 +482,7 @@ end;
 
 procedure TOPCUADriver.OpenTagEditor(InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
 begin
-  if (FTagBuilderMode = tbCodesysXML) and Assigned(CodesysXMLTagBuilderEditor) then
-    CodesysXMLTagBuilderEditor(Self, Self.Owner, InsertHook, CreateProc)
-  else if Assigned(OPCUATagBuilderEditor) then
+  if Assigned(OPCUATagBuilderEditor) then
     OPCUATagBuilderEditor(Self, Self.Owner, InsertHook, CreateProc)
   else
     inherited OpenTagEditor(InsertHook, CreateProc);
@@ -549,12 +522,6 @@ begin
   FNextConnect := 0;
   FLibLoadFailed := false;
 end;
-
-function TOPCUADriver.GetTagBuilderMode:TOPCUATagBuilderMode;
-begin Result := FTagBuilderMode; end;
-
-procedure TOPCUADriver.SetTagBuilderMode(AValue:TOPCUATagBuilderMode);
-begin FTagBuilderMode := AValue; end;
 
 function TOPCUADriver.GetEndpointUrl:AnsiString; begin Result := FClient.EndpointUrl; end;
 procedure TOPCUADriver.SetEndpointUrl(const AValue:AnsiString); begin if AValue=FClient.EndpointUrl then exit; FClient.EndpointUrl := AValue; SettingChanged; end;
