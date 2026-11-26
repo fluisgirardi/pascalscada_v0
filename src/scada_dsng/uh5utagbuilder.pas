@@ -27,6 +27,7 @@ type
     FVars: TH5UTagCsvVars;
     FChecked: array of Boolean;
     FImportedKeys: TStringList;
+    FUseStateFile: string;
     FStation: LongInt;
     FDefaultPeriod: LongInt;
     FUseCsvPeriod: Boolean;
@@ -51,15 +52,21 @@ type
     procedure CancelClick(Sender: TObject);
     procedure RefreshGrid;
     function ImportedKey(const V: TH5UTagCsvVar): string;
+    function UseStateKey(const V: TH5UTagCsvVar): string;
+    procedure ApplyUseState;
+    procedure SaveUseState;
+    procedure SetStation(const AValue: LongInt);
+    procedure SetDefaultPeriod(const AValue: LongInt);
+    procedure SetUseCsvPeriod(const AValue: Boolean);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     {: Station used for every generated tag. }
-    property Station: LongInt read FStation write FStation;
+    property Station: LongInt read FStation write SetStation;
     {: Default refresh time used when the CSV has no period. }
-    property DefaultPeriod: LongInt read FDefaultPeriod write FDefaultPeriod;
+    property DefaultPeriod: LongInt read FDefaultPeriod write SetDefaultPeriod;
     {: TRUE when the user wants the CSV period to overwrite DefaultPeriod. }
-    property UseCsvPeriod: Boolean read FUseCsvPeriod write FUseCsvPeriod;
+    property UseCsvPeriod: Boolean read FUseCsvPeriod write SetUseCsvPeriod;
     {: Variables selected by the user. }
     function SelectedVars: TH5UTagCsvVars;
     {: Adds the variables to the dialog after it has been created. }
@@ -74,6 +81,13 @@ var
   {: Last AutoShop CSV used in this IDE session; loaded automatically when the
      wizard is opened again. }
   H5ULastCSVFile: string = '';
+  {: Per-file "Use" checkbox state, keyed by CSV path + variable identity.
+     Kept at unit scope so it survives closing and reopening the wizard. }
+  H5UUseState: TStringList;
+  {: Last editor settings, also kept for the lifetime of the IDE session. }
+  H5ULastStation: LongInt = 1;
+  H5ULastPeriod: LongInt = 100;
+  H5ULastUseCsvPeriod: Boolean = true;
 
 const
   {: Must match H5UTAG_FUNC_UB / H5UTAG_FUNC_UW in H5UTagDriver.pas. Kept local
@@ -96,9 +110,9 @@ begin
   Height := 560;
   BorderStyle := bsDialog;
 
-  FStation := 1;
-  FDefaultPeriod := 100;
-  FUseCsvPeriod := true;
+  FStation := H5ULastStation;
+  FDefaultPeriod := H5ULastPeriod;
+  FUseCsvPeriod := H5ULastUseCsvPeriod;
   SetLength(FVars,0);
   SetLength(FChecked,0);
   FImportedKeys := TStringList.Create;
@@ -227,6 +241,12 @@ end;
 
 destructor TfrmH5UTagBuilder.Destroy;
 begin
+  // Remember the Use column and editor settings so reopening the wizard shows
+  // the same state, regardless of whether the user pressed OK or Cancel.
+  SaveUseState;
+  if Assigned(edtStation) then H5ULastStation := edtStation.Value;
+  if Assigned(edtPeriod) then H5ULastPeriod := edtPeriod.Value;
+  if Assigned(chkOverwritePeriod) then H5ULastUseCsvPeriod := chkOverwritePeriod.Checked;
   FImportedKeys.Free;
   inherited Destroy;
 end;
@@ -250,17 +270,19 @@ procedure TfrmH5UTagBuilder.LoadClick(Sender: TObject);
 var
   Err: string;
   Vars: TH5UTagCsvVars;
-  i: LongInt;
 begin
   if Trim(edtFile.Text) = '' then begin
     MessageDlg('Select the CSV file first.',mtInformation,[mbOK],0);
     exit;
   end;
+  // Persist the current file's selection before switching to another CSV.
+  SaveUseState;
   if not ParseAutoShopCSV(Trim(edtFile.Text),Vars,Err) then begin
     MessageDlg(Err,mtError,[mbOK],0);
     exit;
   end;
   H5ULastCSVFile := Trim(edtFile.Text);
+  FUseStateFile := H5ULastCSVFile;
   SetVars(Vars);
 end;
 
@@ -271,6 +293,7 @@ begin
   FVars := AVars;
   SetLength(FChecked,Length(FVars));
   for i:=0 to High(FVars) do FChecked[i] := true;
+  ApplyUseState;
   RefreshGrid;
 end;
 
@@ -313,6 +336,36 @@ begin
     IntToStr(V.Address) + '|' + IntToStr(Size);
 end;
 
+function TfrmH5UTagBuilder.UseStateKey(const V: TH5UTagCsvVar): string;
+begin
+  // Scope the saved checkbox to the CSV file and to the variable itself, so
+  // switching to a different CSV never reuses another file's selection.
+  Result := LowerCase(FUseStateFile) + '|' + V.Name + '|' + V.VarType + '|' +
+    V.Device + '|' + IntToStr(V.Address) + '|' + IntToStr(V.Count);
+end;
+
+procedure TfrmH5UTagBuilder.ApplyUseState;
+var
+  i: LongInt;
+  S: string;
+begin
+  if H5UUseState = nil then exit;
+  for i:=0 to High(FVars) do begin
+    S := H5UUseState.Values[UseStateKey(FVars[i])];
+    if S = 'Y' then FChecked[i] := true
+    else if S = 'N' then FChecked[i] := false;
+  end;
+end;
+
+procedure TfrmH5UTagBuilder.SaveUseState;
+var
+  i: LongInt;
+begin
+  if (H5UUseState = nil) or (FUseStateFile = '') then exit;
+  for i:=0 to High(FVars) do
+    H5UUseState.Values[UseStateKey(FVars[i])] := BoolToStr(FChecked[i],'Y','N');
+end;
+
 procedure TfrmH5UTagBuilder.SetImportedKeys(const AKeys: TStrings);
 var
   i: LongInt;
@@ -323,6 +376,9 @@ begin
   for i:=0 to High(FVars) do
     if FImportedKeys.IndexOf(ImportedKey(FVars[i])) >= 0 then
       FChecked[i] := false;
+  // A saved user choice always wins over the automatic "already imported"
+  // default, otherwise reopening the wizard would silently reset the column.
+  ApplyUseState;
   RefreshGrid;
 end;
 
@@ -389,5 +445,31 @@ procedure TfrmH5UTagBuilder.CancelClick(Sender: TObject);
 begin
   ModalResult := mrCancel;
 end;
+
+procedure TfrmH5UTagBuilder.SetStation(const AValue: LongInt);
+begin
+  FStation := AValue;
+  if Assigned(edtStation) then edtStation.Value := AValue;
+end;
+
+procedure TfrmH5UTagBuilder.SetDefaultPeriod(const AValue: LongInt);
+begin
+  FDefaultPeriod := AValue;
+  if Assigned(edtPeriod) then edtPeriod.Value := AValue;
+end;
+
+procedure TfrmH5UTagBuilder.SetUseCsvPeriod(const AValue: Boolean);
+begin
+  FUseCsvPeriod := AValue;
+  if Assigned(chkOverwritePeriod) then chkOverwritePeriod.Checked := AValue;
+end;
+
+initialization
+  H5UUseState := TStringList.Create;
+  H5UUseState.Sorted := true;
+  H5UUseState.Duplicates := dupIgnore;
+
+finalization
+  H5UUseState.Free;
 
 end.

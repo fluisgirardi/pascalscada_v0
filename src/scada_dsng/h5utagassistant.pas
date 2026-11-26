@@ -166,8 +166,8 @@ begin
     CollectImportedKeys;
     Dlg := TfrmH5UTagBuilder.Create(nil);
     try
-      Dlg.Station := 1;
-      Dlg.DefaultPeriod := 100;
+      // Station / period are restored by the wizard itself from the last
+      // session; do not overwrite them here.
       Dlg.SetImportedKeys(ImportedKeys);
       if Dlg.ShowModal = mrOK then begin
         Vars := Dlg.SelectedVars;
