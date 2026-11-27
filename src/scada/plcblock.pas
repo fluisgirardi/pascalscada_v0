@@ -146,6 +146,8 @@ type
     property SyncWrites;
     //: @seealso(TPLCTag.TagType)
     property TagType;
+    //: @seealso(TTag.CSVVariableName)
+    property CSVVariableName;
     //: @seealso(TPLCTag.SwapBytes)
     property SwapBytes;
     //: @seealso(TPLCTag.SwapWords)

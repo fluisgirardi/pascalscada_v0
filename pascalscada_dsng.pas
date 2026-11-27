@@ -13,8 +13,9 @@ uses
   ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, 
   ustructuremapper, uwesttagbuilder, westasciitagassistant, 
   rockwelltagassistant, ulgxtagbuilder, s7plustagassistant, us7plustagbuilder, 
-  s7pluscertpropedit, us7plusbasketbuilder, opcuatagassistant, opcuaserveredt, 
-  LazarusPackageIntf;
+  s7pluscertpropedit, us7plusbasketbuilder, opcuatagassistant, opcuaserveredt,
+  h5utagcsv, uh5utagbuilder, h5utagassistant, codesysxml, ucodesysxmlbuilder,
+  codesysxmlassistant, LazarusPackageIntf;
 
 implementation
 

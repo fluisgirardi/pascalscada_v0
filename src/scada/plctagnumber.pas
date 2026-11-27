@@ -113,6 +113,8 @@ type
     property ClockMonotonicTimeStamp;
     //: @seealso(TTag.LongAddress)
     property LongAddress;
+    //: @seealso(TTag.CSVVariableName)
+    property CSVVariableName;
     //: @seealso(TPLCTag.SyncWrites)
     property SyncWrites;
     //: @seealso(TPLCTag.TagType)

@@ -31,7 +31,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="8" Release="1"/>
-    <Files Count="118">
+    <Files Count="120">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -504,6 +504,14 @@
         <Filename Value="src\scada\mqttdriver.pas"/>
         <UnitName Value="MQTTDriver"/>
       </Item118>
+      <Item119>
+        <Filename Value="src\scada\codesysdriver.pas"/>
+        <UnitName Value="CodesysDriver"/>
+      </Item119>
+      <Item120>
+        <Filename Value="src\scada\codesyssymbolclient.pas"/>
+        <UnitName Value="CodesysSymbolClient"/>
+      </Item120>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

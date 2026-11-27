@@ -616,6 +616,13 @@ type
     PGUID:AnsiString;
 
     {$IFDEF PORTUGUES}
+    //: Armazena o nome da variável CSV de origem (ex.: importação H5U).
+    {$ELSE}
+    //: Stores the source CSV variable name (e.g. H5U import) for traceability.
+    {$ENDIF}
+    PCSVVariableName:AnsiString;
+
+    {$IFDEF PORTUGUES}
     //: Primeira atualização do tag?
     {$ELSE}
     //: First tag update? so fires
@@ -865,6 +872,16 @@ type
     //: Long address (text), if supported by the protocol driver.
     {$ENDIF}
     property LongAddress:AnsiString read PPath;
+
+    {$IFDEF PORTUGUES}
+    {: Nome da variável do arquivo CSV de origem deste tag, quando importado
+       por um assistente (ex.: H5U AutoShop). Beta. }
+    {$ELSE}
+    {: Source CSV variable name of this tag when created by an import wizard
+       (e.g. H5U AutoShop). Purely informational; keeps the original name so
+       the tag can be traced back to the PLC variable. }
+    {$ENDIF}
+    property CSVVariableName:AnsiString read PCSVVariableName write PCSVVariableName;
 
     {$IFDEF PORTUGUES}
     //: Evento chamado quando uma leitura do tag tem exito.
