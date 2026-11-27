@@ -10,15 +10,50 @@
   The design-time Tag Builder imports a CODESYS Symbolconfiguration XML and
   creates the tags with their paths and IEC types filled in.
 
-  @bold(TEST STAGE / 测试阶段 - git tag @code(codesys11740-test-stage).)
-  Frozen as an experimental test-stage snapshot. Both packages compile and the
-  wire encoder passes its local self-test, but NO message exchange has been
-  validated against a real CODESYS runtime yet. Do not use in production.
+  Both packages compile; the
+  handshake and Service layers were calibrated against a REAL bidirectional
+  capture (MCGS HMI <-> CODESYS Control Win V3 soft PLC). On 2026-11-27 a
+  REAL boot application (9 BOOL + 1 INT, Symbol Configuration exported
+  ReadWrite) was loaded into the soft PLC.
+
+  Two layers have now been verified end-to-end against that real application:
+    - @bold(Protocol client:) tools/codesys_verify.pas read back all 10 real
+      IEC values and wrote a BOOL and an INT (read-back confirmed). Key
+      correction: variable values are tag 0x1D (one per registered symbol,
+      4 byte header + IEC value), NOT tag 0x22 (a status/heartbeat word);
+      Write(4) uses 0x13/0x21/0x1E with an 8/12 byte value buffer and
+      tag 0x20 == 0 means success.
+    - @bold(Driver layer:) tools/codesys_driver_verify.pas drives real
+      TPLCTagNumber objects through DoAddTag/DoRead/DoWrite/DoScanRead/
+      DoGetValue. That test EXPOSED and led to the fix of three mapping bugs
+      in this unit: BOOL (pttDefault) was treated as an 8 byte LREAL, INT
+      (pttSmallInt) was mapped to unsigned UINT, and WriteOne sent the wrong
+      buffer length / wrote float bit patterns into 64 bit integers. BOOL
+      and signed INT reads, writes, read-back and the scan cache now pass.
+
+  @bold(REAL / LREAL verified - 2026-11-27.) A second boot application
+  (ProbeSymbols3: 9 BOOL + INT + REAL + LREAL) was generated with the
+  CODESYS ScriptEngine and loaded into the soft PLC. The XML wizard maps
+  REAL -> pttFloat and LREAL -> pttDouble; TagTypeToIEC maps those to IEC
+  $0E/4 bytes and $0F/8 bytes. tools/codesys_driver_verify.pas now covers
+  SizeOfTag, DoRead initial values (3.14159 / 2.718281828459045), DoWrite
+  (-12.5 / -9876.54321) with byte-exact read-back and the full
+  DoScanRead/DoGetValue cache path: 29 PASS / 0 FAIL. On the wire
+  tools/codesys_capture/verify_real_lreal.py gives 17 PASS / 0 FAIL.
+  A 64 bit LREAL uses a 12 byte 0x1D (4 byte header + 8 byte double) and a
+  12 byte Write(4) value buffer. The protocol client now BATCHES Register(1)
+  requests (<= 10 names / <= 440 encoded bytes per batch), because this
+  runtime resets the connection on larger requests and on BLK fragments.
+
+  Still do not use in production - only anonymous runtimes, one runtime
+  version (3.5.14.10) and BOOL/INT/REAL/LREAL have been exercised
+  end-to-end; LINT/ULINT/STRING/WSTRING and password-protected runtimes
+  remain untested.
 
   @bold(Anonymous access only:) the runtime must allow access without a
   password; login/challenge-response is not implemented. The protocol is
-  private: handshake, variable registration and read/write requests may need
-  byte-level corrections once a real-PLC capture is available.
+  private and the tag semantics above are based on a single runtime version
+  (3.5.14.10); other versions may need byte-level corrections.
 }
 unit CodesysDriver;
 
@@ -126,19 +161,36 @@ begin
   CodesysDriverTagBuilderEditor := TagBuilderTool;
 end;
 
-{ IEC type code and byte width of a PascalSCADA TagType. }
+{ IEC type code and byte width of a PascalSCADA TagType.
+
+  Verified 2026-11-27 end-to-end through the driver (tools/
+  codesys_driver_verify.pas) against a real running CODESYS application.
+  Two mappings were WRONG before that test:
+    * pttDefault had no case, so it fell through to the LREAL default.
+      The Codesys XML Tag Builder emits pttDefault for BOOL (see
+      src/scada_dsng/codesysxml.pas: 'bool' -> 'pttDefault'), so every
+      BOOL tag was treated as an 8 byte LREAL: SizeOfTag returned 8,
+      DecodeIEC always produced 0, and WriteOne sent 8 bytes which the
+      PLC rejected with status 15. BOOL is 1 byte / IEC $00.
+    * pttSmallInt (INT, signed 16 bit) was mapped to $0B (UINT), so a
+      negative INT was displayed as 65535-N. It must be IEC $07.
+  Keep the type codes in sync with DecodeIEC below and with the case in
+  WriteOne; WriteOne derives the write buffer size from the code. }
 function TagTypeToIEC(T:TTagType; out Bytes:LongInt):Byte;
 begin
   Bytes := 8;
   case T of
-    pttShortInt, pttByte: begin Result := $00; Bytes := 1; end; // BOOL/BYTE
-    pttSmallInt, pttWord:         begin Result := $0B; Bytes := 2; end; // UINT
-    pttLongInt:                   begin Result := $08; Bytes := 4; end; // DINT
-    pttDWord:                     begin Result := $0C; Bytes := 4; end; // UDINT
-    pttFloat:                     begin Result := $0E; Bytes := 4; end; // REAL
-    pttInt64:                     begin Result := $09; Bytes := 8; end; // LINT
-    pttQWord:                     begin Result := $0D; Bytes := 8; end; // ULINT
-    pttDouble:                    begin Result := $0F; Bytes := 8; end; // LREAL
+    pttDefault:   begin Result := $00; Bytes := 1; end; // BOOL (XML wizard)
+    pttShortInt:  begin Result := $06; Bytes := 1; end; // SINT
+    pttByte:      begin Result := $02; Bytes := 1; end; // BYTE/USINT
+    pttSmallInt:  begin Result := $07; Bytes := 2; end; // INT (signed!)
+    pttWord:      begin Result := $0B; Bytes := 2; end; // UINT/WORD
+    pttLongInt:   begin Result := $08; Bytes := 4; end; // DINT
+    pttDWord:     begin Result := $0C; Bytes := 4; end; // UDINT/DWORD
+    pttFloat:     begin Result := $0E; Bytes := 4; end; // REAL
+    pttInt64:     begin Result := $09; Bytes := 8; end; // LINT
+    pttQWord:     begin Result := $0D; Bytes := 8; end; // ULINT/LWORD
+    pttDouble:    begin Result := $0F; Bytes := 8; end; // LREAL
   else
     Result := $0F; Bytes := 8; // unknown: assume LREAL
   end;
@@ -463,7 +515,12 @@ begin
     for i:=0 to High(Names) do begin
       Item := FindItem(Names[i]);
       if Item=nil then continue;
-      if Results[i].OK and (Results[i].Status=0) then begin
+      // Verified 2026-11-27 against a REAL loaded CODESYS application:
+      // OK is set when a 0x1D value tag arrives for this variable (the
+      // client maps the N 0x1D tags to Names in request order). 0x20 is
+      // an error code (0 = OK, 20 = no data) and is absent on a good read;
+      // do not gate success on Status. ReadOne judges by OK alone too.
+      if Results[i].OK then begin
         Item.LastResult := ioOk;
         Item.Stamp := Now_;
         Item.Values := DecodeIEC(Results[i].Raw,Item.TypeCode);
@@ -576,17 +633,20 @@ end;
 
 function TCodesysSymbolDriver.WriteOne(const Path:AnsiString;
   const Values:TArrayOfDouble):TProtocolIOResult;
-var Data:TBytes; Item:TCodesysItem; i,n:LongInt; V:Double; F:Single;
+var Data:TBytes; Item:TCodesysItem; i,n:LongInt; V:Double; F:Single; Q:QWord;
 begin
   if not EnsureConnected(GetTickCount64) then exit(FConnectResult);
   if Length(Values)=0 then exit(ioIllegalValue);
   Item := GetItem(Path);
+  // The write buffer length MUST equal the IEC type size: the client puts
+  // Length(Data) into tag 0x1E as the u16 type size, and the PLC rejects
+  // a mismatch with status 15. Verified 2026-11-27 end-to-end.
   n := 8;
   case Item.TypeCode of
-    $00,$02: n := 1;
-    $0A,$0B,$03: n := 2;
-    $0C,$04,$08,$0E: n := 4;
-  else n := 8;
+    $00,$02,$06,$0A: n := 1;   // BOOL, BYTE/USINT, SINT
+    $07,$03,$0B:     n := 2;   // INT, WORD/UINT
+    $08,$04,$0C,$0E: n := 4;   // DINT, DWORD/UDINT, REAL
+  else n := 8;                 // LINT, ULINT, LREAL
   end;
   SetLength(Data,n);
   for i:=0 to n-1 do Data[i] := 0;
@@ -606,7 +666,14 @@ begin
          end;
        end;
   else
-    Data := EncodeDouble(V);
+    if Item.TypeCode=$0F then Data := EncodeDouble(V)
+    else begin
+      // LINT / ULINT: little-endian 64 bit integer. The old code used
+      // EncodeDouble here, writing a FLOAT bit pattern into an INT64.
+      Q := QWord(Int64(Round(V)));
+      SetLength(Data,8);
+      for i:=0 to 7 do Data[i] := Byte((Q shr (i*8)) and $FF);
+    end;
   end;
   if FClient.WriteVariable(Path,Data) then begin
     Item.Stamp := GetTickCount64;

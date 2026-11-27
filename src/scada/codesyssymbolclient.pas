@@ -25,18 +25,94 @@
     Tags         : 7-bit varint id + 7-bit varint size + data;
                    id >= 0x80 means a parent tag (children follow in data)
 
-  @bold(TEST STAGE / 测试阶段 - git tag @code(codesys11740-test-stage).)
-  Handshake layers (Block / Datagram / OpenChannel) were calibrated against
-  a real MCGS HMI capture: block framing, total-length semantics, full
-  addresses, the 20 byte OpenChannel request and its CRC32 rule (CRC over the
-  whole channel frame with the CRC field zeroed, verified 0xE326BA42).
-  NOT yet verified: no response from a real CODESYS runtime was ever seen, so
-  the Service layer (CmpIecVarAccess register/read/write TLV tags, 0x19 name
-  padding, subcommand values and all response parsing) remains speculative.
-  This client has never talked to a real PLC. Do not use in production.
+  Both the handshake layers AND the Service layer have now been calibrated
+  against a REAL bidirectional capture (MCGS HMI <-> CODESYS Control Win V3
+  soft PLC, 2026-11-27, 108 client frames + 119 server frames via a local
+  mitm on TCP 11740 -> 11741). Verified from that capture:
+    - Block: 00 01 17 E8 + total length; Channel/Datagram/OpenChannel framing,
+      CRC32 = crc32(service payload) for BLK first blocks, and crc32 over the
+      whole OpenChannel request with its CRC field zeroed (0xE326BA42).
+    - OpenChannel RESPONSE carries the real channel id at offset 14 (the HMI
+      uses it in every following BLK/ACK/KeepAlive frame).
+    - BLK first block: total@12, crc@16, service payload@20.
+    - Service header (20 bytes): 0xCD55, hdrsize=16, group (bit 0x80 set on
+      responses), subcmd, session id, content size, additional data, TLVs.
+    - Session flow: CmpDevice(1) subcmd=1 device info -> subcmd=2 anonymous
+      login (fixed nonce blob) -> tag 0x21 in the parent 0x82 response gives
+      the session id used by every later request.
+    - CmpIecVarAccess(9): GetHandle(7) -> tag 0x14 handle on a runtime with
+      NO application; Register(1) -> tags 0x13, 0x00, 0x00, 0x14 (or 0x3A),
+      0x18, 0x19(name); response tag 0x10 is the registration handle;
+      Read(3) -> only tag 0x10.
+    - 0x19 name encoding = u16(L+1) + name + #0 + pad to align4(L+1).
+    - channel type 0x80 is a 162 byte router/name-service announcement with
+      UTF-16LE "CODESYS Control Win V3 x64" and "3S - Smart Software
+      Solutions GmbH"; it is skipped during the handshake.
 
-  Only anonymous (no password) access is implemented. PLCs whose runtime
-  requires a login cannot be accessed with this client (no challenge-response).
+  @bold(VERIFIED against a REAL running application - 2026-11-27.)
+  A boot application (tools/codesys_project/ProbeSymbols2, 9 BOOL + 1 INT,
+  Symbol Configuration exported ReadWrite) was loaded into CODESYS Control
+  Win V3 and probed directly with tools/codesys_dbg*.pas. This corrected
+  several earlier conclusions that had been drawn from an EMPTY runtime
+  (no application loaded, so no symbol had a real value):
+
+    - GetHandle(7) on a runtime WITH an application does NOT return 0x14.
+      It returns the browse root: tag 0x30 = application name,
+      0x38 = 20 byte browse blob, 0x3A = u32 session handle. BOTH 0x14
+      (constant 0x0018 from the HMI capture) and the 0x3A handle work as
+      the Register(1) handle; 0x38 does NOT (it closes the channel).
+      This client prefers 0x14, falls back to 0x3A, and remembers which
+      tag id to send in RegisterVars.
+    - Register(1) with N names + ONE Read(3) returns N tags @bold(0x1D),
+      one per variable IN REQUEST ORDER. Each is 8 bytes: a 4 byte header
+      (00 00 00 00) followed by the IEC value in the low bytes
+      (BOOL 01/00, INT 39 30 for 12345, etc). @bold(0x22 is NOT the value):
+      it is a fixed status/heartbeat tag (58 00 01 00 + u32 tick counter).
+      The old "one 0x22 per read" conclusion was an artifact of an empty
+      runtime where no 0x1D values existed at all.
+    - @bold(0x20 is an ERROR code, not a status word): 0 = success,
+      20 (0x14) = no data / invalid name, 15 (0x0F) = bad value layout.
+      It is ABSENT on a successful read that returns 0x1D values.
+    - Write(4) request, verified to really change the variable:
+        0x13 = 00 00 00 00
+        0x21 = ASCII name + #0 + zero pad to align4(L+1) (NO u16 prefix)
+        0x1E = [u16 IEC size][00 00][value buffer]
+               value buffer = 8 bytes for types <= 4 bytes,
+                              12 bytes for 64 bit types (not yet verified),
+               IEC value in the LOW bytes, remainder zero.
+      Success = response tag 0x20 == 0. BOOL TRUE -> 1,0,0,0,0,0,0,0;
+      INT 54321 -> 31,D4,0,0,0,0,0,0. Read-back confirmed both.
+
+  @bold(REAL / LREAL + Register batching - 2026-11-27.)
+  A second boot application (ProbeSymbols3, 9 BOOL + INT + REAL + LREAL,
+  all ReadWrite in the Symbol Configuration) was generated and loaded into
+  the same runtime. tools/codesys_verify.pas (12 symbols),
+  tools/codesys_driver_verify.pas (full TCodesysSymbolDriver layer) and
+  tools/codesys_capture/verify_real_lreal.py (byte-level capture replay)
+  established:
+
+    - REAL (IEC $0E) and LREAL (IEC $0F) read/write work end to end.
+      REAL 3.14159 = D0 0F 49 40, LREAL 2.718281828459045 =
+      69 57 14 8B 0A BF 05 40. Writing -12.5 (00 00 48 C1) and
+      -9876.54321 (6E C0 E7 87 45 4A C3 C0) really changes the PLC and
+      reads back byte-identically. Driver layer: 29 PASS / 0 FAIL.
+    - A 64 bit LREAL 0x1D is @bold(12 bytes), not 8: 4 byte header
+      (00 00 00 00) + the 8 byte double. <=32 bit types use 8 bytes.
+    - Write(4) 0x1E uses a @bold(12 byte value buffer) for 64 bit types
+      (verified working, previously marked "not yet verified").
+    - @bold(The runtime REJECTS large Register(1) requests.) 10 symbols /
+      470 encoded bytes are accepted, 11 symbols / ~512 bytes make the PLC
+      close the TCP connection (WSAECONNRESET 10054). BLK continuation
+      frames (the SendAppBlock fragment path) are ALSO rejected. Therefore
+      ReadVariables splits the caller's name list into batches by encoded
+      payload size (<= 440 bytes) and by count (<= 10 names), and does one
+      Register(1) + Read(3) per batch. 0x1D[n] maps to
+      Results[Start + FRegMap[n]], so an unknown symbol interleaved in a
+      batch can never shift a value onto the wrong tag.
+
+  This client supports anonymous/no-password runtimes only (no
+  challenge-response / RSA / scrypt login). Do not use in production;
+  keep the test-stage tag until wider type/PLC coverage is confirmed.
 }
 unit CodesysSymbolClient;
 
@@ -63,8 +139,13 @@ type
   end;
   TCodesysTags = array of TCodesysTag;
 
-  {: Raw result of one symbol read. Status is the value of tag 0x20 when the
-     PLC sent one; OK is false when the request or the socket failed. }
+  {: Raw result of one symbol read. Status is the u16 value of tag 0x20 when
+     the PLC sent one; 0 = OK, 20 = no data / unknown symbol, 15 = bad write
+     layout. A successful read carrying 0x1D values normally sends NO 0x20
+     at all, so an absent tag means Status = 0. OK is true when a 0x1D tag
+     was received for this variable. Raw is the 0x1D payload with its 4 byte
+     header stripped, i.e. the real IEC value bytes (verified against a
+     running CODESYS application, see the unit header). }
   TCodesysVarResult = record
     Raw: TBytes;
     Status: LongWord;
@@ -87,11 +168,16 @@ type
     FMsgID:Byte;
     FBlkID:LongWord;
     FAckID:LongWord;
-    FHandle38:TBytes;
-    FHandle3A:TBytes;
+    FVarHandle:TBytes;   // CmpIecVarAccess handle for Register(1)
+    FVarHandleTag:Byte;  // $14 (no app) or $3A (app loaded) - see GetVarHandles
     FSessionID:LongWord;
     FRegKey:AnsiString;
     FRegHandle:TBytes;
+    { Request index of every SUCCESSFUL registration (0x1B), in response
+      order. Read(3) returns one 0x1D per successful registration, so
+      ReadVariables maps 0x1D[n] to Results[FRegMap[n]] instead of blindly
+      to Results[n]. Empty => legacy sequential mapping. See RegisterVars. }
+    FRegMap:array of LongInt;
     FOpened:Boolean;
     FLogged:Boolean;
     FLastError:AnsiString;
@@ -108,6 +194,7 @@ type
     function SendKeepAlive:Boolean;
     function ServiceCall(Group, SubCmd:Word; const Tags:TCodesysTags;
       out ResponseTags:TCodesysTags):Boolean;
+    function DeviceLogin:Boolean;
     function GetVarHandles:Boolean;
     function RegisterVars(const Names:array of AnsiString):Boolean;
     procedure CloseSocket;
@@ -174,7 +261,28 @@ const
   CODESYS_CMP_VARACCESS = $09;
   // Verified: the MCGS HMI advertises 0x00004000, not 0x7D000.
   CODESYS_RECV_BUFFER = $00004000;
-  CODESYS_MAX_PDU     = 512;
+  // 4096 was chosen after a real-runtime experiment (2026-11-27): the PLC
+  // ACCEPTS one large BLK block but RESETS the TCP connection as soon as it
+  // sees a BLK continuation frame (SendAppBlock's fragment path). Therefore
+  // the driver never fragments: ReadVariables keeps every Register(1) small
+  // (see CODESYS_MAX_BATCH_CONTENT) and SendAppBlock always emits one block.
+  CODESYS_MAX_PDU     = 4096;
+  // Verified limit on CODESYS Control Win V3 3.5.14 with a loaded boot
+  // application: Register(1) with 10 symbols / 470 encoded bytes is accepted,
+  // 11 symbols / 512 bytes makes the PLC close the connection (10054).
+  // Keep a comfortable margin below both the size and the count limit.
+  CODESYS_BATCH_BASE        = 42;   // 20 byte service header + 22 fixed TLV bytes
+  CODESYS_MAX_BATCH_CONTENT = 440;  // encoded service payload bytes per batch
+  CODESYS_MAX_BATCH_NAMES   = 10;   // never register more than 10 names at once
+  // Anonymous login payload, byte-for-byte from the real HMI capture. The
+  // 0x11 blob and the 0x23 seed were IDENTICAL in all 12 captured login
+  // requests, so they can be sent verbatim; a password-protected runtime will
+  // still reject this client (no challenge-response / RSA / scrypt).
+  CODESYS_LOGIN_MODE  = $00000001; // tag 0x22
+  CODESYS_LOGIN_SEED  = $08F02F26; // tag 0x23, bytes 26 2F F0 08
+  CODESYS_LOGIN_NONCE:array[0..31] of Byte = (
+    $A0,$65,$44,$52,$5F,$36,$45,$66,$7B,$23,$32,$37,$9C,$75,$70,$68,
+    $5D,$54,$68,$75,$88,$3F,$70,$68,$87,$44,$72,$2A,$98,$55,$62,$52);
 
 var
   CRC32Table:array[0..255] of LongWord;
@@ -328,15 +436,22 @@ begin
 end;
 
 function CodesysNameData(const Name:AnsiString):TBytes;
-var L,n:LongInt;
+var L,NameLen,Aligned,n,i:LongInt;
 begin
   L := Length(Name);
-  // u16 length prefix, then zero-terminated name, then pad to 4 bytes
-  n := 2 + L + 1;
-  if (n mod 4)<>0 then Inc(n,4-(n mod 4));
+  // Verified 2026-11-27 against 9 captured 0x19 tags: the data is
+  //   u16(L+1) + name + #0 + zero padding,
+  // where the NAME AREA (L+1 bytes) is aligned to 4 and the 2 byte prefix is
+  // NOT included in that alignment. Total = 2 + align4(L+1).
+  // Examples: L=36 -> 2+40 = 42 bytes, L=40 -> 2+44 = 46 bytes.
+  // (The previous align4(2+L+1) produced 40/44 and was off by two bytes.)
+  NameLen := L + 1;
+  Aligned := ((NameLen + 3) div 4) * 4;
+  n := 2 + Aligned;
   SetLength(Result,n);
-  Result[0] := Byte((L+1) and $FF);
-  Result[1] := Byte(((L+1) shr 8) and $FF);
+  for i:=0 to n-1 do Result[i] := 0;
+  Result[0] := Byte(NameLen and $FF);
+  Result[1] := Byte((NameLen shr 8) and $FF);
   if L>0 then Move(Name[1],Result[2],L);
   Result[2+L] := 0;
 end;
@@ -435,7 +550,10 @@ begin
   try
     CloseSocket;
     FRegKey := '';
+    FSessionID := 0;
+    SetLength(FVarHandle,0);
     SetLength(FRegHandle,0);
+    SetLength(FRegMap,0);
   finally
     FCS.Leave;
   end;
@@ -571,7 +689,10 @@ begin
           Fail('Codesys: OpenChannel rejected (reason '+IntToStr(CodesysGetU16(ChannelData,10))+')');
           exit;
         end;
-        FChannelID := CodesysGetU16(ChannelData,12);
+        // Verified 2026-11-27: the assigned channel id is at offset 14
+        // (e.g. 0xDA58), and the HMI then uses it in every following BLK,
+        // ACK and KeepAlive frame. Offset 12 is zero in a real response.
+        FChannelID := CodesysGetU16(ChannelData,14);
         Payload := ChannelData;
         Result := true;
       end;
@@ -598,7 +719,11 @@ begin
         FAckID := AckID;
         if (Flags and $01)<>0 then begin
           if Length(ChannelData)<22 then exit;
-          Total := CodesysGetU32(ChannelData,14);
+          // Verified 2026-11-27: BLK first block is
+          //   total@12, crc@16, service payload@20 (crc = crc32(service)).
+          // Reading total@14 mixed the total's high half with the CRC and
+          // made the reassembly loop wait for non-existent continuation frames.
+          Total := CodesysGetU32(ChannelData,12);
           if Total>CODESYS_MAX_PDU*64 then begin
             Fail('Codesys: payload too large');
             exit;
@@ -637,6 +762,16 @@ begin
           SendAck(BlkID);
           Result := ReceiveFrame(ServiceID,Payload,IsService);
         end;
+      end;
+    $80:
+      begin
+        // Router / name-service announcement (type 0x80, 162 bytes) seen
+        // once per connection in the s2c direction. Decoded 2026-11-27: it
+        // carries a GUID/node id and the UTF-16LE strings
+        // "CODESYS Control Win V3 x64" and "3S - Smart Software Solutions
+        // GmbH". It is not a service frame; skip it and keep reading
+        // instead of aborting the handshake.
+        Result := ReceiveFrame(ServiceID,Payload,IsService);
       end;
   else
     Fail('Codesys: unknown channel frame type '+IntToHex(Type_,2));
@@ -729,6 +864,10 @@ begin
     Fail('Codesys: unexpected service protocol id');
     exit;
   end;
+  // Verified 2026-11-27 against real responses: the group u16 at offset 4
+  // has bit 0x80 set on responses (0x0081 CmpDevice, 0x0089 CmpIecVarAccess)
+  // and group = value AND $7F. These two checks are therefore correct and
+  // are kept unchanged.
   if (CodesysGetU16(TData,4) and $80)=0 then begin
     Fail('Codesys: service response flag missing');
     exit;
@@ -744,25 +883,84 @@ begin
   Result := true;
 end;
 
+function TCodesysSymbolClient.DeviceLogin:Boolean;
+var Tags,Resp:TCodesysTags; Child,Blob,D:TBytes; i:LongInt;
+begin
+  Result := false;
+  FSessionID := 0;
+
+  // Step 1: CmpDevice(1) subcmd=1 - device information, request has NO tags
+  // (content=0). The response describes the runtime; we do not need it.
+  SetLength(Tags,0);
+  if not ServiceCall(CODESYS_CMP_DEVICE,$01,Tags,Resp) then exit;
+
+  // Step 2: CmpDevice(1) subcmd=2 - anonymous login. The MCGS HMI sends this
+  // exact payload (verified identical in all 12 captured login requests):
+  //   tag 0x22 = u32(1), tag 0x23 = u32(0x08F02F26),
+  //   parent 0x81 { tag 0x10 = u16(0), tag 0x11 = 32 byte fixed nonce }.
+  // TLV size varints are emitted in their canonical (shortest) form; the
+  // runtime accepts both, as its own responses mix canonical and overlong.
+  SetLength(Child,0);
+  CodesysPutTag(Child,$10,MakeBytes([$00,$00]));
+  SetLength(Blob,Length(CODESYS_LOGIN_NONCE));
+  for i:=0 to High(CODESYS_LOGIN_NONCE) do Blob[i] := CODESYS_LOGIN_NONCE[i];
+  CodesysPutTag(Child,$11,Blob);
+
+  SetLength(Tags,3);
+  Tags[0].Id := $22; Tags[0].Parent := 0; Tags[0].Data := CodesysU32(CODESYS_LOGIN_MODE);
+  Tags[1].Id := $23; Tags[1].Parent := 0; Tags[1].Data := CodesysU32(CODESYS_LOGIN_SEED);
+  Tags[2].Id := $81; Tags[2].Parent := 0; Tags[2].Data := Child;
+  if not ServiceCall(CODESYS_CMP_DEVICE,$02,Tags,Resp) then exit;
+
+  // Response parent 0x82 holds tag 0x21 = session id (u32 LE). It is
+  // different on every connection, so it must be read from the response.
+  if not CodesysFindTag(Resp,$21,D) then begin
+    Fail('Codesys: login response has no session id (tag 0x21). '+
+         'A password-protected runtime is not supported by this client.');
+    exit;
+  end;
+  if Length(D)<4 then begin
+    Fail('Codesys: short login session id');
+    exit;
+  end;
+  FSessionID := CodesysGetU32(D,0);
+  Result := true;
+end;
+
 function TCodesysSymbolClient.GetVarHandles:Boolean;
 var Tags,Resp:TCodesysTags; D:TBytes;
 begin
   Result := false;
   SetLength(Tags,0);
-  SetLength(FHandle38,0);
-  SetLength(FHandle3A,0);
+  SetLength(FVarHandle,0);
+  FVarHandleTag := $14;
+  // GetHandle(7) sends NO tags. Its answer depends on whether the runtime
+  // has a loaded application:
+  //   * empty runtime  : tag 0x14 = u16 handle (HMI capture: 0x0018)
+  //   * app loaded     : tag 0x30 = app name, 0x38 = 20 byte browse blob,
+  //                     0x3A = u32 session handle (CmpIecVarAccess browse)
+  // Both 0x14 and 0x3A are accepted by Register(1) as the var-access
+  // handle; 0x38 is NOT (verified: it closes the channel). Verified with a
+  // real boot application on 2026-11-27 (tools/codesys_dbg6.pas).
   if not ServiceCall(CODESYS_CMP_VARACCESS,$07,Tags,Resp) then exit;
-  if not CodesysFindTag(Resp,$3A,FHandle3A) then begin
-    Fail('Codesys: PLC did not return the variable access handle (tag 0x3a). '+
-         'A password-protected runtime may require a login, which this client does not support.');
+  if CodesysFindTag(Resp,$14,FVarHandle) then begin
+    FVarHandleTag := $14;
+    Result := true;
     exit;
   end;
-  CodesysFindTag(Resp,$38,FHandle38);
-  Result := true;
+  if CodesysFindTag(Resp,$3A,D) then begin
+    FVarHandle := D;
+    FVarHandleTag := $3A;
+    Result := true;
+    exit;
+  end;
+  Fail('Codesys: GetHandle(7) returned neither tag 0x14 nor 0x3A. '+
+       'A password-protected runtime may require a login, which this client does not support.');
 end;
 
 function TCodesysSymbolClient.RegisterVars(const Names:array of AnsiString):Boolean;
-var Tags,Resp:TCodesysTags; D,NameData,Flags:TBytes; i:LongInt; Key:AnsiString;
+var Tags,Resp:TCodesysTags; NameData,Flags:TBytes;
+    i,j,k:LongInt; Key:AnsiString;
 begin
   Result := false;
   if Length(Names)=0 then exit(true);
@@ -770,30 +968,65 @@ begin
   for i:=0 to High(Names) do Key := Key+Names[i]+#10;
   if (FRegKey=Key) and (Length(FRegHandle)>0) then exit(true);
 
+  // Verified 2026-11-27 Register(1) request TLV order:
+  //   0x13 flags(48 00 01 00), 0x00 (empty), 0x00 (empty),
+  //   <var-access handle: 0x14 on an empty runtime, 0x3A when an app is
+  //    loaded>, 0x18 u32(count), 0x19 name x N.
+  // The handle tag id comes from GetVarHandles (FVarHandleTag).
   SetLength(Tags,0);
   Flags := MakeBytes([$48,$00,$01,$00]);
-  SetLength(Tags,3+Length(Names));
+  SetLength(Tags,5+Length(Names));
   Tags[0].Id := $13; Tags[0].Parent := 0; Tags[0].Data := Flags;
-  Tags[1].Id := $3A; Tags[1].Parent := 0; Tags[1].Data := FHandle3A;
-  Tags[2].Id := $18; Tags[2].Parent := 0; Tags[2].Data := CodesysU32(LongWord(Length(Names)));
+  Tags[1].Id := $00; Tags[1].Parent := 0; SetLength(Tags[1].Data,0);
+  Tags[2].Id := $00; Tags[2].Parent := 0; SetLength(Tags[2].Data,0);
+  Tags[3].Id := FVarHandleTag; Tags[3].Parent := 0;
+  Tags[3].Data := FVarHandle;
+  Tags[4].Id := $18; Tags[4].Parent := 0; Tags[4].Data := CodesysU32(LongWord(Length(Names)));
   for i:=0 to High(Names) do begin
     NameData := CodesysNameData(Names[i]);
-    Tags[3+i].Id := $19;
-    Tags[3+i].Parent := 0;
-    Tags[3+i].Data := NameData;
+    Tags[5+i].Id := $19;
+    Tags[5+i].Parent := 0;
+    Tags[5+i].Data := NameData;
   end;
   if not ServiceCall(CODESYS_CMP_VARACCESS,$01,Tags,Resp) then exit;
+  // Response tag 0x10 is the registration handle (captured: 2F 15 00 00).
   if not CodesysFindTag(Resp,$10,FRegHandle) then begin
     Fail('Codesys: variable registration failed (no tag 0x10)');
     exit;
   end;
+
+  // Per-variable registration results, IN REQUEST ORDER. Verified 2026-11-27
+  // against a real loaded application (captures/unknown_probe_*):
+  //   0x1B size=12 -> success: [u32 IEC type][u32 byte size][u32 offset]
+  //   0x1C size=2  -> rejected name (u16 error code)
+  // A 10-symbol all-valid Register produced 10 x 0x1B. With one unknown
+  // name in the middle the response was 0x1B, 0x1C, 0x1B and Read(3)
+  // returned only TWO 0x1D values. Mapping those N values onto
+  // Results[0..N-1] silently shifted the INT value onto the unknown name
+  // and left the real INT tag empty (tools/codesys_unknown_probe.pas).
+  // Remember the request index of each successful 0x1B so ReadVariables
+  // can map 0x1D[n] -> Results[FRegMap[n]].
+  SetLength(FRegMap,0);
+  k := 0;
+  for j:=0 to High(Resp) do
+    if (Resp[j].Id=$1B) or (Resp[j].Id=$1C) then begin
+      if k<=High(Names) then begin
+        if Resp[j].Id=$1B then begin
+          SetLength(FRegMap,Length(FRegMap)+1);
+          FRegMap[High(FRegMap)] := k;
+        end;
+        Inc(k);
+      end;
+    end;
   FRegKey := Key;
   Result := true;
 end;
 
 function TCodesysSymbolClient.ReadVariables(const Names:array of AnsiString;
   var Results:array of TCodesysVarResult):Boolean;
-var Tags,Resp:TCodesysTags; i,n:LongInt; D:TBytes;
+var Tags,Resp:TCodesysTags; Batch:array of AnsiString;
+    i,j,n,Idx,Start,Cnt,Payload,L,Aligned,Item:LongInt;
+    D:TBytes; Stat,LastStat:LongWord; AnyValue:Boolean;
 begin
   Result := false;
   FCS.Enter;
@@ -809,35 +1042,80 @@ begin
       Fail('Codesys: read array size mismatch');
       exit;
     end;
-    if not RegisterVars(Names) then exit;
 
-    SetLength(Tags,3);
-    Tags[0].Id := $13; Tags[0].Parent := 0; SetLength(Tags[0].Data,4);
-    Tags[0].Data[0] := $48; Tags[0].Data[1] := $00;
-    Tags[0].Data[2] := $01; Tags[0].Data[3] := $00;
-    Tags[1].Id := $3A; Tags[1].Parent := 0; Tags[1].Data := FHandle3A;
-    Tags[2].Id := $10; Tags[2].Parent := 0; Tags[2].Data := FRegHandle;
-    if not ServiceCall(CODESYS_CMP_VARACCESS,$03,Tags,Resp) then exit;
-
-    n := 0;
-    for i:=0 to High(Resp) do begin
-      if Resp[i].Id=$1D then begin
-        if n<=High(Results) then begin
-          // tag 0x1d carries a 4 byte header followed by the raw IEC value
-          if Length(Resp[i].Data)>4 then begin
-            SetLength(Results[n].Raw,Length(Resp[i].Data)-4);
-            Move(Resp[i].Data[4],Results[n].Raw[0],Length(Results[n].Raw));
-          end;
-          Results[n].OK := true;
-        end;
-        Inc(n);
-      end else if Resp[i].Id=$20 then begin
-        D := Resp[i].Data;
-        if (n>0) and (n<=Length(Results)) then
-          Results[n-1].Status := CodesysGetU32(D,0);
+    // Verified 2026-11-27 against a REAL running CODESYS application:
+    // ONE Register(1) followed by ONE Read(3) returns one tag 0x1D per
+    // SUCCESSFULLY registered variable, in acceptance order. Each 0x1D is
+    // 4 header bytes + the IEC value (4 bytes for <=32 bit types, 8 bytes
+    // for LREAL/LINT - verified: LREAL 0x1D is 12 bytes total).
+    // Tag 0x22 is a fixed status/heartbeat word, NOT a value; 0x20 is an
+    // error code (0 = OK). The earlier "one 0x22 only" rule was an artifact
+    // of probing an EMPTY runtime where no 0x1D values exist at all.
+    //
+    // REAL RUNTIME LIMIT (CODESYS Control Win V3 3.5.14, boot app loaded):
+    // a Register(1) with 11 symbols / 512 encoded bytes makes the PLC reset
+    // the TCP connection (WSAECONNRESET 10054); 10 symbols / 470 bytes is
+    // accepted. BLK continuation frames are rejected too. So the caller's
+    // name list is split into batches by ENCODED payload size and count,
+    // and each batch gets its own Register(1) + Read(3). RegisterVars fills
+    // FRegMap with the accepted indices WITHIN that batch, so 0x1D[n] maps
+    // to Results[Start + FRegMap[n]] - values never land on the wrong tag
+    // even when an unknown symbol is interleaved.
+    Start := 0;
+    AnyValue := false;
+    LastStat := 0;
+    while Start < Length(Names) do begin
+      Payload := CODESYS_BATCH_BASE;
+      Cnt := 0;
+      while (Start+Cnt < Length(Names)) and
+            (Cnt < CODESYS_MAX_BATCH_NAMES) do begin
+        L := Length(Names[Start+Cnt]);
+        Aligned := ((L+1+3) div 4)*4;
+        Item := 2 + Aligned + 3;  // 0x19 data + tag byte + worst-case varint
+        if (Cnt>0) and (Payload+Item > CODESYS_MAX_BATCH_CONTENT) then break;
+        Inc(Payload,Item);
+        Inc(Cnt);
       end;
+      if Cnt=0 then Cnt := 1;  // always make progress (one very long name)
+      SetLength(Batch,Cnt);
+      for i:=0 to Cnt-1 do Batch[i] := Names[Start+i];
+
+      if not RegisterVars(Batch) then exit;
+      SetLength(Tags,1);
+      Tags[0].Id := $10; Tags[0].Parent := 0; Tags[0].Data := FRegHandle;
+      if not ServiceCall(CODESYS_CMP_VARACCESS,$03,Tags,Resp) then exit;
+      Stat := 0;
+      for j:=0 to High(Resp) do
+        if Resp[j].Id=$20 then begin
+          D := Resp[j].Data;
+          if Length(D)>=2 then Stat := CodesysGetU16(D,0);
+        end;
+      if Stat<>0 then LastStat := Stat;
+      n := 0;
+      for j:=0 to High(Resp) do begin
+        if Resp[j].Id=$1D then begin
+          if Length(FRegMap)>0 then begin
+            if n<=High(FRegMap) then Idx := FRegMap[n] else Idx := -1;
+          end else Idx := n;
+          if Idx>=0 then Inc(Idx,Start);
+          if (Idx>=0) and (Idx<=High(Results)) then begin
+            D := Resp[j].Data;
+            if Length(D)>4 then begin
+              SetLength(Results[Idx].Raw,Length(D)-4);
+              Move(D[4],Results[Idx].Raw[0],Length(Results[Idx].Raw));
+            end;
+            Results[Idx].Status := Stat;
+            Results[Idx].OK := true;
+          end;
+          Inc(n);
+        end;
+      end;
+      if n>0 then AnyValue := true;
+      Inc(Start,Cnt);
     end;
-    Result := true;
+    Result := AnyValue;
+    if not Result then
+      Fail('Codesys: read returned no values, last status '+IntToStr(LastStat));
   finally
     FCS.Leave;
   end;
@@ -845,31 +1123,65 @@ end;
 
 function TCodesysSymbolClient.WriteVariable(const Name:AnsiString;
   const Data:TBytes):Boolean;
-var Tags,Resp:TCodesysTags; D,Val,Flags,Tmp:TBytes;
+var Tags,Resp:TCodesysTags; D,Nm,VB,Val:TBytes;
+    i,L,Pad,Size,BufLen:LongInt; Status:Word;
 begin
+  // VERIFIED 2026-11-27 against a REAL running CODESYS application: this
+  // request really changes the variable (BOOL FALSE->TRUE and INT 0->54321
+  // were both read back). Layout:
+  //   0x13 = 00 00 00 00
+  //   0x21 = ASCII name + #0 + zero pad to align4(L+1)  (NO u16 prefix!)
+  //   0x1E = [u16 IEC size][00 00][value buffer]
+  //          value buffer = 8 bytes for types <= 4 bytes, 12 bytes for
+  //          64 bit types, IEC value in the LOW bytes, rest zero.
+  // Success = response tag 0x20 == 0. Non-zero (20 / 15) is a rejection.
+  // Data must contain exactly the IEC value bytes (Length = type size).
   Result := false;
   FCS.Enter;
   try
     if not FLogged then exit;
     if Length(Name)=0 then exit;
+    Size := Length(Data);
+    if (Size<1) or (Size>8) then begin
+      Fail('Codesys: invalid write value length');
+      exit;
+    end;
+
+    // 0x21 name: unlike 0x19 there is NO u16 length prefix. Verified with
+    // tools/codesys_dbg5.pas (name-mode 1 and 3 both accepted; mode 1 is
+    // the minimal one, consistent with the 0x19 suffix rule).
+    L := Length(Name);
+    Pad := ((L+1)+3) and not 3;
+    SetLength(Nm,Pad);
+    for i:=1 to L do Nm[i-1] := Byte(Name[i]);
+    for i:=L to Pad-1 do Nm[i] := 0;
+
+    // 0x1E value buffer. 8 bytes for <=4 byte types, 12 for 64 bit types.
+    if Size>4 then BufLen := 12 else BufLen := 8;
+    SetLength(VB,BufLen);
+    for i:=0 to BufLen-1 do VB[i] := 0;
+    for i:=0 to Size-1 do VB[i] := Data[i];
+    SetLength(Val,4+BufLen);
+    Val[0] := Byte(Size and $FF);
+    Val[1] := Byte((Size shr 8) and $FF);
+    Val[2] := 0; Val[3] := 0;
+    for i:=0 to BufLen-1 do Val[4+i] := VB[i];
+
     SetLength(Tags,3);
-    Flags := MakeBytes([$00,$00,$00,$00]);
-    Tags[0].Id := $13; Tags[0].Parent := 0; Tags[0].Data := Flags;
-    Tags[1].Id := $21; Tags[1].Parent := 0; Tags[1].Data := CodesysNameData(Name);
-    // value: u16 length, 2 reserved bytes, then the IEC value (8/12 byte slot)
-    SetLength(Tmp,4);
-    Tmp[0] := Byte(Length(Data) and $FF);
-    Tmp[1] := Byte((Length(Data) shr 8) and $FF);
-    Tmp[2] := 0; Tmp[3] := 0;
-    Val := Tmp;
-    AppendBytes(Val,Data);
+    Tags[0].Id := $13; Tags[0].Parent := 0;
+    Tags[0].Data := MakeBytes([$00,$00,$00,$00]);
+    Tags[1].Id := $21; Tags[1].Parent := 0; Tags[1].Data := Nm;
     Tags[2].Id := $1E; Tags[2].Parent := 0; Tags[2].Data := Val;
     if not ServiceCall(CODESYS_CMP_VARACCESS,$04,Tags,Resp) then exit;
-    if CodesysFindTag(Resp,$20,D) and (Length(D)>=4) then begin
-      if CodesysGetU32(D,0)<>0 then begin
-        Fail('Codesys: write rejected, status '+IntToStr(CodesysGetU32(D,0)));
-        exit;
-      end;
+    if not CodesysFindTag(Resp,$20,D) then begin
+      Fail('Codesys: write rejected (no status tag 0x20 in response)');
+      exit;
+    end;
+    Status := 0;
+    if Length(D)>=2 then Status := CodesysGetU16(D,0);
+    if Status<>0 then begin
+      Fail('Codesys: write rejected (status '+IntToStr(Status)+')');
+      exit;
     end;
     Result := true;
   finally
@@ -930,6 +1242,17 @@ begin
     FBlkID := 1;
     FAckID := 0;
     FRegKey := '';
+    SetLength(FRegMap,0);
+    FSessionID := 0;
+    SetLength(FVarHandle,0);
+    // Verified 2026-11-27 session flow: after OpenChannel the HMI performs
+    // CmpDevice device-info + anonymous login (which yields the session id
+    // used by EVERY later request) and only then GetHandle. The old code
+    // skipped login entirely and talked to the PLC with session id 0.
+    if not DeviceLogin then begin
+      CloseSocket;
+      exit;
+    end;
     if not GetVarHandles then begin
       CloseSocket;
       exit;
