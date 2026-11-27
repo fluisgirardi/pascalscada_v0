@@ -6,23 +6,34 @@
   This is a self-contained implementation of the proprietary CODESYS V3
   "symbol" protocol. It does not use OPC UA, an OPC server, or any vendor DLL.
 
-  Wire format (verified against the Microsoft CoDe16 Wireshark dissector):
+  Wire format (Microsoft CoDe16 Wireshark dissector + a REAL packet capture
+  of the Kunlun-Tongtai MCGS HMI client on 2026-11-27):
 
-    Block driver : 00 01 17 E8 (big endian magic) + payload length (u32 LE)
-    Datagram     : C5, hop/header length, packet info, service id (64),
-                   message id, address lengths, [addresses], padding
+    Block driver : 00 01 17 E8 + TOTAL frame length (u32 LE, includes these
+                   8 header bytes). E.g. 24 00 00 00 = 8 + 28 datagram bytes.
+    Datagram     : C5 6B 40 <service> <msgid> 43 <receiver 6B> <sender 8B>
+                   6B = hop count 13, header length 3 (=> 6 byte header)
+                   40 = priority normal, full addressing
+                   43 = receiver length 3*2, sender length 4*2
+                   receiver = 2 byte port (network order) + 4 byte IPv4
+                   channel payload starts at offset 20
     Channel      : 0xC3 OpenChannel request / 0x83 response, 0x01 BLK
-                   (0x81 first) + CRC32, 0x02 ACK, 0x03 KeepAlive, 0x84 error
+                   (0x81 first) + CRC32, 0x02 ACK, 0x03 KeepAlive, 0x84 error,
+                   0xC4 CloseChannel
     Service      : 0xCD55, header size, cmd group, subcmd, session id,
                    content size, additional data, then TLV tags
     Tags         : 7-bit varint id + 7-bit varint size + data;
                    id >= 0x80 means a parent tag (children follow in data)
 
   @bold(TEST STAGE / 测试阶段 - git tag @code(codesys11740-test-stage).)
-  Experimental snapshot: compiled and checked by a local wire-encoding
-  self-test, but never exercised against a real CODESYS runtime. The TLV
-  layout, name padding (0x19) and subcommand values still need a real-PLC
-  packet capture to be confirmed.
+  Handshake layers (Block / Datagram / OpenChannel) were calibrated against
+  a real MCGS HMI capture: block framing, total-length semantics, full
+  addresses, the 20 byte OpenChannel request and its CRC32 rule (CRC over the
+  whole channel frame with the CRC field zeroed, verified 0xE326BA42).
+  NOT yet verified: no response from a real CODESYS runtime was ever seen, so
+  the Service layer (CmpIecVarAccess register/read/write TLV tags, 0x19 name
+  padding, subcommand values and all response parsing) remains speculative.
+  This client has never talked to a real PLC. Do not use in production.
 
   Only anonymous (no password) access is implemented. PLCs whose runtime
   requires a login cannot be accessed with this client (no challenge-response).
@@ -149,17 +160,20 @@ implementation
 const
   CODESYS_TCP_MAGIC:array[0..3] of Byte = ($00,$01,$17,$E8);
   CODESYS_DATAGRAM_MAGIC = $C5;
+  CODESYS_SERVICE_NSSERVER = 3;      // ACK frames in the real HMI capture
   CODESYS_SERVICE_CHANNELMANAGER = 64;
   CODESYS_CH_OPENREQ  = $C3;
   CODESYS_CH_OPENRESP = $83;
   CODESYS_CH_BLK      = $01;
   CODESYS_CH_ACK      = $02;
   CODESYS_CH_KEEPALIVE= $03;
+  CODESYS_CH_CLOSE    = $C4;         // seen in the real HMI capture
   CODESYS_CH_ERROR    = $84;
   CODESYS_PROTOCOL_ID = $CD55;
   CODESYS_CMP_DEVICE  = $01;
   CODESYS_CMP_VARACCESS = $09;
-  CODESYS_RECV_BUFFER = $0007D000;
+  // Verified: the MCGS HMI advertises 0x00004000, not 0x7D000.
+  CODESYS_RECV_BUFFER = $00004000;
   CODESYS_MAX_PDU     = 512;
 
 var
@@ -337,13 +351,51 @@ begin
   Move(Src[0],Dest[i],n);
 end;
 
+{: Parses a dotted IPv4 address into 4 bytes. Host names are not resolved:
+   the CODESYS receiver address is only used for routing, so an unresolved
+   name falls back to 0.0.0.0 (a directly attached PLC still accepts it). }
+function CodesysIPv4(const Host:AnsiString):TBytes;
+var i,Start,j,v,n:LongInt; S:AnsiString; C:AnsiChar;
+begin
+  Result := MakeBytes([$00,$00,$00,$00]);
+  S := Trim(String(Host));
+  if S='' then exit;
+  Start := 1;
+  n := 0;
+  for j:=1 to Length(S)+1 do
+    if (j>Length(S)) or (S[j]='.') then begin
+      if n>3 then begin
+        Result := MakeBytes([$00,$00,$00,$00]);
+        exit;
+      end;
+      v := 0;
+      for i:=Start to j-1 do begin
+        C := S[i];
+        if not (C in ['0'..'9']) then begin
+          Result := MakeBytes([$00,$00,$00,$00]);
+          exit;
+        end;
+        v := v*10 + (Ord(C)-Ord('0'));
+      end;
+      if v>255 then begin
+        Result := MakeBytes([$00,$00,$00,$00]);
+        exit;
+      end;
+      Result[n] := Byte(v);
+      Inc(n);
+      Start := j+1;
+    end;
+  if n<>4 then Result := MakeBytes([$00,$00,$00,$00]);
+end;
+
 constructor TCodesysSymbolClient.Create;
 begin
   inherited Create;
   FCS := TCriticalSection.Create;
   FPort := 11740;
   FTimeout := 3000;
-  FMsgID := 1;
+  // The real HMI sends message id 0 in its handshake frames.
+  FMsgID := 0;
 end;
 
 destructor TCodesysSymbolClient.Destroy;
@@ -429,14 +481,32 @@ end;
 
 function TCodesysSymbolClient.SendDatagram(ServiceID:Byte;
   const Payload:TBytes):Boolean;
-var Frame:TBytes; HeaderLen:Byte; Lengths:Byte;
+var DG,Frame,Addr:TBytes;
 begin
-  SetLength(Frame,0);
-  // magic, hop=3 -> 6 byte datagram header, priority normal, no addresses
-  Frame := MakeBytes([$C5,$03,$40,ServiceID,FMsgID,$00,$00,$00]);
+  // Calibrated against the real MCGS HMI capture of 2026-11-27.
+  // Datagram header (6 bytes): C5, hop=13/headerlen=3, priority normal +
+  // full addressing, service id, message id, address-length nibbles (0x43).
+  DG := MakeBytes([$C5,$6B,$40,ServiceID,FMsgID,$43]);
+  // Receiver (6 bytes): 2 byte TCP port in network order + PLC IPv4.
+  Addr := MakeBytes([Byte(FPort shr 8),Byte(FPort and $FF)]);
+  AppendBytes(Addr,CodesysIPv4(FHost));
+  AppendBytes(DG,Addr);
+  // Sender (8 bytes): port 0, IPv4 (the HMI puts the PLC address here too),
+  // then the two reserved bytes 85 EA that appear in every captured frame.
+  Addr := MakeBytes([$00,$00]);
+  AppendBytes(Addr,CodesysIPv4(FHost));
+  AppendBytes(Addr,MakeBytes([$85,$EA]));
+  AppendBytes(DG,Addr);
+  AppendBytes(DG,Payload);
+
+  // Block driver layer: magic + TOTAL length (8 header bytes + datagram).
+  // The previous implementation omitted this layer entirely.
+  Frame := MakeBytes([$00,$01,$17,$E8]);
+  AppendBytes(Frame,CodesysU32(LongWord(8+Length(DG))));
+  AppendBytes(Frame,DG);
+
   Inc(FMsgID);
   if FMsgID=0 then Inc(FMsgID);
-  AppendBytes(Frame,Payload);
   Result := SendRaw(Frame);
 end;
 
@@ -458,11 +528,13 @@ begin
     exit;
   end;
   Len := LongInt(CodesysGetU32(BlockHdr,4));
-  if (Len<8) or (Len>65535) then begin
+  // Verified against the real HMI capture: the block length is the TOTAL
+  // frame length INCLUDING these 8 header bytes.
+  if (Len<12) or (Len>65535) then begin
     Fail('Codesys: invalid block length '+IntToStr(Len));
     exit;
   end;
-  if not ReadExact(Chunk,Len,FTimeout) then exit;
+  if not ReadExact(Chunk,Len-8,FTimeout) then exit;
   if Chunk[0]<>CODESYS_DATAGRAM_MAGIC then begin
     Fail('Codesys: invalid datagram magic');
     exit;
@@ -538,8 +610,8 @@ begin
           while LongWord(Length(Payload))<Total do begin
             if not ReadExact(BlockHdr,8,FTimeout) then exit;
             Len := LongInt(CodesysGetU32(BlockHdr,4));
-            if (Len<8) or (Len>65535) then exit;
-            if not ReadExact(Chunk,Len,FTimeout) then exit;
+            if (Len<12) or (Len>65535) then exit;
+            if not ReadExact(Chunk,Len-8,FTimeout) then exit;
             HeaderSize := (Chunk[1] and $07)*2;
             if HeaderSize<6 then HeaderSize := 6;
             ReceiverLen := (Chunk[5] and $0F)*2;
@@ -837,14 +909,18 @@ begin
     exit;
     {$ENDIF}
 
-    // OpenChannel request: type, flags, version, CRC32, msg id, recv buffer
+    // OpenChannel request (20 bytes), byte-for-byte from the real HMI capture:
+    // C3 00 01 01 | CRC32 | msgid=1 | recvbuf=0x4000 | maxchannels=2
+    // CRC32 covers the WHOLE channel frame with the CRC field zeroed
+    // (verified 0xE326BA42 on the captured frame).
     SetLength(Data,0);
     Data := MakeBytes([CODESYS_CH_OPENREQ,$00,$01,$01]);
-    AppendBytes(Data,CodesysU32(0)); // CRC filled below
+    AppendBytes(Data,CodesysU32(0)); // CRC placeholder
     AppendBytes(Data,CodesysU32(1)); // message id
     AppendBytes(Data,CodesysU32(CODESYS_RECV_BUFFER));
-    // CRC32 covers msg id + receiver buffer size (the 8 bytes after the CRC)
-    Tmp := Copy(Data,8,8);
+    AppendBytes(Data,CodesysU32(2)); // max channels
+    Tmp := Copy(Data,0,Length(Data));
+    Tmp[4] := 0; Tmp[5] := 0; Tmp[6] := 0; Tmp[7] := 0;
     SIDBytes := CodesysU32(CodesysCRC32(Tmp,Length(Tmp)));
     Data[4] := SIDBytes[0]; Data[5] := SIDBytes[1];
     Data[6] := SIDBytes[2]; Data[7] := SIDBytes[3];
