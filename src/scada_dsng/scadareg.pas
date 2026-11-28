@@ -33,7 +33,7 @@ uses
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
-  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, CodesysDriver, opcuatagassistant, CommPort,
+  XinJETCP, XinJEModbusRTU, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, CodesysDriver, opcuatagassistant, CommPort,
   h5utagassistant, codesysxmlassistant,
   SysUtils, pscadalog, ObjInspStrConsts, opcuaserver, opcuaserveredt, MQTTDriver,
   {$IFDEF FPC}
@@ -94,6 +94,7 @@ begin
                                            TISOTCPDriver,
                                            TMelsecTCPDriver,
                                            TXinJETCPDriver,
+                                           TXinJEModbusRTUDriver,
                                            TDeltaTCPDriver,
                                            TInovanceTCPDriver,
                                            TH5UTagTCPDriver,
