@@ -2247,7 +2247,11 @@ begin
   if found then begin
     h:=High(ftags);
     ftags[c]:=ftags[h];
-    SetLength(ftags,Max(0,h-1));
+    // h is the old last index; after replacing the deleted slot with the
+    // last element the array must keep exactly h elements (0..h-1).
+    // The old code used h-1 and silently dropped one extra LIVE tag on
+    // every removal, corrupting the manager (found 2026-11-27).
+    SetLength(ftags,h);
   end;
 end;
 

@@ -35,7 +35,8 @@ procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
 implementation
 
 uses
-  PLCTagNumber, PLCBlock, Tag, Dialogs, Controls, TypInfo, Math;
+  PLCTagNumber, PLCBlock, Tag, Dialogs, Controls, TypInfo, Math
+  {$IFDEF FPC}, PropEdits{$ENDIF};
 
 procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
@@ -68,6 +69,8 @@ var
   UsedNames, ImportedKeys, TagByVarName: TStringList;
   BaseName, TagName, DeletedList: string;
   N, Skipped: LongInt;
+  ToDelete: TList;
+  DeletionConfirmed: Boolean;
 
   {: CSVVariableName of a tag component, or '' when not imported from CSV. }
   function CSVNameOf(C: TComponent): string;
@@ -101,52 +104,116 @@ var
     end;
   end;
 
-  {: Delete tags whose CSV variable was unchecked in this wizard run. Only
-     tags from the CURRENT CSV that were un-checked are considered; tags
-     created manually (no CSVVariableName) or belonging to other drivers are
-     never touched. Returns the number of tags actually removed. }
-  function DeleteUncheckedTags(out DeletedList: string): LongInt;
+  {: Pointer-only test: is Cmp still listed among the owner's components?
+     Used after the IDE delete hook to decide whether the component still
+     needs a plain Free. Deliberately does NOT dereference Cmp, so it is
+     safe to call even when Cmp was already freed through a hook. }
+  function ComponentStillOwned(Cmp: TComponent): Boolean;
+  var t: LongInt;
+  begin
+    Result := false;
+    if not Assigned(OwnerOfNewTags) then exit;
+    for t:=0 to OwnerOfNewTags.ComponentCount-1 do
+      if OwnerOfNewTags.Components[t] = Cmp then exit(true);
+  end;
+
+  {: Collect the tags whose CSV variable was unchecked in this wizard run and
+     ask for confirmation. Only tags from the CURRENT CSV that were unchecked
+     are considered; manually created tags (no CSVVariableName) or tags of
+     other drivers are never touched.
+
+     The actual destruction is DEFERRED until after the create loop. The
+     CreateProc / InsertHook callbacks are method pointers owned by the IDE
+     component editor; deleting a persistent makes Lazarus rebuild that
+     editor, so any CreateProc call issued afterwards jumps into a freed
+     object and raises EAccessViolation (H5U trace 2026-11-27 21:09:36:
+     DEL done -> CREATE count=3 -> NEW CreateProc -> EAccessViolation).
+     Returns True when the user confirmed the deletion. }
+  function PrepareTagDeletions(out ADeletedList: string): Boolean;
   var
     k, m: LongInt;
     DVars: TH5UTagCsvVars;
-    ToDelete: TList;
+    C: TComponent;
+  begin
+    Result := false;
+    ADeletedList := '';
+    DVars := Dlg.DeselectedVars;
+    for k:=0 to High(DVars) do
+      for m:=0 to TagByVarName.Count-1 do
+        if TagByVarName[m] = DVars[k].Name then begin
+          C := TComponent(TagByVarName.Objects[m]);
+          if (C <> nil) and (ToDelete.IndexOf(C) < 0) then
+            ToDelete.Add(C);
+        end;
+    if ToDelete.Count = 0 then begin
+      exit;
+    end;
+
+    for k:=0 to ToDelete.Count-1 do begin
+      C := TComponent(ToDelete[k]);
+      if ADeletedList <> '' then ADeletedList := ADeletedList + #13#10;
+      ADeletedList := ADeletedList + '  - ' + C.Name + '  (' + CSVNameOf(C) + ')';
+    end;
+    Result := MessageDlg('These tag(s) are no longer selected and will be DELETED:' +
+      #13#10#13#10 + ADeletedList + #13#10#13#10 + 'Continue?',
+      mtConfirmation,[mbYes,mbNo],0) = mrYes;
+    if not Result then begin
+      ToDelete.Clear;
+      ADeletedList := '';
+    end;
+  end;
+
+  {: Destroy the confirmed tags. Called only after ALL CreateProc / InsertHook
+     calls of this wizard run have finished.
+
+     Do NOT use GlobalDesignHook.DeletePersistent: it hands the tag to
+     TDesigner.DoDeletePersistent, which frees it and then broadcasts
+     PersistentDeleted with the ALREADY FREED pointer, while
+     TMainIDE.PropHookPersistentDeleting tries to remove a published variable
+     from the form source. Wizard tags were created with tagclass.Create(Owner)
+     + PersistentAdded, not Designer.CreateComponent, so involving the
+     designer corrupts IDE state (Codesys trace 2026-11-27 20:44:46). }
+  function ApplyTagDeletions: LongInt;
+  var
+    k, m: LongInt;
+    DeletedName: string;
     C: TComponent;
   begin
     Result := 0;
-    DeletedList := '';
-    DVars := Dlg.DeselectedVars;
-    ToDelete := TList.Create;
-    try
-      for k:=0 to High(DVars) do
-        for m:=0 to TagByVarName.Count-1 do
-          if TagByVarName[m] = DVars[k].Name then begin
-            C := TComponent(TagByVarName.Objects[m]);
-            if (C <> nil) and (ToDelete.IndexOf(C) < 0) then
-              ToDelete.Add(C);
-          end;
-      if ToDelete.Count = 0 then exit;
-
-      for k:=0 to ToDelete.Count-1 do begin
-        C := TComponent(ToDelete[k]);
-        if DeletedList <> '' then DeletedList := DeletedList + #13#10;
-        DeletedList := DeletedList + '  - ' + C.Name + '  (' + CSVNameOf(C) + ')';
-      end;
-      if MessageDlg('These tag(s) are no longer selected and will be DELETED:' +
-        #13#10#13#10 + DeletedList + #13#10#13#10 + 'Continue?',
-        mtConfirmation,[mbYes,mbNo],0) <> mrYes then exit;
-
-      for k:=0 to ToDelete.Count-1 do begin
-        C := TComponent(ToDelete[k]);
-        try
+    for k:=0 to ToDelete.Count-1 do begin
+      C := TComponent(ToDelete[k]);
+      // The IDE hook may remove several components at once. Skip any that
+      // are no longer owned, so we never touch a dangling pointer.
+      if not ComponentStillOwned(C) then continue;
+      // Cache the name BEFORE the component goes away.
+      DeletedName := C.Name;
+      try
+        {$IFDEF FPC}
+        // Official "tell all IDE parts to remove all references from this
+        // object" broadcast. Deliberately NOT DeletePersistent.
+        if Assigned(GlobalDesignHook) then begin
+          GlobalDesignHook.PersistentDeleting(C);
+        end;
+        {$ENDIF}
+        // Free through the normal destructor; the pointer-only ownership
+        // test prevents a double free without dereferencing C.
+        if ComponentStillOwned(C) then begin
           C.Free;
-          inc(Result);
-        except
-          on E: Exception do
-            MessageDlg('Error deleting tag: ' + E.Message,mtError,[mbOK],0);
+        end;
+        // No PersistentDeleted(C): the object no longer exists.
+        // Drop the stale pointer from the CSV name -> tag map. Pointer()
+        // keeps this a pure address comparison: C may already have been
+        // freed by an IDE handler, so it must not be dereferenced here.
+        for m := TagByVarName.Count-1 downto 0 do
+          if Pointer(TagByVarName.Objects[m]) = Pointer(C) then
+            TagByVarName.Delete(m);
+        inc(Result);
+      except
+        on E: Exception do begin
+          MessageDlg('Error deleting tag ' + DeletedName + ': ' + E.Message,
+            mtError,[mbOK],0);
         end;
       end;
-    finally
-      ToDelete.Free;
     end;
   end;
 
@@ -222,6 +289,9 @@ var
     if not Assigned(OwnerOfNewTags) then exit;
     for i:=0 to OwnerOfNewTags.ComponentCount-1 do begin
       C := OwnerOfNewTags.Components[i];
+      // Tags queued for deletion are still on the form while the create loop
+      // runs: treat them as gone so their address can be reused immediately.
+      if (ToDelete <> nil) and (ToDelete.IndexOf(C) >= 0) then continue;
       if C is TPLCTagNumber then begin
         Num := TPLCTagNumber(C);
         if (Num.PLCStation = AStation) and (Num.MemReadFunction = AFunc) and
@@ -242,6 +312,7 @@ begin
 
   ImportedKeys := TStringList.Create;
   TagByVarName := TStringList.Create;
+  ToDelete := TList.Create;
   try
     ImportedKeys.Sorted := true;
     ImportedKeys.Duplicates := dupIgnore;
@@ -253,13 +324,13 @@ begin
       // session; do not overwrite them here.
       Dlg.SetImportedKeys(ImportedKeys);
       if Dlg.ShowModal = mrOK then begin
-        // Remove tags for variables the user unchecked this time, before
-        // creating new ones so the freed names become available again.
-        N := DeleteUncheckedTags(DeletedList);
-        if N > 0 then
-          MessageDlg(IntToStr(N) + ' tag(s) deleted for unchecked variable(s).',
-            mtInformation,[mbOK],0);
+        // 1) Collect + confirm deletions, but DO NOT destroy anything yet.
+        //    CreateProc / InsertHook are method pointers into the IDE
+        //    component editor and must be used before any persistent is
+        //    deleted (Lazarus rebuilds the editor on deletion).
+        DeletionConfirmed := PrepareTagDeletions(DeletedList);
 
+        // 2) Create the newly selected tags while all IDE callbacks are alive.
         Vars := Dlg.SelectedVars;
         UsedNames := TStringList.Create;
         try
@@ -314,12 +385,21 @@ begin
               end;
             end;
           except
-            on E: Exception do
+            on E: Exception do begin
               MessageDlg('Error creating tags: ' + E.Message,mtError,[mbOK],0);
+            end;
           end;
           if Skipped > 0 then
             MessageDlg(IntToStr(Skipped) + ' variable(s) already have a tag at ' +
               'the same station/address and were skipped.',mtInformation,[mbOK],0);
+          // 3) Destroy unchecked tags LAST: no CreateProc / InsertHook call
+          //    happens after this point in this wizard run.
+          if DeletionConfirmed then begin
+            N := ApplyTagDeletions;
+            if N > 0 then
+              MessageDlg(IntToStr(N) + ' tag(s) deleted for unchecked variable(s).',
+                mtInformation,[mbOK],0);
+          end;
         finally
           UsedNames.Free;
         end;
@@ -328,6 +408,7 @@ begin
       Dlg.Free;
     end;
   finally
+    ToDelete.Free;
     TagByVarName.Free;
     ImportedKeys.Free;
   end;

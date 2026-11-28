@@ -272,6 +272,16 @@ end;
 destructor TCodesysSymbolDriver.Destroy;
 var i:LongInt;
 begin
+  // The inherited destructor stops the scan threads and unregisters every
+  // still-bound tag through the virtual DoDelTag. That callback locks
+  // FItemsCS and looks symbols up in FItems, so both must still be alive
+  // while inherited Destroy runs. Freeing them first (the old order) made
+  // DoDelTag dereference a freed/nil FItemsCS and raised EAccessViolation
+  // whenever the driver was deleted with tags still attached (2026-11-28).
+  // inherited first also guarantees the scan threads are gone before the
+  // client socket and the item list are released.
+  inherited Destroy;
+
   LockItems;
   try
     for i:=0 to FItems.Count-1 do FItems.Objects[i].Free;
@@ -282,7 +292,6 @@ begin
   FreeAndNil(FClient);
   FreeAndNil(FItems);
   FreeAndNil(FItemsCS);
-  inherited Destroy;
 end;
 
 procedure TCodesysSymbolDriver.LockItems;
